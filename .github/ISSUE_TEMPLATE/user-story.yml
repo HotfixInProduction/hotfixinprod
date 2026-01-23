@@ -1,0 +1,38 @@
+name: User Story
+description: Create a user story with acceptance criteria
+title: "[US] "
+labels: ["user-story"]
+body:
+  - type: input
+    id: id
+    attributes:
+      label: Story ID
+      placeholder: "US-1.1"
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: User Story
+      placeholder: "As a ..., I want ..., so that ..."
+    validations:
+      required: true
+  - type: textarea
+    id: ac
+    attributes:
+      label: Acceptance Criteria
+      placeholder: |
+        Given ...
+        When ...
+        Then ...
+    validations:
+      required: true
+  - type: input
+    id: points
+    attributes:
+      label: Story Points
+      placeholder: "1,2,3,5,8"
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / Dependencies
