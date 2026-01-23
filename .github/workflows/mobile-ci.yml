@@ -1,4 +1,4 @@
-name: Mobile CI
+name: Mobile App CI
 
 on:
   push:
@@ -25,10 +25,3 @@ jobs:
       - run: npx tsc --noEmit
 
       - run: npx expo doctor
-  #       working-directory: mobile
-  #     - uses: expo/expo-github-action@v8
-  #       with:
-  #         eas-version: latest
-  #         token: ${{ secrets.EXPO_TOKEN }}
-  #     - run: eas build --platform all --profile preview --non-interactive
-  #       working-directory: mobile
