@@ -18,6 +18,14 @@ body:
     validations:
       required: true
   - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      placeholder: |
+        - [ ] Task 1
+        - [ ] Task 2
+        - [ ] Task 3
+  - type: textarea
     id: ac
     attributes:
       label: Acceptance Criteria
