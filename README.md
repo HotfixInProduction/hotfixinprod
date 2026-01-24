@@ -25,3 +25,7 @@ SOEN390 Project
 ### Testing
 - Jest
 - Detox
+
+
+### Wiki
+https://github.com/HotfixInProduction/hotfixinprod/wiki
