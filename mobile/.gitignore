@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Jest coverage output
+coverage/
+mobile/coverage/
+**/coverage/
