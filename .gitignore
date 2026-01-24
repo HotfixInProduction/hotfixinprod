@@ -37,10 +37,8 @@ yarn-error.*
 *.tsbuildinfo
 
 # generated native folders
-/ios
-/android
+mobile/ios
+mobile/android
 
 # Jest coverage output
-coverage/
-mobile/coverage/
 **/coverage/
