@@ -3,8 +3,12 @@ name: Mobile App CI
 on:
   push:
     branches: [main, dev]
+    paths:
+      - "mobile/**"
   pull_request:
     branches: [main, dev]
+    paths:
+      - "mobile/**"
 
 jobs:
   validate:
@@ -19,9 +23,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: "npm"
+          cache-dependency-path: mobile/package-lock.json
 
       - run: npm ci
 
       - run: npx tsc --noEmit
 
       - run: npx expo-doctor
+
+      # Unit tests + coverage
+      - run: npm run test:coverage
+
+      # Upload coverage to Codecov
+      - uses: codecov/codecov-action@v5
+        with:
+          files: mobile/coverage/lcov.info
+          fail_ci_if_error: true
+
