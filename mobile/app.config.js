@@ -23,6 +23,7 @@ module.exports = {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: "#ffffff"
       },
+      package: "com.concordia.hotfixinprod",
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       config: {
