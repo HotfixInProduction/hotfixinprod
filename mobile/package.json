@@ -14,11 +14,13 @@
     "expo": "~54.0.32",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
-    "react-native": "0.81.5"
+    "react-native": "0.81.5",
+    "react-native-maps": "^1.26.20"
   },
   "devDependencies": {
     "@types/jest": "29.5.14",
     "@types/react": "~19.1.0",
+    "@types/react-native-maps": "^0.24.2",
     "jest": "^29.7.0",
     "jest-expo": "^54.0.16",
     "typescript": "~5.9.2"
