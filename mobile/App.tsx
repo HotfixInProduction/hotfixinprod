@@ -17,7 +17,7 @@ export default function App() {
         }}
       />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-
+        {/* Reserved for future header/search UI overlaying the map */}
       </SafeAreaView>
       <StatusBar style="auto" />
     </View>
