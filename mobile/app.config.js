@@ -1,8 +1,9 @@
 module.exports = {
   expo: {
-    name: "mobile",
-    slug: "mobile",
-    version: "1.0.0",
+    name: "campushotfix",
+    slug: "campushotfix",
+    owner: 'hotfixinprod',
+    version: "0.1.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
     userInterfaceStyle: "light",
@@ -34,6 +35,11 @@ module.exports = {
     },
     web: {
       favicon: "./assets/favicon.png"
+    },
+    extra: {
+      eas: {
+        projectId: "20dcdc57-e4a6-4d53-b09f-0ba6e3587b7a"
+      }
     }
   }
 };
