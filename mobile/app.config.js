@@ -38,6 +38,8 @@ module.exports = {
     },
     extra: {
       eas: {
+        // EAS project ID for this app.
+        // See README.md ("EAS Project configuration") for details about this ID and how to update it.
         projectId: "20dcdc57-e4a6-4d53-b09f-0ba6e3587b7a"
       }
     }
