@@ -4,7 +4,6 @@ import App from '../App';
 
 // Mock react-native-maps
 jest.mock('react-native-maps', () => {
-  const React = require('react');
   const { View } = require('react-native');
   return {
     __esModule: true,
@@ -14,7 +13,6 @@ jest.mock('react-native-maps', () => {
 
 // Mock safe area context
 jest.mock('react-native-safe-area-context', () => {
-  const React = require('react');
   const { View } = require('react-native');
   return {
     SafeAreaView: (props: any) => <View {...props} />,
