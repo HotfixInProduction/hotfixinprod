@@ -14,9 +14,9 @@ jest.mock('expo-location', () => ({
 
 // Mock react-native-maps
 jest.mock('react-native-maps', () => {
-  const React = require('react');
+  const React = require('react') as typeof import('react');
   const { View } = require('react-native');
-  const MockMapView = React.forwardRef((props: any, ref) => {
+  const MockMapView = React.forwardRef((props: any, ref: React.Ref<any>) => {
     React.useImperativeHandle(ref, () => ({
       animateToRegion: jest.fn(),
     }));
