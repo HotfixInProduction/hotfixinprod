@@ -2,12 +2,30 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import App from '../App';
 
+// Mock Expo Location to avoid hitting native APIs during tests
+jest.mock('expo-location', () => ({
+  requestForegroundPermissionsAsync: jest
+    .fn()
+    .mockResolvedValue({ status: 'granted' }),
+  getCurrentPositionAsync: jest.fn().mockResolvedValue({
+    coords: { latitude: 45.5, longitude: -73.58 },
+  }),
+}));
+
 // Mock react-native-maps
 jest.mock('react-native-maps', () => {
+  const React = require('react');
   const { View } = require('react-native');
+  const MockMapView = React.forwardRef((props: any, ref) => {
+    React.useImperativeHandle(ref, () => ({
+      animateToRegion: jest.fn(),
+    }));
+    return <View testID="map-view" {...props} />;
+  });
   return {
     __esModule: true,
-    default: (props: any) => <View testID="map-view" {...props} />,
+    default: MockMapView,
+    PROVIDER_GOOGLE: 'google',
   };
 });
 
