@@ -43,3 +43,10 @@ mobile/android
 
 # Jest coverage output
 **/coverage/
+
+# tooling caches
+.lsp/
+.clj-kondo/
+.eas/
+**/.expo/
+**/.expo-shared/
