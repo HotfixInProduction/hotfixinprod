@@ -50,3 +50,5 @@ mobile/android
 .eas/
 **/.expo/
 **/.expo-shared/
+# IDEs and editors
+.idea
