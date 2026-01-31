@@ -2,6 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BuildingPolygons from './src/components/BuildingPolygon';
 
 export default function App() {
   return (
@@ -15,7 +16,9 @@ export default function App() {
           latitudeDelta: 0.004,
           longitudeDelta: 0.004,
         }}
-      />
+      >
+        <BuildingPolygons />
+      </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         {/* Reserved for future header/search UI overlaying the map */}
       </SafeAreaView>
