@@ -893,7 +893,7 @@ export const buildings =[
         coordinates: [
             { latitude: 45.45995428029579, longitude: -73.64013930845545 },
             { latitude: 45.459665802085965, longitude: -73.63931500580557 },
-            { latitude: 45.459619548058726, longitude: -73.63944971328578 },
+            { latitude: 45.459619548058726, longitude: -73.6394497132857 },
             { latitude: 45.45956964235518, longitude: -73.63921088336592 },
             { latitude: 45.45927994495878, longitude: -73.6394382173597 },
             { latitude: 45.45933350257272, longitude: -73.63958572414936 },

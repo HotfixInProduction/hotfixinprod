@@ -5,9 +5,15 @@ import App from '../App';
 // Mock react-native-maps
 jest.mock('react-native-maps', () => {
   const { View } = require('react-native');
+
+  const MockMapView = (props: any) => <View testID="map-view" {...props}>{props.children}</View>;
+  const MockPolygon = (props: any) => <View {...props} />;
+
   return {
     __esModule: true,
-    default: (props: any) => <View testID="map-view" {...props} />,
+    default: MockMapView,
+    Polygon: MockPolygon,       // <-- important
+    Marker: MockPolygon,        // optional if you use Marker
   };
 });
 
