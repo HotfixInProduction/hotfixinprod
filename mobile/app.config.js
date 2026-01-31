@@ -3,6 +3,7 @@ module.exports = {
     name: "campushotfix",
     slug: "campushotfix",
     owner: 'hotfixinprod',
+    scheme: "campushotfix",
     version: "0.1.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
@@ -14,10 +15,13 @@ module.exports = {
       backgroundColor: "#ffffff"
     },
     ios: {
+      bundleIdentifier: "com.concordia.hotfixinprod",
       supportsTablet: true,
-      config: {
-        googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY
-      }
+      infoPlist: {
+        NSLocationWhenInUseUsageDescription:
+          "Allow location access so we can show your position on the map.",
+      },
+      config: { googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_API_KEY }
     },
     android: {
       adaptiveIcon: {
@@ -27,6 +31,7 @@ module.exports = {
       package: "com.concordia.hotfixinprod",
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
+      permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       config: {
         googleMaps: {
           apiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY
