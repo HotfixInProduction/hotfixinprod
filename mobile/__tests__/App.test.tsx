@@ -2,7 +2,6 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import App from '../App';
-import * as Location from 'expo-location';
 
 // Create mocks before jest.mock
 const mockRequestForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
