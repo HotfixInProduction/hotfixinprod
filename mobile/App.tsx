@@ -1,9 +1,17 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View, TouchableOpacity, Text, Animated } from 'react-native';
+import * as Location from 'expo-location';
+import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated } from 'react-native';
 import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+const INITIAL_REGION = {
+  latitude: 45.497,
+  longitude: -73.579,
+  latitudeDelta: 0.004,
+  longitudeDelta: 0.004,
+};
 
 const CAMPUSES = {
   downtown: {
@@ -28,6 +36,37 @@ export default function App() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
   const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // Request foreground location permission on app load so iOS/Android show the system prompt.
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Location needed',
+          'Please allow location so we can show where you are on the map.'
+        );
+        return;
+      }
+
+      try {
+        const { coords } = await Location.getCurrentPositionAsync({});
+        mapRef.current?.animateToRegion(
+          {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          600
+        );
+      } catch (error) {
+        // Location retrieval failed (timeout, services disabled, etc.)
+        // App continues to work with default map view
+        console.warn('Failed to get current location:', error);
+      }
+    })();
+  }, []);
 
   const handleCampusChange = (campusKey: CampusKey) => {
     setSelectedCampus(campusKey);
@@ -65,6 +104,10 @@ export default function App() {
       >
         <BuildingPolygon />
       </MapView>
+        showsUserLocation
+        showsMyLocationButton
+        initialRegion={INITIAL_REGION}
+      />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
           <View style={styles.campusSelector}>
