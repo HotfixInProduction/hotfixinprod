@@ -20,7 +20,12 @@ jest.mock('react-native-maps', () => {
   const { View } = require('react-native');
   return {
     __esModule: true,
-    default: (props: any) => <View testID="map-view" {...props} />,
+    default: React.forwardRef((props: any, ref: any) => {
+      React.useImperativeHandle(ref, () => ({
+        animateToRegion: mockAnimateToRegion,
+      }));
+      return <View testID="map-view" {...props} />;
+    }),
   };
 });
 
