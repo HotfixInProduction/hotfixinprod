@@ -2,7 +2,7 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, TouchableOpacity, Text, Animated } from 'react-native';
 import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import BuildingPolygons from './src/components/BuildingPolygon';
+import BuildingPolygon from './src/components/BuildingPolygon';
 import { useRef, useState } from 'react';
 
 const CAMPUSES = {
@@ -63,7 +63,7 @@ export default function App() {
           longitudeDelta: 0.004,
         }}
       >
-        <BuildingPolygons />
+        <BuildingPolygon />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
