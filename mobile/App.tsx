@@ -48,16 +48,22 @@ export default function App() {
         return;
       }
 
-      const { coords } = await Location.getCurrentPositionAsync({});
-      mapRef.current?.animateToRegion(
-        {
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        },
-        600
-      );
+      try {
+        const { coords } = await Location.getCurrentPositionAsync({});
+        mapRef.current?.animateToRegion(
+          {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          600
+        );
+      } catch (error) {
+        // Location retrieval failed (timeout, services disabled, etc.)
+        // App continues to work with default map view
+        console.warn('Failed to get current location:', error);
+      }
     })();
   }, []);
 

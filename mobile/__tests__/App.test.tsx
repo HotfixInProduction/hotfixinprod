@@ -140,6 +140,70 @@ describe('App', () => {
 
       expect(mockGetCurrentPosition).not.toHaveBeenCalled();
     });
+
+    it('handles getCurrentPositionAsync timeout error gracefully', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockRejectedValue(new Error('Location request timed out'));
+
+      const { getByTestId } = render(<App />);
+
+      await waitFor(() => {
+        expect(mockGetCurrentPosition).toHaveBeenCalled();
+      });
+
+      // App should still render without crashing
+      expect(getByTestId('map-view')).toBeTruthy();
+      // animateToRegion should not be called when location fails
+      expect(mockAnimateToRegion).not.toHaveBeenCalled();
+    });
+
+    it('handles getCurrentPositionAsync generic error gracefully', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockRejectedValue(new Error('Failed to get location'));
+
+      const { getByTestId } = render(<App />);
+
+      await waitFor(() => {
+        expect(mockGetCurrentPosition).toHaveBeenCalled();
+      });
+
+      // App should still render without crashing
+      expect(getByTestId('map-view')).toBeTruthy();
+      expect(mockAnimateToRegion).not.toHaveBeenCalled();
+    });
+
+    it('handles location services disabled after permission granted', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockRejectedValue(
+        new Error('Location services are disabled')
+      );
+
+      const { getByTestId } = render(<App />);
+
+      await waitFor(() => {
+        expect(mockGetCurrentPosition).toHaveBeenCalled();
+      });
+
+      // App should still render without crashing
+      expect(getByTestId('map-view')).toBeTruthy();
+      // Should not attempt to animate to a region when location fails
+      expect(mockAnimateToRegion).not.toHaveBeenCalled();
+    });
+
+    it('handles network error when getting location', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockRejectedValue(new Error('Network error'));
+
+      const { getByTestId } = render(<App />);
+
+      await waitFor(() => {
+        expect(mockGetCurrentPosition).toHaveBeenCalled();
+      });
+
+      // App should continue functioning
+      expect(getByTestId('map-view')).toBeTruthy();
+      expect(mockAnimateToRegion).not.toHaveBeenCalled();
+    });
   });
 
   describe('Campus Selection', () => {
