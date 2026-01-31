@@ -43,3 +43,6 @@ mobile/android
 
 # Jest coverage output
 **/coverage/
+
+# IDEs and editors
+.idea
