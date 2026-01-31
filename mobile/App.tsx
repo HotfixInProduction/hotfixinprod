@@ -1,13 +1,59 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Text, Animated } from 'react-native';
 import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygons from './src/components/BuildingPolygon';
+import { useRef, useState } from 'react';
+
+const CAMPUSES = {
+  downtown: {
+    name: 'Downtown',
+    latitude: 45.4972,
+    longitude: -73.5789,
+    latitudeDelta: 0.004,
+    longitudeDelta: 0.004,
+  },
+  loyola: {
+    name: 'Loyola',
+    latitude: 45.4582,
+    longitude: -73.6402,
+    latitudeDelta: 0.004,
+    longitudeDelta: 0.004,
+  },
+};
+
+type CampusKey = keyof typeof CAMPUSES;
 
 export default function App() {
+  const mapRef = useRef<MapView>(null);
+  const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  const handleCampusChange = (campusKey: CampusKey) => {
+    setSelectedCampus(campusKey);
+    
+    // Animate slider
+    Animated.spring(slideAnim, {
+      toValue: campusKey === 'downtown' ? 0 : 1,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 10,
+    }).start();
+
+    // Animate map
+    const campus = CAMPUSES[campusKey];
+    mapRef.current?.animateToRegion({
+      latitude: campus.latitude,
+      longitude: campus.longitude,
+      latitudeDelta: campus.latitudeDelta,
+      longitudeDelta: campus.longitudeDelta,
+    }, 500);
+  };
+
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}
         style={styles.map}
         mapPadding={{ top: 100, right: 20, bottom: 0, left: 20 }}
         initialRegion={{
@@ -20,7 +66,49 @@ export default function App() {
         <BuildingPolygons />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        {/* Reserved for future header/search UI overlaying the map */}
+        <View style={styles.campusSelectorContainer}>
+          <View style={styles.campusSelector}>
+            <Animated.View
+              style={[
+                styles.sliderPill,
+                {
+                  transform: [
+                    {
+                      translateX: slideAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 136],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            />
+            <TouchableOpacity
+              style={styles.campusOption}
+              onPress={() => handleCampusChange('downtown')}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.campusText,
+                selectedCampus === 'downtown' && styles.campusTextActive
+              ]}>
+                Downtown
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.campusOption}
+              onPress={() => handleCampusChange('loyola')}
+              activeOpacity={0.7}
+            >
+              <Text style={[
+                styles.campusText,
+                selectedCampus === 'loyola' && styles.campusTextActive
+              ]}>
+                Loyola
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </SafeAreaView>
       <StatusBar style="auto" />
     </View>
@@ -39,5 +127,50 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     pointerEvents: 'box-none',
+  },
+  campusSelectorContainer: {
+    alignItems: 'center',
+    paddingTop: 12,
+  },
+  campusSelector: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 24,
+    padding: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  sliderPill: {
+    position: 'absolute',
+    left: 4,
+    top: 4,
+    bottom: 4,
+    width: 136,
+    backgroundColor: '#912338',
+    borderRadius: 20,
+    shadowColor: '#912338',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  campusOption: {
+    width: 136,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  campusText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#666',
+    zIndex: 1,
+  },
+  campusTextActive: {
+    color: '#FFFFFF',
   },
 });
