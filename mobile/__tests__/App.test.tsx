@@ -1,6 +1,8 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import App from '../App';
+import * as Location from 'expo-location';
 
 // Mock Expo Location to avoid hitting native APIs during tests
 jest.mock('expo-location', () => ({
@@ -39,6 +41,10 @@ jest.mock('react-native-safe-area-context', () => {
 });
 
 describe('App', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders without crashing', () => {
     const { getByTestId } = render(<App />);
     expect(getByTestId('map-view')).toBeTruthy();
@@ -50,5 +56,24 @@ describe('App', () => {
     
     expect(mapView.props.initialRegion.latitude).toBeCloseTo(45.497, 2);
     expect(mapView.props.initialRegion.longitude).toBeCloseTo(-73.579, 2);
+  });
+
+  it('alerts when location permission is denied', async () => {
+    (Location.requestForegroundPermissionsAsync as jest.Mock).mockResolvedValueOnce({
+      status: 'denied',
+    });
+
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Location needed',
+        'Please allow location so we can show where you are on the map.'
+      );
+    });
+
+    alertSpy.mockRestore();
   });
 });
