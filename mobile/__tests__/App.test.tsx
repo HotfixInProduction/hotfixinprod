@@ -140,6 +140,27 @@ describe('App', () => {
 
       expect(mockGetCurrentPosition).not.toHaveBeenCalled();
     });
+
+    it.each([
+      ['timeout error', 'Location request timed out'],
+      ['generic error', 'Failed to get location'],
+      ['location services disabled after permission granted', 'Location services are disabled'],
+      ['network error', 'Network error'],
+    ])('handles getCurrentPositionAsync %s gracefully', async (scenario, errorMessage) => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockRejectedValue(new Error(errorMessage));
+
+      const { getByTestId } = render(<App />);
+
+      await waitFor(() => {
+        expect(mockGetCurrentPosition).toHaveBeenCalled();
+      });
+
+      // App should still render without crashing
+      expect(getByTestId('map-view')).toBeTruthy();
+      // animateToRegion should not be called when location fails
+      expect(mockAnimateToRegion).not.toHaveBeenCalled();
+    });
   });
 
   describe('Campus Selection', () => {
