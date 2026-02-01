@@ -6,6 +6,20 @@ export const buildings =[
             {latitude : 45.49737008952721,  longitude: -73.57829860721526},
             {latitude : 45.49682738667073,  longitude: -73.5788266357901},
             {latitude : 45.497170475291824,  longitude: -73.57954748378724}
+        ],
+        address: '1455 De Maisonneuve Blvd. W.',
+        departments: [
+            'Economics', 'Geography, Planning & Environment', 
+            'Political Science', 'School of Community & Public Affairs', 
+            'School of Irish Studies', 'Sociology & Anthropology'
+        ],
+        services: [
+            'Campus Safety & Prevention Services', 'Concordia Student Union',
+            'Espace Franco', 'First Stop',
+            'IT Service Desk', 'NouLa Black Student Centre',
+            'Office of Student Life & Engagement', 'Otsenhákta Student Centre',
+            'Student Success Centre', 'Welcome Crew Office',
+            'Zen Den'
         ]
     },
     {
@@ -15,7 +29,8 @@ export const buildings =[
             { latitude: 45.496652001931665, longitude: -73.57903261800521 },
             { latitude: 45.496551147753564, longitude: -73.57913045763331 },
             { latitude: 45.496578882670775, longitude: -73.57919592385521 }
-        ]
+        ],
+        address: '2010 Mackay St.'
     },
     {
         id: 'P Annex',
@@ -24,7 +39,8 @@ export const buildings =[
             { latitude: 45.49668402259039, longitude: -73.57909967246366 },
             { latitude: 45.496587436535094, longitude: -73.57919119538936 },
             { latitude: 45.49662200794671, longitude: -73.57926695603385 }
-        ]
+        ],
+        address: '2020 Mackay St.'
     },
     {
         id: 'T Annex',
@@ -33,7 +49,9 @@ export const buildings =[
             { latitude: 45.49671716832046, longitude: -73.57918000925397 },
             { latitude: 45.49662343357136, longitude: -73.57926695603385 },
             { latitude: 45.49665622293125, longitude: -73.57933864899252 }
-        ]
+        ],
+        address: '2030 Mackay St.',
+        services: ['Graduate Students Association']
     },
     {
         id: 'RR Annex',
@@ -42,7 +60,9 @@ export const buildings =[
             { latitude: 45.49676252800219, longitude: -73.5792447968169 },
             { latitude: 45.496613619026704, longitude: -73.57938160538005 },
             { latitude: 45.49665245020347, longitude: -73.57946831503291 }
-        ]
+        ],
+        address: '2040 Mackay St.',
+        departments: ['Liberal Arts College']
     },
     {
         id: 'R Annex',
@@ -51,7 +71,9 @@ export const buildings =[
             { latitude: 45.49680084578296, longitude: -73.57933241525643 },
             { latitude: 45.496703840166646, longitude: -73.57942467638648 },
             { latitude: 45.49674072253029, longitude: -73.57951477514625 }
-        ]
+        ],
+        address: '2050 Mackay St.',
+        departments: ['Religions & Cultures']
     },
     {
         id: 'FA Annex',
@@ -60,7 +82,9 @@ export const buildings =[
             { latitude: 45.49684379092403, longitude: -73.57941674769604 },
             { latitude: 45.4967432487183, longitude: -73.57951405435644 },
             { latitude: 45.49677962581842, longitude: -73.5795947828453 }
-        ]
+        ],
+        address: '2060 Mackay St.',
+        departments: ['Religions & Cultures']
     },
     {
         id: 'EN Annex',
@@ -73,7 +97,9 @@ export const buildings =[
             { latitude: 45.49689767722256, longitude: -73.57948500467079 },
             { latitude: 45.49691485525352, longitude: -73.57952320654495 },
             { latitude: 45.49692647568298, longitude: -73.57951311548344 }
-        ]
+        ],
+        address: '2070 Mackay St.',
+        departments: ['Research Chair on Gambling']
     },
     {
         id: 'X Annex',
@@ -82,7 +108,9 @@ export const buildings =[
             { latitude: 45.49692615597985, longitude: -73.5795933183832 },
             { latitude: 45.49683191472235, longitude: -73.57968058450983 },
             { latitude: 45.49686479053369, longitude: -73.57975132179217 }
-        ]
+        ],
+        address: '2080 Mackay St.',
+        services: ['Concordia International']
     },
     {
         id: 'Z Annex',
@@ -97,7 +125,9 @@ export const buildings =[
             { latitude: 45.496867587191986, longitude: -73.579834555228 },
             { latitude: 45.49688860614279, longitude: -73.57981379537321 },
             { latitude: 45.496902618771855, longitude: -73.57984070629638 }
-        ]
+        ],
+        address: '2090 Mackay St.',
+        services: ['Multi-Faith & Spirituality Centre', 'Sustainable Concordia']
     },
     {
         id: 'PR Annex',
@@ -112,7 +142,9 @@ export const buildings =[
             { latitude: 45.496826627163585, longitude: -73.58005061149117 },
             { latitude: 45.496893995615864, longitude: -73.57998910081095 },
             { latitude: 45.49688752824784, longitude: -73.57997218537402 }
-        ]
+        ],
+        address: '2100 Mackay St.',
+        services: ['Concordia University Library Employees\' Union (CULEU)']
     },
     {
         id: 'V Annex',
@@ -121,7 +153,9 @@ export const buildings =[
             { latitude: 45.49704847015562, longitude: -73.579811031409 },
             { latitude: 45.49693475247366, longitude: -73.5799263639338 },
             { latitude: 45.496970861904515, longitude: -73.58001478553543 }
-        ]
+        ],
+        address: '2110 Mackay St.',
+        services: ['Centre for Gender Advocacy', 'Community University Television (CUTV)']
     },
     {
         id: 'CI Annex',
@@ -130,7 +164,8 @@ export const buildings =[
             { latitude: 45.49754093758972, longitude: -73.57975103041416 },
             { latitude: 45.49735644293895, longitude: -73.57993335813795 },
             { latitude: 45.497401605747825, longitude: -73.58002109478745 }
-        ]
+        ],
+        address: '2149 Mackay St.'
     },
     {
         id: 'S Annex',
@@ -141,7 +176,9 @@ export const buildings =[
             { latitude: 45.49742156797342, longitude: -73.5797384155357 },
             { latitude: 45.49731820435093, longitude: -73.57984267343267 },
             { latitude: 45.49735704802754, longitude: -73.57992344982132 }
-        ]
+        ],
+        address: '2145 Mackay St.',
+        departments: ['Philosophy']
     },
     {
         id: 'M Annex',
@@ -150,7 +187,8 @@ export const buildings =[
             { latitude: 45.497387332909454, longitude: -73.579654821366 },
             { latitude: 45.49727804391185, longitude: -73.57976753260611 },
             { latitude: 45.4973155708806, longitude: -73.57983891639164 }
-        ]
+        ],
+        address: '2135 Mackay St.'
     },
     {
         id: 'MI Annex',
@@ -161,6 +199,14 @@ export const buildings =[
             { latitude: 45.4976893759256, longitude: -73.57928016197579 },
             { latitude: 45.497622113434886, longitude: -73.57935421033233 },
             { latitude: 45.49764329847963, longitude: -73.57939954606027 }
+        ],
+        address: '2130 Bishop St.',
+        services: [
+            'Association of Concordia University Management and Administrative Employees (ACUMAE)',
+            'Concordia University Continuing Education Part-time Faculty Union (CUCEPTFU)',
+            'Concordia University Professional Employee Union (CUPEU)',
+            'Concordia University Support Staff Union (CSN)',
+            'The Concordia University Union of Support Staff - Technical Sector (CUUSS-TS)'
         ]
     },
     {
@@ -172,7 +218,8 @@ export const buildings =[
             { latitude: 45.49773068670709, longitude: -73.57936781105009 },
             { latitude: 45.49768884630021, longitude: -73.57940785760998 },
             { latitude: 45.497707912818356, longitude: -73.57945394893405 }
-        ]
+        ],
+        address: '2140 Bishop St.'
     },
     {
         id: 'K Annex',
@@ -187,7 +234,8 @@ export const buildings =[
             { latitude: 45.49767906952525, longitude: -73.57947855827709 },
             { latitude: 45.49759708964436, longitude: -73.57956089370735 },
             { latitude: 45.49763809484932, longitude: -73.57964252216887 }
-        ]
+        ],
+        address: '2150 Bishop St.'
     },
     {
         id: 'B Annex',
@@ -196,7 +244,9 @@ export const buildings =[
             { latitude: 45.4978863496774, longitude: -73.57938825595453 },
             { latitude: 45.49771732201586, longitude: -73.57956029702002 },
             { latitude: 45.497751127588515, longitude: -73.57962868154344 }
-        ]
+        ],
+        address: '2160 Bishop St.',
+        services: ['Engineering & Computer Science Association']
     },
     {
         id: 'MU Annex',
@@ -205,7 +255,8 @@ export const buildings =[
             { latitude: 45.49792368706218, longitude: -73.57946239917507 },
             { latitude: 45.49771025816193, longitude: -73.57967619079143 },
             { latitude: 45.497747595664094, longitude: -73.57975177368562 }
-        ]
+        ],
+        address: '2170 Bishop St.'
     },
     {
         id: 'GS Building',
@@ -217,7 +268,9 @@ export const buildings =[
             { latitude: 45.49641101424976, longitude: -73.5809319191611 },
             { latitude: 45.496569226784544, longitude: -73.58142681062175 },
             { latitude: 45.49661962031385, longitude: -73.5814485457199 }
-        ]
+        ],
+        address: '1538 Sherbrooke St. W.',
+        services: ['Concordia University Part-Time Faculty Association (CUPFA)']
     },
     {
         id: 'ER Building',
@@ -226,6 +279,14 @@ export const buildings =[
             { latitude: 45.49651733156372, longitude: -73.57962870592398 },
             { latitude: 45.496121213052675, longitude: -73.5800182657564 },
             { latitude: 45.49623840816827, longitude: -73.58039277821308 }
+        ],
+        address: '2155 Guy St.',
+        departments: [
+            'Applied AI Institute', 'Centre for Engineering in Society',
+            'Computer Science & Software Engineering', 'Creative Arts Therapies',
+            'engAGE: Centre for Research on Aging', 'Next-Generation Cities Institute',
+            'Simone de Beauvoir Institute', 'Sustainability in the Digital Age',
+            'Urban Studies'
         ]
     },
     {
@@ -237,7 +298,8 @@ export const buildings =[
             { latitude: 45.49626880919135, longitude: -73.57966684739733 },
             { latitude: 45.49636022116337, longitude: -73.57957321928342 },
             { latitude: 45.49640827098648, longitude: -73.57966684739733 }
-        ]
+        ],
+        address: '1535 De Maisonneuve Blvd. W'
     },
     {
         id: 'J.W. McConnell Building',
@@ -256,6 +318,20 @@ export const buildings =[
             { latitude: 45.4965994954139, longitude: -73.5776880366626 },
             { latitude: 45.49648581017948, longitude: -73.57745525085375 },
             { latitude: 45.496243746837536, longitude: -73.57768232770144 }
+        ],
+        address: '1400 De Maisonneuve Blvd. W.',
+        departments: [
+            'Centre for Interdisciplinary Studies in Society and Culture (CISSC)', 'Centre for the Study of Learning and Performance',
+            'Education', 'English', 
+            'Études françaises', 'History',
+            'Mathematics & Statistics'
+        ],
+        services: [
+            'Birks Student Service Centre', 'Concordia Book Stop',
+            'First Stop', 'Concordia Print Services',
+            'Instructional & Information Technology Services (IITS)', 'J.A. De Sève Cinema',
+            'R. Howard Webster Library', 'Sexual Assault Resource Centre (SARC)',
+            'SHIFT Centre for Social Transformation', 'Welcome Centre'
         ]
     },
     {
@@ -265,7 +341,9 @@ export const buildings =[
             { latitude: 45.49688822200733, longitude: -73.57727383133273 },
             { latitude: 45.49676391253851, longitude: -73.57740025519429 },
             { latitude: 45.496858683148105, longitude: -73.57759164687346 }
-        ]
+        ],
+        address: '1424 Bishop St.',
+        services: ['CSU Daycare & Nursery']
     },
     {
         id: 'Guy-De Maisonneuve Building',
@@ -276,6 +354,20 @@ export const buildings =[
             { latitude: 45.4957801340793, longitude: -73.57905874602058 },
             { latitude: 45.49576310940938, longitude: -73.57908303360247 },
             { latitude: 45.49578275325854, longitude: -73.57912226738783 }
+        ],
+        address: '1550 De Maisonneuve Blvd. W.',
+        departments: [
+            'Contemporary Dance', 'Music', 'Theatre'
+        ],
+        services: [
+            'Access Centre for Students with Disabilities', 'Facilities Management',
+            'Financial Aid & Awards Office', 'Financial Services',
+            'Graduate Services', 'Health Services',
+            'Institute for Co-operative Education', 'International Students Office',
+            'Office of the President & Vice-Chancellor', 'Office of the Provost & VP, Academic',
+            'Office of Rights & Responsibilities', 'Office of the VP, Research, Innovation & Impact',
+            'Office of the VP, Services & Sustainability', 'Ombuds Office',
+            'University Communications Services', 'Zen Den'
         ]
     },
     {
@@ -300,7 +392,19 @@ export const buildings =[
             { latitude: 45.49590345607473, longitude: -73.57830500538543 },
             { latitude: 45.4958864314421, longitude: -73.57833489779343 },
             { latitude: 45.49592964780581, longitude: -73.57843017984456 }
-        ]
+        ],
+        address: '1515 Ste-Catherine St. W.',
+        departments: [
+            'Art Education', 'Art History',
+            'Building, Civil & Environmental Engineering', 'Centre for Composites (CONCOM)',
+            'Centre for Pattern Recognition and Machine Intelligence (CENPARMI)', 'Centre for Zero Energy Building Studies',
+            'Chemicals & Materials Engineering', 'Contemporary Dance',
+            'Design and Computation Arts', 'Electrical & Computer Engineering',
+            'Faculty of Fine Arts', 'Gina Cody School of Engineering & Computer Science',
+            'Mechanical, Industrial & Aerospace Engineering', 'Recreation & Athletics',
+            'Studio Arts'
+        ],
+        services: ['Le Gym', 'Zen Den']
     },
     {
         id: 'John Molson Building',
@@ -309,6 +413,19 @@ export const buildings =[
             { latitude: 45.495204242390884, longitude: -73.57845926323128 },
             { latitude: 45.494940501121135, longitude: -73.57879217689894 },
             { latitude: 45.49533818381954, longitude: -73.57948952268714 }
+        ],
+        address: '1450 Guy St.',
+        departments: [
+            'Accountancy', 'Contemporary Dance',
+            'Executive MBA Program', 'Finance',
+            'Goodman Institute for Investment Management', 'Management',
+            'Marketing', 'Music',
+            'Supply Chain & Business Technology Management', 'Theatre'
+        ],
+        services: [
+            'Career Management Services', 'First Stop',
+            'John Molson Executive Centre', 'Performing Arts Facilities',
+            'Zen Den'
         ]
     },
     {
@@ -322,7 +439,8 @@ export const buildings =[
             { latitude: 45.4950418074269, longitude: -73.57831292100738 },
             { latitude: 45.49502678104645, longitude: -73.57833292842564 },
             { latitude: 45.49510391642218, longitude: -73.5784772676576 }
-        ]
+        ],
+        address: '1410 Guy St.'
     },
     {
         id: 'CL Annex',
@@ -331,7 +449,8 @@ export const buildings =[
             { latitude: 45.49425934418852, longitude: -73.57892599166482 },
             { latitude: 45.493961816980715, longitude: -73.57930470350982 },
             { latitude: 45.494163173949886, longitude: -73.57964482961985 }
-        ]
+        ],
+        address: '1665 Ste-Catherine St. W.'
     },
     {
         id: 'Faubourg Building',
@@ -340,6 +459,18 @@ export const buildings =[
             { latitude: 45.49463604946453, longitude: -73.57718750572423 },
             { latitude: 45.49438038616347, longitude: -73.57748569216437 },
             { latitude: 45.494686145515885, longitude: -73.57803277803006 }
+        ],
+        address: '1250 Guy St.',
+        departments: [
+            'Classics, Modern Languages & Linguistics', 'Concordia Continuing Education',
+            'Mel Hoppenheim School of Cinema', 'Theological Studies'
+        ],
+        services: [
+            'Enrolment Services / Office of the Registrar / Student Recruitment',
+            'Environmental Health & Safety', 'Examinations Office',
+            'Human Resources', 'Office of Sustainability',
+            'Records Management & Archives (RMA) Office', 'Senior Non-Credit Programs',
+            'Study Hub'
         ]
     },
     {
@@ -352,7 +483,10 @@ export const buildings =[
             { latitude: 45.49443911972753, longitude: -73.57774691334342 },
             { latitude: 45.49360993433211, longitude: -73.57870801013507 },
             { latitude: 45.4938103219213, longitude: -73.57904069748578 }
-        ]
+        ],
+        address: '1610 Ste-Catherine St. W.',
+        departments: ['Education'],
+        services: ['RMA Research Room & Vault']
     },
     {
         id: 'Grey Nuns Annex',
@@ -366,7 +500,9 @@ export const buildings =[
             { latitude: 45.49414493971983, longitude: -73.57800942936666 },
             { latitude: 45.494120114899886, longitude: -73.57797047360128 },
             { latitude: 45.49434353788422, longitude: -73.57774382187831 }
-        ]
+        ],
+        address: '1211-1215 St-Mathieu St.',
+        departments: ['Department of Education']
     },
     {
         id: 'Grey Nuns Building',
@@ -468,6 +604,14 @@ export const buildings =[
             { latitude: 45.49418886702642, longitude: -73.5770527252751 },
             { latitude: 45.49401152891667, longitude: -73.57722598166866 },
             { latitude: 45.49401797758506, longitude: -73.57724744706265 }
+        ],
+        address: '1190 Guy St.',
+        departments: ['Philosophy'],
+        services: [
+            'Concordia Daycare',
+            'Concordia University Student Parents Centre (CUSP)',
+            'Grey Nuns Reading Room & Group Study Rooms', 'Residences',
+            'Summer Accommodations'
         ]
     },
     {
@@ -479,7 +623,10 @@ export const buildings =[
             { latitude: 45.49564739378678, longitude: -73.57348066579509 },
             { latitude: 45.4953820706981, longitude: -73.57374313701396 },
             { latitude: 45.49564739378678, longitude: -73.57429847085676 }
-        ]
+        ],
+        address: '1395 René-Lévesque Blvd. W.',
+        departments: ['Art Education', 'Art History', 'Studio Arts'],
+        services: ['VAV Gallery']
     },
     {
         id: 'Samuel Bronfman Building',
@@ -501,7 +648,9 @@ export const buildings =[
             { latitude: 45.49655005390997, longitude: -73.5862014705718 },
             { latitude: 45.496547804011044, longitude: -73.58622072922309 },
             { latitude: 45.49656692815057, longitude: -73.58625924652608 }
-        ]
+        ],
+        address: '1590 Doctor Penfield',
+        services: ['Arts & Science Research Groups']
     },
     {
         id: 'Stinger Dome',
@@ -510,7 +659,9 @@ export const buildings =[
             { latitude: 45.45789203249652, longitude: -73.63509548474677 },
             { latitude: 45.45686495041846, longitude: -73.63644630571322 },
             { latitude: 45.45788479958961, longitude: -73.63862205551371 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        departments: ['Stingers.ca']
     },
     {
         id: 'PERFORM Centre',
@@ -519,6 +670,11 @@ export const buildings =[
             { latitude: 45.45693787896599, longitude: -73.63677951763626 },
             { latitude: 45.45666661217268, longitude: -73.63699275834563 },
             { latitude: 45.45699618847979, longitude: -73.63786379243086 }
+        ],
+        address: '7200 Sherbrooke St. W.',
+        services: [
+            'Athletic Therapy Clinic', 'Nutrition Centre',
+            'PERFORM Gym', 'School of Health'
         ]
     },
     {
@@ -536,7 +692,9 @@ export const buildings =[
             { latitude: 45.45704942754884, longitude: -73.63801197665302 },
             { latitude: 45.457006329258604, longitude: -73.6380445048969 },
             { latitude: 45.45697337172021, longitude: -73.63795414866388 }
-        ]
+        ],
+        address: '7200 Sherbrooke St. W.',
+        services: ['Concordia Stadium', 'Ed Meagher Arena', 'Gymnasium' ]
     },
     {
         id: 'Centre for Structural and Functional Genomics',
@@ -551,7 +709,9 @@ export const buildings =[
             { latitude: 45.45703735334078, longitude: -73.64016682558967 },
             { latitude: 45.457147748756654, longitude: -73.64044527289018 },
             { latitude: 45.45713246325016, longitude: -73.6404549580136 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Centre for Structural & Functional Genomics']
     },
     {
         id: 'Communication Studies and Journalism Building',
@@ -581,7 +741,10 @@ export const buildings =[
             { latitude: 45.457354224329606, longitude: -73.64077315321146 },
             { latitude: 45.45762688490032, longitude: -73.64056340028814 },
             { latitude: 45.457666029131445, longitude: -73.64064999553182 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        departments: ['Communication Studies', 'Journalism'],
+        services: ['Book Stop']
     },
     {
         id: 'Richard J. Renaud Science Complex',
@@ -616,6 +779,17 @@ export const buildings =[
             { latitude: 45.45778299483521, longitude: -73.64122921601901 },
             { latitude: 45.45779474185963, longitude: -73.64126271030437 },
             { latitude: 45.45751616890976, longitude: -73.64146606846457 }
+        ],
+        address: '7141 Sherbrooke St. W.',
+        departments: [
+            'Biology', 'Centre for Biological Applications of Mass Spectrometry',
+            'Centre for NanoScience Research', 'Centre for Research in Molecular Modeling',
+            'Centre for Studies in Behavioural Neurobiology', 'Chemistry & Biochemistry',
+            'Health, Kinesiology & Applied Physiology', 'Physics', 'Psychology'
+        ],
+        services: [
+            'Café', 'Campus Safety & Prevention Services',
+            'First Stop', 'Science College'
         ]
     },
     {
@@ -653,7 +827,8 @@ export const buildings =[
             { latitude: 45.457921804301265, longitude: -73.64253348050974 },
             { latitude: 45.45790729750502, longitude: -73.6425504018652 },
             { latitude: 45.45795081788259, longitude: -73.64268201241008 }
-        ]
+        ],
+        address: '4455 Broadway St.'
     },
     {
         id: 'Jesuit Residence',
@@ -674,7 +849,9 @@ export const buildings =[
             { latitude: 45.45839800337163, longitude: -73.64340728654723 },
             { latitude: 45.45846045034841, longitude: -73.64335630439754 },
             { latitude: 45.45846952383471, longitude: -73.64337000109454 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Student Residence' ]
     },
     {
         id: 'Applied Science Hub',
@@ -683,7 +860,8 @@ export const buildings =[
             { latitude: 45.45856566454353, longitude: -73.64145357692038 },
             { latitude: 45.4582680470871, longitude: -73.64170013135862 },
             { latitude: 45.45842892158285, longitude: -73.6421215674332 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.'
     },
     {
         id: 'Loyola Jesuit Hall and Conference Centre',
@@ -698,7 +876,9 @@ export const buildings =[
             { latitude: 45.45834800934088, longitude: -73.64121040212575 },
             { latitude: 45.458427275065645, longitude: -73.64114762081317 },
             { latitude: 45.45849186186999, longitude: -73.64132550119899 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Conference Services', 'Loyola Jesuit Hall & Conference Centre']
     },
     {
         id: 'Central Building',
@@ -717,7 +897,12 @@ export const buildings =[
             { latitude: 45.458319700852144, longitude: -73.640853878045 },
             { latitude: 45.458360801632494, longitude: -73.6407869113113 },
             { latitude: 45.45837548047558, longitude: -73.64081830196758 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: [
+            'Concordia Student Union', 
+            'Loyola College for Diversity & Sustainability', 'Zen Den'
+         ]
     },
     {
         id: 'Administration Building',
@@ -750,6 +935,15 @@ export const buildings =[
             { latitude: 45.45807551408848, longitude: -73.63988061189056 },
             { latitude: 45.458071141826025, longitude: -73.6398594185151 },
             { latitude: 45.45819269058538, longitude: -73.63977215167233 }
+        ],
+        address: '7141 Sherbrooke St. W.',
+        departments: ['Faculty of Arts & Science'],
+        services: [
+            'Access Centre for Students with Disabilities', 'Centre for Teaching & Learning',
+            'Counselling & Psychological Services', 'Health Services',
+            'Loyola College for Diversity & Sustainability', 'Loyola Landing',
+            'Office of Student Life & Engagement', 'Provost & VP, Academic',
+            'Welcome Crew Office'
         ]
     },
     {
@@ -781,7 +975,9 @@ export const buildings =[
             { latitude: 45.45849857401467, longitude: -73.63959008836429 },
             { latitude: 45.45851169070065, longitude: -73.63958136167965 },
             { latitude: 45.45854754295942, longitude: -73.63966862852241 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Concordia Multi-Faith & Spirituality Centre']
     },
     {
         id: 'Quadrangle',
@@ -798,7 +994,8 @@ export const buildings =[
             { latitude: 45.45862096992306, longitude: -73.64037177836624 },
             { latitude: 45.45888838232696, longitude: -73.64017480283418 },
             { latitude: 45.458837871192344, longitude: -73.64002018763186 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.'
     },
     {
         id: 'Psychology Building',
@@ -809,7 +1006,9 @@ export const buildings =[
             { latitude: 45.45879535451249, longitude: -73.64081919022118 },
             { latitude: 45.4591073345625, longitude: -73.64056926427787 },
             { latitude: 45.45913110440014, longitude: -73.6406200966728 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        departments: ['Centre for Clinical Research in Health (CCRH)', 'Psychology']
     },
     {
         id: 'Hingston Hall A',
@@ -830,7 +1029,9 @@ export const buildings =[
             { latitude: 45.45945594888738, longitude: -73.64154070283479 },
             { latitude: 45.45964939848977, longitude: -73.64138611429414 },
             { latitude: 45.45964323768473, longitude: -73.64136854741442 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Student Residence']
     },
     {
         id: 'Hingston Hall B',
@@ -855,7 +1056,9 @@ export const buildings =[
             { latitude: 45.45934717208078, longitude: -73.64205988159561 },
             { latitude: 45.459505899288615, longitude: -73.64193874668831 },
             { latitude: 45.459531108862706, longitude: -73.64199864856579 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Concordia University Faculty Association (CUFA)','Student Residence']
     },
     {
         id: 'Hingston Hall C',
@@ -868,7 +1071,9 @@ export const buildings =[
             { latitude: 45.45962595852154, longitude: -73.64226042167519 },
             { latitude: 45.45978841967823, longitude: -73.64212331293368 },
             { latitude: 45.459776281792074, longitude: -73.64208870296059 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Student Residence']
     },
     {
         id: 'Future Buildings Laboratory',
@@ -877,7 +1082,8 @@ export const buildings =[
             { latitude: 45.45931164820695, longitude: -73.64243141702278 },
             { latitude: 45.45922294745844, longitude: -73.64243141702278 },
             { latitude: 45.45922294745844, longitude: -73.64262576533558 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.'
     },
     {
         id: 'Terrebone Building',
@@ -886,7 +1092,8 @@ export const buildings =[
             { latitude: 45.46001086306467, longitude: -73.64079283195636 },
             { latitude: 45.45991887536658, longitude: -73.64087059186092 },
             { latitude: 45.45995876385575, longitude: -73.64097272427412 }
-        ]
+        ],
+        address: '7079 Terrebonne St.'
     },
     {
         id: 'Physical Services Building',
@@ -903,7 +1110,9 @@ export const buildings =[
             { latitude: 45.459611027576216, longitude: -73.64016880981306 },
             { latitude: 45.45964024065472, longitude: -73.64014451457702 },
             { latitude: 45.459705970026306, longitude: -73.64032499347304 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Centre for the Arts in Human Development (CAHD)']
     },
     {
         id: 'BB Anex',
@@ -912,7 +1121,8 @@ export const buildings =[
             { latitude: 45.45978800626693, longitude: -73.63909243330616 },
             { latitude: 45.459690629534094, longitude: -73.63918093738005 },
             { latitude: 45.45971984257139, longitude: -73.63925035233999 }
-        ]
+        ],
+        address: '3502 Bermore Avenue'
     },
     {
         id: 'BH Anex',
@@ -921,7 +1131,9 @@ export const buildings =[
             { latitude: 45.45976188256844, longitude: -73.63901868418169 },
             { latitude: 45.459662918659944, longitude: -73.63909370965864 },
             { latitude: 45.459689623223994, longitude: -73.63916985491906 }
-        ]
+        ],
+        address: '3500 Bermore Ave.',
+        services: ['CPE Les P\'tits Profs Daycare']
     },
     {
         id: 'Student Centre',
@@ -940,7 +1152,9 @@ export const buildings =[
             { latitude: 45.45911343428884, longitude: -73.63944440658685 },
             { latitude: 45.459162525537664, longitude: -73.63940126292735 },
             { latitude: 45.45917194029289, longitude: -73.6394233141312 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['Cafeteria', 'Café', 'Food Services']
     },
     {
         id: 'Oscar Peterson Concert Hall',
@@ -951,7 +1165,10 @@ export const buildings =[
             { latitude: 45.459338139464734, longitude: -73.63921641032164 },
             { latitude: 45.45935350261155, longitude: -73.63920302511099 },
             { latitude: 45.45936118418359, longitude: -73.63924196390599 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        departments: ['Oscar Peterson Concert Hall'],
+        services: ['Concert Hall']
     },
     {
         id: 'Vanier Library Building',
@@ -966,7 +1183,9 @@ export const buildings =[
             { latitude: 45.45893172209449, longitude: -73.63819711971237 },
             { latitude: 45.458819058613386, longitude: -73.63829167929765 },
             { latitude: 45.45903075674309, longitude: -73.63884478810772 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        services: ['First Stop', 'Georges P. Vanier Library']
     },
     {
         id: 'Vanier Extension',
@@ -975,6 +1194,9 @@ export const buildings =[
             { latitude: 45.45881498800827, longitude: -73.6382808057018 },
             { latitude: 45.4586096491343, longitude: -73.6384401321267 },
             { latitude: 45.45882952524579, longitude: -73.63900230829394 }
-        ]
+        ],
+        address: '7141 Sherbrooke St. W.',
+        departments: ['Applied Human Sciences'],
+        services: ['Library']
     }
 ];
