@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated } from 'react-native';
 import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BuildingPolygon from './src/components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
 
 const INITIAL_REGION = {
@@ -97,7 +98,9 @@ export default function App() {
         showsUserLocation
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
-      />
+      >
+        <BuildingPolygon />
+      </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
           <View style={styles.campusSelector}>

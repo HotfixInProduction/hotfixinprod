@@ -20,16 +20,22 @@ jest.mock('expo-location', () => {
 // Mock react-native-maps
 const mockAnimateToRegion = jest.fn();
 jest.mock('react-native-maps', () => {
-  const React = require('react') as typeof import('react');
+  const React = require('react');
   const { View } = require('react-native');
+
+  const MockMapView = React.forwardRef((props: any, ref: any) => {
+    React.useImperativeHandle(ref, () => ({
+      animateToRegion: mockAnimateToRegion,
+    }));
+    return <View testID="map-view" {...props}>{props.children}</View>;
+  });
+
+  const MockPolygon = (props: any) => <View {...props} />;
+
   return {
     __esModule: true,
-    default: React.forwardRef((props: any, ref: any) => {
-      React.useImperativeHandle(ref, () => ({
-        animateToRegion: mockAnimateToRegion,
-      }));
-      return <View testID="map-view" {...props} />;
-    }),
+    default: MockMapView,
+    Polygon: MockPolygon,
   };
 });
 
