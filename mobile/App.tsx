@@ -5,6 +5,7 @@ import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
+import BuildingInfo from './src/components/BuildingInfo';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -100,7 +101,7 @@ export default function App() {
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
       >
-        <BuildingPolygon onSelectBuilding={setSelectedBuilding} />
+      <BuildingPolygon onSelectBuilding={setSelectedBuilding} />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
@@ -148,17 +149,7 @@ export default function App() {
         </View>
       </SafeAreaView>
 
-      {selectedBuilding && (
-        <View style={styles.buildingModal}>
-
-          <Text style={styles.buildingTitle}>{selectedBuilding.id}</Text>
-          <Text style={styles.buildingAddress}>{selectedBuilding.address}</Text>
-
-          <TouchableOpacity style={{position:'absolute', right: 20, top:10}} onPress={() => setSelectedBuilding(null)} activeOpacity={0.7}>
-            <Text style={{ marginTop: 10}}>X</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <BuildingInfo building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />
 
       <StatusBar style="auto" />
     </View>
@@ -222,26 +213,5 @@ const styles = StyleSheet.create({
   },
   campusTextActive: {
     color: '#FFFFFF',
-  },
-  buildingModal: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    padding: 20,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-  },
-  buildingTitle: {
-    fontSize: 18,
-  },
-  buildingAddress: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
   }
 });
