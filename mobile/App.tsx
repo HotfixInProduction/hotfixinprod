@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
-import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated } from 'react-native';
+import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated} from 'react-native';
 import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
@@ -35,6 +35,7 @@ type CampusKey = keyof typeof CAMPUSES;
 export default function App() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
+  const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -99,7 +100,7 @@ export default function App() {
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
       >
-        <BuildingPolygon />
+        <BuildingPolygon onSelectBuilding={setSelectedBuilding} />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
@@ -146,6 +147,19 @@ export default function App() {
           </View>
         </View>
       </SafeAreaView>
+
+      {selectedBuilding && (
+        <View style={styles.buildingModal}>
+
+          <Text style={styles.buildingTitle}>{selectedBuilding.id}</Text>
+          <Text style={styles.buildingAddress}>{selectedBuilding.address}</Text>
+
+          <TouchableOpacity style={{position:'absolute', right: 20, top:10}} onPress={() => setSelectedBuilding(null)} activeOpacity={0.7}>
+            <Text style={{ marginTop: 10}}>X</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <StatusBar style="auto" />
     </View>
   );
@@ -209,4 +223,25 @@ const styles = StyleSheet.create({
   campusTextActive: {
     color: '#FFFFFF',
   },
+  buildingModal: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    padding: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+  },
+  buildingTitle: {
+    fontSize: 18,
+  },
+  buildingAddress: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  }
 });
