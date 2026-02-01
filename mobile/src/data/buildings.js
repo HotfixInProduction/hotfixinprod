@@ -976,5 +976,5 @@ export const buildings =[
             { latitude: 45.4586096491343, longitude: -73.6384401321267 },
             { latitude: 45.45882952524579, longitude: -73.63900230829394 }
         ]
-    },
+    }
 ]
