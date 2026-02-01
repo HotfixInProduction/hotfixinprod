@@ -20,7 +20,9 @@ export const buildings =[
             'Office of Student Life & Engagement', 'Otsenhákta Student Centre',
             'Student Success Centre', 'Welcome Crew Office',
             'Zen Den'
-        ]
+        ],
+        isAccessible: true,
+        hasBikeRacks: true
     },
     {
         id: 'Q Annex',
@@ -287,7 +289,8 @@ export const buildings =[
             'engAGE: Centre for Research on Aging', 'Next-Generation Cities Institute',
             'Simone de Beauvoir Institute', 'Sustainability in the Digital Age',
             'Urban Studies'
-        ]
+        ],
+        isAccessible: true
     },
     {
         id: 'Learning Square (LS Building)',
@@ -299,7 +302,8 @@ export const buildings =[
             { latitude: 45.49636022116337, longitude: -73.57957321928342 },
             { latitude: 45.49640827098648, longitude: -73.57966684739733 }
         ],
-        address: '1535 De Maisonneuve Blvd. W'
+        address: '1535 De Maisonneuve Blvd. W',
+        isAccessible: true
     },
     {
         id: 'J.W. McConnell Building',
@@ -332,7 +336,10 @@ export const buildings =[
             'Instructional & Information Technology Services (IITS)', 'J.A. De Sève Cinema',
             'R. Howard Webster Library', 'Sexual Assault Resource Centre (SARC)',
             'SHIFT Centre for Social Transformation', 'Welcome Centre'
-        ]
+        ],
+        isAccessible: true,
+        hasBikeRacks: true,
+        hasParking: true
     },
     {
         id: 'LD Building',
@@ -368,7 +375,9 @@ export const buildings =[
             'Office of Rights & Responsibilities', 'Office of the VP, Research, Innovation & Impact',
             'Office of the VP, Services & Sustainability', 'Ombuds Office',
             'University Communications Services', 'Zen Den'
-        ]
+        ],
+        isAccessible: true,
+        hasBikeRacks: true
     },
     {
         id: 'Engineering, Computer Science and Visual Arts Integrated Complex (EV Building)',
@@ -404,7 +413,8 @@ export const buildings =[
             'Mechanical, Industrial & Aerospace Engineering', 'Recreation & Athletics',
             'Studio Arts'
         ],
-        services: ['Le Gym', 'Zen Den']
+        services: ['Le Gym', 'Zen Den'],
+        isAccessible: true
     },
     {
         id: 'John Molson Building',
@@ -426,7 +436,8 @@ export const buildings =[
             'Career Management Services', 'First Stop',
             'John Molson Executive Centre', 'Performing Arts Facilities',
             'Zen Den'
-        ]
+        ],
+        isAccessible: true
     },
     {
         id: 'Toronto-Dominion Building',
@@ -450,7 +461,8 @@ export const buildings =[
             { latitude: 45.493961816980715, longitude: -73.57930470350982 },
             { latitude: 45.494163173949886, longitude: -73.57964482961985 }
         ],
-        address: '1665 Ste-Catherine St. W.'
+        address: '1665 Ste-Catherine St. W.',
+        isAccessible: true
     },
     {
         id: 'Faubourg Building',
@@ -471,7 +483,9 @@ export const buildings =[
             'Human Resources', 'Office of Sustainability',
             'Records Management & Archives (RMA) Office', 'Senior Non-Credit Programs',
             'Study Hub'
-        ]
+        ],
+        isAccessible: true,
+        hasParking: true
     },
     {
         id: 'Faubourg Ste-Catherine Building',
@@ -486,7 +500,8 @@ export const buildings =[
         ],
         address: '1610 Ste-Catherine St. W.',
         departments: ['Education'],
-        services: ['RMA Research Room & Vault']
+        services: ['RMA Research Room & Vault'],
+        isAccessible: true
     },
     {
         id: 'Grey Nuns Annex',
@@ -502,7 +517,8 @@ export const buildings =[
             { latitude: 45.49434353788422, longitude: -73.57774382187831 }
         ],
         address: '1211-1215 St-Mathieu St.',
-        departments: ['Department of Education']
+        departments: ['Department of Education'],
+        isAccessible: true
     },
     {
         id: 'Grey Nuns Building',
@@ -612,7 +628,8 @@ export const buildings =[
             'Concordia University Student Parents Centre (CUSP)',
             'Grey Nuns Reading Room & Group Study Rooms', 'Residences',
             'Summer Accommodations'
-        ]
+        ],
+        isAccessible: true
     },
     {
         id: 'Visual Arts Building',
@@ -626,7 +643,9 @@ export const buildings =[
         ],
         address: '1395 René-Lévesque Blvd. W.',
         departments: ['Art Education', 'Art History', 'Studio Arts'],
-        services: ['VAV Gallery']
+        services: ['VAV Gallery'],
+        isAccessible: true,
+        hasBikeRacks: true
     },
     {
         id: 'Samuel Bronfman Building',
@@ -650,7 +669,8 @@ export const buildings =[
             { latitude: 45.49656692815057, longitude: -73.58625924652608 }
         ],
         address: '1590 Doctor Penfield',
-        services: ['Arts & Science Research Groups']
+        services: ['Arts & Science Research Groups'],
+        isAccessible: true
     },
     {
         id: 'Stinger Dome',
@@ -675,7 +695,9 @@ export const buildings =[
         services: [
             'Athletic Therapy Clinic', 'Nutrition Centre',
             'PERFORM Gym', 'School of Health'
-        ]
+        ],
+        isAccessible: true,
+        hasParking: true
     },
     {
         id: 'Recreation and Athletic Complex',
@@ -694,7 +716,9 @@ export const buildings =[
             { latitude: 45.45697337172021, longitude: -73.63795414866388 }
         ],
         address: '7200 Sherbrooke St. W.',
-        services: ['Concordia Stadium', 'Ed Meagher Arena', 'Gymnasium' ]
+        services: ['Concordia Stadium', 'Ed Meagher Arena', 'Gymnasium' ],
+        isAccessible: true,
+        hasParking: true
     },
     {
         id: 'Centre for Structural and Functional Genomics',
@@ -711,7 +735,8 @@ export const buildings =[
             { latitude: 45.45713246325016, longitude: -73.6404549580136 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['Centre for Structural & Functional Genomics']
+        services: ['Centre for Structural & Functional Genomics'],
+        isAccessible: true
     },
     {
         id: 'Communication Studies and Journalism Building',
@@ -744,7 +769,8 @@ export const buildings =[
         ],
         address: '7141 Sherbrooke St. W.',
         departments: ['Communication Studies', 'Journalism'],
-        services: ['Book Stop']
+        services: ['Book Stop'],
+        isAccessible: true
     },
     {
         id: 'Richard J. Renaud Science Complex',
@@ -790,7 +816,8 @@ export const buildings =[
         services: [
             'Café', 'Campus Safety & Prevention Services',
             'First Stop', 'Science College'
-        ]
+        ],
+        isAccessible: true
     },
     {
         id: 'St. Ignatius of Loyola Church',
@@ -851,7 +878,9 @@ export const buildings =[
             { latitude: 45.45846952383471, longitude: -73.64337000109454 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['Student Residence' ]
+        services: ['Student Residence' ],
+        isAccessible: true,
+        hasParking: true
     },
     {
         id: 'Applied Science Hub',
@@ -861,7 +890,8 @@ export const buildings =[
             { latitude: 45.4582680470871, longitude: -73.64170013135862 },
             { latitude: 45.45842892158285, longitude: -73.6421215674332 }
         ],
-        address: '7141 Sherbrooke St. W.'
+        address: '7141 Sherbrooke St. W.',
+        isAccessible: true
     },
     {
         id: 'Loyola Jesuit Hall and Conference Centre',
@@ -878,7 +908,8 @@ export const buildings =[
             { latitude: 45.45849186186999, longitude: -73.64132550119899 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['Conference Services', 'Loyola Jesuit Hall & Conference Centre']
+        services: ['Conference Services', 'Loyola Jesuit Hall & Conference Centre'],
+        isAccessible: true
     },
     {
         id: 'Central Building',
@@ -902,7 +933,9 @@ export const buildings =[
         services: [
             'Concordia Student Union', 
             'Loyola College for Diversity & Sustainability', 'Zen Den'
-         ]
+         ],
+         isAccessible: true,
+         hasBikeRacks: true
     },
     {
         id: 'Administration Building',
@@ -944,7 +977,10 @@ export const buildings =[
             'Loyola College for Diversity & Sustainability', 'Loyola Landing',
             'Office of Student Life & Engagement', 'Provost & VP, Academic',
             'Welcome Crew Office'
-        ]
+        ],
+        isAccessible: true,
+        hasBikeRacks: true,
+        hasParking: true
     },
     {
         id: 'F.C Smith Building',
@@ -977,7 +1013,8 @@ export const buildings =[
             { latitude: 45.45854754295942, longitude: -73.63966862852241 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['Concordia Multi-Faith & Spirituality Centre']
+        services: ['Concordia Multi-Faith & Spirituality Centre'],
+        isAccessible: true
     },
     {
         id: 'Quadrangle',
@@ -995,7 +1032,8 @@ export const buildings =[
             { latitude: 45.45888838232696, longitude: -73.64017480283418 },
             { latitude: 45.458837871192344, longitude: -73.64002018763186 }
         ],
-        address: '7141 Sherbrooke St. W.'
+        address: '7141 Sherbrooke St. W.',
+        isAccessible: true
     },
     {
         id: 'Psychology Building',
@@ -1008,7 +1046,8 @@ export const buildings =[
             { latitude: 45.45913110440014, longitude: -73.6406200966728 }
         ],
         address: '7141 Sherbrooke St. W.',
-        departments: ['Centre for Clinical Research in Health (CCRH)', 'Psychology']
+        departments: ['Centre for Clinical Research in Health (CCRH)', 'Psychology'],
+        isAccessible: true
     },
     {
         id: 'Hingston Hall A',
@@ -1031,7 +1070,9 @@ export const buildings =[
             { latitude: 45.45964323768473, longitude: -73.64136854741442 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['Student Residence']
+        services: ['Student Residence'],
+        isAccessible: true,
+        hasParking: true
     },
     {
         id: 'Hingston Hall B',
@@ -1058,7 +1099,9 @@ export const buildings =[
             { latitude: 45.459531108862706, longitude: -73.64199864856579 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['Concordia University Faculty Association (CUFA)','Student Residence']
+        services: ['Concordia University Faculty Association (CUFA)','Student Residence'],
+        isAccessible: true,
+        hasParking: true
     },
     {
         id: 'Hingston Hall C',
@@ -1073,7 +1116,9 @@ export const buildings =[
             { latitude: 45.459776281792074, longitude: -73.64208870296059 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['Student Residence']
+        services: ['Student Residence'],
+        isAccessible: true,
+        hasParking: true
     },
     {
         id: 'Future Buildings Laboratory',
@@ -1083,7 +1128,8 @@ export const buildings =[
             { latitude: 45.45922294745844, longitude: -73.64243141702278 },
             { latitude: 45.45922294745844, longitude: -73.64262576533558 }
         ],
-        address: '7141 Sherbrooke St. W.'
+        address: '7141 Sherbrooke St. W.',
+        isAccessible: true
     },
     {
         id: 'Terrebone Building',
@@ -1093,7 +1139,8 @@ export const buildings =[
             { latitude: 45.45991887536658, longitude: -73.64087059186092 },
             { latitude: 45.45995876385575, longitude: -73.64097272427412 }
         ],
-        address: '7079 Terrebonne St.'
+        address: '7079 Terrebonne St.',
+        hasParking: true
     },
     {
         id: 'Physical Services Building',
@@ -1154,7 +1201,8 @@ export const buildings =[
             { latitude: 45.45917194029289, longitude: -73.6394233141312 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['Cafeteria', 'Café', 'Food Services']
+        services: ['Cafeteria', 'Café', 'Food Services'],
+        isAccessible: true
     },
     {
         id: 'Oscar Peterson Concert Hall',
@@ -1168,7 +1216,8 @@ export const buildings =[
         ],
         address: '7141 Sherbrooke St. W.',
         departments: ['Oscar Peterson Concert Hall'],
-        services: ['Concert Hall']
+        services: ['Concert Hall'],
+        isAccessible: true
     },
     {
         id: 'Vanier Library Building',
@@ -1185,7 +1234,8 @@ export const buildings =[
             { latitude: 45.45903075674309, longitude: -73.63884478810772 }
         ],
         address: '7141 Sherbrooke St. W.',
-        services: ['First Stop', 'Georges P. Vanier Library']
+        services: ['First Stop', 'Georges P. Vanier Library'],
+        isAccessible: true
     },
     {
         id: 'Vanier Extension',
@@ -1197,6 +1247,8 @@ export const buildings =[
         ],
         address: '7141 Sherbrooke St. W.',
         departments: ['Applied Human Sciences'],
-        services: ['Library']
+        services: ['Library'],
+        isAccessible: true,
+        hasBikeRacks: true
     }
 ];
