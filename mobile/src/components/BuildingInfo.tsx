@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 type Building = {
     id: string;
@@ -30,6 +30,7 @@ export default function BuildingInfo({ building, onClose }: Props) {
                 <Text style={styles.buildingTitle}>{building.id}</Text>
 
                 <View style={styles.row}>
+                    <MaterialIcons name="location-on" size={18} color="#912338"></MaterialIcons>
                     {building.address ? <Text style={styles.buildingAddress}>{building.address}</Text> : null}
 
                     {(building.isAccessible || building.hasParking || building.hasBikeRacks) && (
@@ -160,6 +161,7 @@ const styles = StyleSheet.create({
     row: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 4
+        marginTop: 4,
+        marginLeft: -4
     }
 });
