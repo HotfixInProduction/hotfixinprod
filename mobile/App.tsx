@@ -95,19 +95,12 @@ export default function App() {
         ref={mapRef}
         style={styles.map}
         mapPadding={{ top: 100, right: 20, bottom: 0, left: 20 }}
-        initialRegion={{
-          latitude: 45.497,
-          longitude: -73.579,
-          latitudeDelta: 0.004,
-          longitudeDelta: 0.004,
-        }}
-      >
-        <BuildingPolygon />
-      </MapView>
         showsUserLocation
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
-      />
+      >
+        <BuildingPolygon />
+      </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
           <View style={styles.campusSelector}>
