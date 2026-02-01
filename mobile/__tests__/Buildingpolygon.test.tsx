@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
+import { act } from 'react';
 import BuildingPolygon from '../src/components/BuildingPolygon';
 
 // Mock expo-location
@@ -46,12 +47,12 @@ describe('BuildingPolygon', () => {
     await new Promise(resolve => setTimeout(resolve, 10));
 
     // Simulate user inside Hall Building (center point)
-    locationCallback({
-      coords: { latitude: 45.49727, longitude: -73.57866 },
+    await act(async () => {
+      locationCallback({
+        coords: { latitude: 45.49727, longitude: -73.57866 },
+      });
+      await new Promise(resolve => setTimeout(resolve, 10));
     });
-
-    // Wait for state update
-    await new Promise(resolve => setTimeout(resolve, 10));
 
     const polygons = UNSAFE_getAllByType(require('react-native-maps').Polygon);
     
