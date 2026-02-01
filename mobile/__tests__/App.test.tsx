@@ -5,15 +5,24 @@ import App from '../App';
 
 // Create mocks before jest.mock
 const mockRequestForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
+const mockGetForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
 const mockGetCurrentPosition = jest.fn().mockResolvedValue({
   coords: { latitude: 45.5, longitude: -73.58 },
+});
+const mockWatchPositionAsync = jest.fn().mockResolvedValue({
+  remove: jest.fn(),
 });
 
 // Mock Expo Location to avoid hitting native APIs during tests
 jest.mock('expo-location', () => {
   return {
     requestForegroundPermissionsAsync: (...args: any[]) => mockRequestForegroundPermissions(...args),
+    getForegroundPermissionsAsync: (...args: any[]) => mockGetForegroundPermissions(...args),
     getCurrentPositionAsync: (...args: any[]) => mockGetCurrentPosition(...args),
+    watchPositionAsync: (...args: any[]) => mockWatchPositionAsync(...args),
+    Accuracy: {
+      High: 4,
+    },
   };
 });
 
