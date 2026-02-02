@@ -27,36 +27,36 @@ export default function BuildingInfo({ building, onClose }: Props) {
         <View style={styles.buildingModal}>
 
             <View style={styles.modalHeader}>
-                <Text style={styles.buildingTitle}>{building.id}</Text>
+                <Text testID="building-title" style={styles.buildingTitle}>{building.id}</Text>
 
                 <View style={styles.row}>
                     <MaterialIcons name="location-on" size={18} color="#912338"></MaterialIcons>
-                    {building.address ? <Text style={styles.buildingAddress}>{building.address}</Text> : null}
+                    <Text style={styles.buildingAddress}>{building.address}</Text>
 
                     {(building.isAccessible || building.hasParking || building.hasBikeRacks) && (
                         <View style={styles.iconRow}>
                             {building.isAccessible && (
-                                <MaterialCommunityIcons name="wheelchair" size={18} color="#912338" style={{ marginRight: 8 }} />
+                                <MaterialCommunityIcons testID="icon-wheelchair" name="wheelchair" size={18} color="#912338" style={{ marginRight: 8 }} />
                             )}
                             {building.hasParking && (
-                                <MaterialCommunityIcons name="parking" size={18} color="#912338" style={{ marginRight: 8 }} />
+                                <MaterialCommunityIcons testID="icon-parking" name="parking" size={18} color="#912338" style={{ marginRight: 8 }} />
                             )}
                             {building.hasBikeRacks && (
-                                <MaterialCommunityIcons name="bike" size={18} color="#912338" style={{ marginRight: 8 }} />
+                                <MaterialCommunityIcons testID="icon-bike" name="bike" size={18} color="#912338" style={{ marginRight: 8 }} />
                             )}
                         </View>
                     )}
                 </View>
             </View>
 
-            <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.closeButton} testID="building-close" onPress={onClose} activeOpacity={0.7}>
                 <MaterialCommunityIcons name="close" size={18} color="#912338"></MaterialCommunityIcons>
             </TouchableOpacity>
 
             {(hasDepartments || hasServices) && (
                 <View style={styles.columnWrapper}>
                     {hasDepartments && (
-                        <View style={styles.column}>
+                        <View testID="departments-column" style={styles.column}>
                             <Text style={styles.columnHeader}>Departments</Text>
                             <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
                                 {building.departments!.map((dept, i) => (
@@ -70,7 +70,7 @@ export default function BuildingInfo({ building, onClose }: Props) {
 
                     {hasServices && (
                         <View style={styles.column}>
-                            <Text style={styles.columnHeader}>Services</Text>
+                            <Text testID="services-column" style={styles.columnHeader}>Services</Text>
                             <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
                                 {building.services!.map((service, i) => (
                                     <Text key={i} style={styles.itemText}>
@@ -89,17 +89,18 @@ export default function BuildingInfo({ building, onClose }: Props) {
 const styles = StyleSheet.create({
     buildingModal: {
         position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
+        bottom: 20,
+        left: 10,
+        right: 10,
         backgroundColor: '#fff',
         padding: 20,
-        paddingBottom: 30,
+       
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.2,
         shadowRadius: 10,
         elevation: 10,
+        borderRadius: 25
     },
     buildingTitle: {
         fontSize: 18,
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
     columnWrapper: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        maxHeight: 130,
+        maxHeight: 160,
         gap: 12,
     },
     column: {
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
         color: '#444',
         paddingVertical: 3,
         lineHeight: 18,
-        paddingRight: 6,
+        paddingRight: 6
     },
     iconRow: {
         flexDirection: 'row',
