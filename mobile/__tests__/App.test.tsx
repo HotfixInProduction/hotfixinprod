@@ -16,7 +16,6 @@ const mockBuilding = {
 
 // Mock BuildingPolygon to simulate building selection
 jest.mock('../src/components/BuildingPolygon', () => {
-  const React = require('react');
   const { TouchableOpacity, Text } = require('react-native');
   return ({ onSelectBuilding }: any) => (
     <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>

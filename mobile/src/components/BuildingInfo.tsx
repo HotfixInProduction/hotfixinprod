@@ -12,10 +12,10 @@ type Building = {
     hasBikeRacks?: boolean;
 };
 
-type Props = {
+type Props = Readonly<{
     building: Building | null;
     onClose: () => void;
-};
+}>;
 
 export default function BuildingInfo({ building, onClose }: Props) {
     if (!building) return null;
@@ -59,8 +59,8 @@ export default function BuildingInfo({ building, onClose }: Props) {
                         <View testID="departments-column" style={styles.column}>
                             <Text style={styles.columnHeader}>Departments</Text>
                             <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
-                                {building.departments!.map((dept, i) => (
-                                    <Text key={i} style={styles.itemText}>
+                                {building.departments!.map((dept) => (
+                                    <Text key={dept} style={styles.itemText}>
                                         {dept}
                                     </Text>
                                 ))}
@@ -72,8 +72,8 @@ export default function BuildingInfo({ building, onClose }: Props) {
                         <View style={styles.column}>
                             <Text testID="services-column" style={styles.columnHeader}>Services</Text>
                             <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
-                                {building.services!.map((service, i) => (
-                                    <Text key={i} style={styles.itemText}>
+                                {building.services!.map((service) => (
+                                    <Text key={service} style={styles.itemText}>
                                         {service}
                                     </Text>
                                 ))}
