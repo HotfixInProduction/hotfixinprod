@@ -12,7 +12,6 @@ const mockGetCurrentPosition = jest.fn().mockResolvedValue({
 const mockWatchPositionAsync = jest.fn().mockResolvedValue({
   remove: jest.fn(),
 });
-const mockGetForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
 const mockOpenSettings = jest.fn();
 
 // Mock Expo Location to avoid hitting native APIs during tests
@@ -25,7 +24,6 @@ jest.mock('expo-location', () => {
     Accuracy: {
       High: 4,
     },
-    getForegroundPermissionsAsync: (...args: any[]) => mockGetForegroundPermissions(...args),
   };
 });
 
