@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { Alert, Linking, AppState } from 'react-native';
 import App from '../App';
 import BuildingInfo from '../src/components/BuildingInfo';
 
@@ -23,12 +23,15 @@ jest.mock('../src/components/BuildingPolygon', () => {
     </TouchableOpacity>
   );
 });
+const mockGetForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
+const mockOpenSettings = jest.fn();
 
 // Mock Expo Location to avoid hitting native APIs during tests
 jest.mock('expo-location', () => {
   return {
     requestForegroundPermissionsAsync: (...args: any[]) => mockRequestForegroundPermissions(...args),
     getCurrentPositionAsync: (...args: any[]) => mockGetCurrentPosition(...args),
+    getForegroundPermissionsAsync: (...args: any[]) => mockGetForegroundPermissions(...args),
   };
 });
 
@@ -63,8 +66,35 @@ jest.mock('react-native-safe-area-context', () => {
   };
 });
 
+// Mock vector icons to avoid loading native modules in tests
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    MaterialIcons: (props: any) => <Text {...props}>{props.name}</Text>,
+  };
+}, { virtual: true });
+
 // Mock Alert
 jest.spyOn(Alert, 'alert');
+
+// Suppress React act warnings in test output (state updates happen inside async hooks)
+const originalConsoleError = console.error;
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation((...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return;
+    originalConsoleError(...args);
+  });
+});
+
+afterAll(() => {
+  (console.error as jest.Mock).mockRestore();
+});
+
+const defaultAppStateRemove = jest.fn();
+jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({
+  remove: defaultAppStateRemove,
+}) as any);
 
 describe('App', () => {
   beforeEach(() => {
@@ -73,6 +103,8 @@ describe('App', () => {
     mockGetCurrentPosition.mockResolvedValue({
       coords: { latitude: 45.5, longitude: -73.58 },
     });
+    (Linking as any).openSettings = mockOpenSettings;
+    mockOpenSettings.mockClear();
   });
 
   it('renders without crashing', () => {
@@ -159,6 +191,98 @@ describe('App', () => {
       });
 
       expect(mockGetCurrentPosition).not.toHaveBeenCalled();
+    });
+
+    it('shows location-off button when permission is denied', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+
+      const { getByTestId } = render(<App />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+    });
+
+  it('opens modal and can re-request permission', async () => {
+    mockRequestForegroundPermissions.mockResolvedValueOnce({ status: 'denied' });
+    const { getByTestId, queryByText } = render(<App />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('location-off-button'));
+      expect(queryByText('Location is off')).toBeTruthy();
+
+      mockRequestForegroundPermissions.mockResolvedValueOnce({ status: 'granted' });
+      fireEvent.press(getByTestId('request-permission-button'));
+
+      await waitFor(() => {
+        expect(mockRequestForegroundPermissions).toHaveBeenCalledTimes(2);
+        expect(mockGetCurrentPosition).toHaveBeenCalled();
+      });
+    });
+
+  it('opens device settings from modal', async () => {
+    mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+    const { getByTestId, queryByText } = render(<App />);
+
+      await waitFor(() => getByTestId('location-off-button'));
+
+      fireEvent.press(getByTestId('location-off-button'));
+      fireEvent.press(getByTestId('open-settings-button'));
+
+    expect(mockOpenSettings).toHaveBeenCalled();
+    expect(queryByText('Location is off')).toBeNull();
+  });
+
+    it('closes modal when tapping Not now', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+      const { getByTestId, queryByText, getByText } = render(<App />);
+
+      await waitFor(() => getByTestId('location-off-button'));
+      fireEvent.press(getByTestId('location-off-button'));
+      fireEvent.press(getByText('Not now'));
+
+      expect(queryByText('Location is off')).toBeNull();
+    });
+
+    it('closes modal when onRequestClose is triggered', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+      const { getByTestId, queryByText } = render(<App />);
+
+      await waitFor(() => getByTestId('location-off-button'));
+      fireEvent.press(getByTestId('location-off-button'));
+
+      fireEvent(getByTestId('location-modal'), 'onRequestClose');
+
+      expect(queryByText('Location is off')).toBeNull();
+    });
+
+    it('hides location-off icon after returning to foreground with permission granted', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+      mockGetForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      (AppState as any).currentState = 'background';
+
+      let appStateCallback: ((state: string) => void) | undefined;
+      const removeListener = jest.fn();
+      (AppState.addEventListener as jest.Mock).mockImplementationOnce((_, cb: any) => {
+        appStateCallback = cb;
+        return { remove: removeListener } as any;
+      });
+
+      const { getByTestId, queryByTestId } = render(<App />);
+
+      await waitFor(() => getByTestId('location-off-button'));
+      fireEvent.press(getByTestId('location-off-button'));
+
+      await act(async () => {
+        appStateCallback?.('active');
+      });
+
+      await waitFor(() => expect(mockGetForegroundPermissions).toHaveBeenCalled());
+      await waitFor(() => expect(queryByTestId('location-off-button')).toBeNull());
+
     });
 
     it.each([
@@ -364,4 +488,5 @@ describe('App', () => {
     })
   })
 
+});
 });
