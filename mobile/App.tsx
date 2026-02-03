@@ -5,6 +5,7 @@ import MapView from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
+import StartDestinationPicker from './src/components/BuildingSelector/StartDestinationPicker';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -144,6 +145,9 @@ export default function App() {
               </Text>
             </TouchableOpacity>
           </View>
+        </View>
+        <View style={styles.buildingSelectorContainer}>
+          <StartDestinationPicker />
         </View>
       </SafeAreaView>
       <StatusBar style="auto" />
