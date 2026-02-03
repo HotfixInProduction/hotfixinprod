@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
@@ -104,7 +104,7 @@ export default function App() {
 
   const handleCampusChange = (campusKey: CampusKey) => {
     setSelectedCampus(campusKey);
-    
+
     // Animate slider
     Animated.spring(slideAnim, {
       toValue: campusKey === 'downtown' ? 0 : 1,
@@ -127,6 +127,7 @@ export default function App() {
     <View style={styles.container}>
       <MapView
         ref={mapRef}
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
         mapPadding={{ top: 100, right: 20, bottom: 0, left: 20 }}
         showsUserLocation
