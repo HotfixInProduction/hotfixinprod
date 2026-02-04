@@ -143,11 +143,6 @@ export default function App() {
     }, 500);
   };
 
-  const handleMapPress = (e: any) => {
-    // Map press disabled - only building search allowed
-    return;
-  };
-
   const handleSearchChange = (text: string) => {
     setSearchQuery(text);
     if (text.trim() === '') {
@@ -181,10 +176,6 @@ export default function App() {
   };
 
   const handleSetLocation = () => {
-    if (!manualLocation) {
-      Alert.alert('No Location', 'Please tap on the map or select a building first');
-      return;
-    }
     setShowLocationModal(false);
   };
 
@@ -205,7 +196,6 @@ export default function App() {
         showsUserLocation
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
-        onPress={handleMapPress}
       >
         <BuildingPolygon onSelectBuilding={(building) => setSelectedBuilding(building)} selectedBuilding={selectedBuilding} />
         {manualLocation && (
@@ -359,6 +349,7 @@ export default function App() {
                 <Text style={styles.modalButtonText}>Close</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                testID="confirm-location-button"
                 style={[styles.modalButton, styles.confirmButton, !manualLocation && styles.confirmButtonDisabled]}
                 onPress={handleSetLocation}
                 disabled={!manualLocation}

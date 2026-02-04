@@ -67,11 +67,16 @@ jest.mock('react-native-maps', () => {
   });
 
   const MockPolygon = (props: any) => <View {...props} />;
+  const MockMarker = (props: any) => <View testID="location-marker" {...props}>{props.children}</View>;
+  const MockCircle = (props: any) => <View testID="location-circle" {...props} />;
 
   return {
     __esModule: true,
     default: MockMapView,
     Polygon: MockPolygon,
+    Marker: MockMarker,
+    Circle: MockCircle,
+    PROVIDER_GOOGLE: 'google',
   };
 });
 
@@ -586,13 +591,13 @@ describe('App', () => {
     });
 
     it('disables Confirm button when no location is selected', async () => {
-      const { getByText } = render(<App />);
+      const { getByText, getByTestId } = render(<App />);
       
       fireEvent.press(getByText('📍 Set Location'));
 
       await waitFor(() => {
-        const confirmButton = getByText('Confirm');
-        expect(confirmButton.props.disabled).toBe(true);
+        const confirmButton = getByTestId('confirm-location-button');
+        expect(confirmButton.props.accessibilityState?.disabled).toBe(true);
       });
     });
 
@@ -654,23 +659,14 @@ describe('App', () => {
 
   describe('Uncovered Code Coverage', () => {
     describe('handleSetLocation', () => {
-      it('shows alert when trying to confirm without location selected', async () => {
-        const { getByText } = render(<App />);
+      it('confirm button is disabled when no location selected', async () => {
+        const { getByText, getByTestId } = render(<App />);
         
         fireEvent.press(getByText('📍 Set Location'));
 
         await waitFor(() => {
-          const confirmButton = getByText('Confirm');
-          expect(confirmButton).toBeTruthy();
-        });
-
-        fireEvent.press(getByText('Confirm'));
-
-        await waitFor(() => {
-          expect(Alert.alert).toHaveBeenCalledWith(
-            'No Location',
-            'Please tap on the map or select a building first'
-          );
+          const confirmButton = getByTestId('confirm-location-button');
+          expect(confirmButton.props.accessibilityState?.disabled).toBe(true);
         });
       });
 
@@ -715,13 +711,13 @@ describe('App', () => {
         fireEvent.press(getByText('Hall Building'));
 
         await waitFor(() => {
-          expect(queryByText('Location set at Hall Building')).toBeTruthy();
+          expect(queryByText(/Location set at Hall Building/)).toBeTruthy();
         });
 
         fireEvent.press(getByText('✕ Clear Location'));
 
         await waitFor(() => {
-          expect(queryByText('Location set at Hall Building')).toBeNull();
+          expect(queryByText(/Location set at Hall Building/)).toBeNull();
           expect(queryByText('✕ Clear Location')).toBeNull();
         });
       });
@@ -786,7 +782,7 @@ describe('App', () => {
         });
 
         await waitFor(() => {
-          expect(queryByText('Location set at Hall Building')).toBeTruthy();
+          expect(queryByText(/Location set at Hall Building/)).toBeTruthy();
           expect(searchInput.props.value).toBe('Hall Building');
           expect(queryByText(/\d+\.\d+, -\d+\.\d+/)).toBeTruthy();
         });

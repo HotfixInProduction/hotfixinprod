@@ -46,6 +46,8 @@ mobile/android
 # Jest coverage output
 **/coverage/
 
+**/junit.xml
+
 # tooling caches
 .lsp/
 .clj-kondo/
