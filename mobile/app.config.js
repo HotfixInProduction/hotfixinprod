@@ -41,6 +41,9 @@ module.exports = {
     web: {
       favicon: "./assets/favicon.png"
     },
+    plugins: [
+      "@config-plugins/detox"
+    ],
     extra: {
       eas: {
         // EAS project ID for this app.
