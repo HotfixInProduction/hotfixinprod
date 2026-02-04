@@ -12,7 +12,12 @@ interface Coordinate {
 interface Building {
     id: string;
     coordinates: Coordinate[];
-    // Add other building properties if needed
+    address: string;
+    departments?: string[];
+    services?: string[];
+    isAccessible?: boolean;
+    hasBikeRacks?: boolean;
+    hasParking?: boolean;
 }
 
 interface BuildingPolygonProps {
