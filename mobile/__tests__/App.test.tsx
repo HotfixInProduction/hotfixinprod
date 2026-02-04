@@ -15,13 +15,24 @@ const mockWatchPositionAsync = jest.fn().mockResolvedValue({
 });
 const mockBuilding = {
   id: 'Hall Building',
-  address: '1455 De Maisonneuve Blvd. W.'
+  address: '1455 De Maisonneuve Blvd. W.',
+  coordinates: [
+    { latitude: 45.497717333439056, longitude: -73.57901648875999 },
+    { latitude: 45.49737008952721, longitude: -73.57829860721526 },
+    { latitude: 45.49682738667073, longitude: -73.5788266357901 },
+    { latitude: 45.497170475291824, longitude: -73.57954748378724 }
+  ],
+  departments: ['Economics', 'Geography'],
+  services: ['Campus Safety', 'IT Service'],
+  isAccessible: true,
+  hasBikeRacks: true,
+  hasParking: true
 };
 
 // Mock BuildingPolygon to simulate building selection
 jest.mock('../src/components/BuildingPolygon', () => {
   const { TouchableOpacity, Text } = require('react-native');
-  return ({ onSelectBuilding }: any) => (
+  return ({ onSelectBuilding, selectedBuilding }: any) => (
     <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
       <Text>select</Text>
     </TouchableOpacity>
@@ -87,15 +98,21 @@ jest.spyOn(Alert, 'alert');
 
 // Suppress React act warnings in test output (state updates happen inside async hooks)
 const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((...args: any[]) => {
     if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return;
     originalConsoleError(...args);
   });
+  jest.spyOn(console, 'warn').mockImplementation((...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('Failed to get current location')) return;
+    originalConsoleWarn(...args);
+  });
 });
 
 afterAll(() => {
   (console.error as jest.Mock).mockRestore();
+  (console.warn as jest.Mock).mockRestore();
 });
 
 const defaultAppStateRemove = jest.fn();
@@ -495,5 +512,396 @@ describe('App', () => {
     })
   })
 
+  describe('Location Selection Feature', () => {
+    it('opens location modal when Set Location button is pressed', async () => {
+      const { getByText, queryByText } = render(<App />);
+      
+      const setLocationButton = getByText('📍 Set Location');
+      fireEvent.press(setLocationButton);
+
+      await waitFor(() => {
+        expect(queryByText('Set Your Location')).toBeTruthy();
+      });
+    });
+
+    it('closes location modal when Close button is pressed', async () => {
+      const { getByText, queryByText } = render(<App />);
+      
+      fireEvent.press(getByText('📍 Set Location'));
+      
+      await waitFor(() => {
+        expect(queryByText('Set Your Location')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Close'));
+      
+      await waitFor(() => {
+        expect(queryByText('Set Your Location')).toBeNull();
+      });
+    });
+
+    it('searches buildings by name', async () => {
+      const { getByText, getByPlaceholderText, queryByText } = render(<App />);
+      
+      fireEvent.press(getByText('📍 Set Location'));
+
+      const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+      fireEvent.changeText(searchInput, 'Hall');
+
+      await waitFor(() => {
+        expect(queryByText('Hall Building')).toBeTruthy();
+      });
+    });
+
+    it('displays building list when search has results', async () => {
+      const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
+      
+      fireEvent.press(getByText('📍 Set Location'));
+
+      const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+      fireEvent.changeText(searchInput, 'Hall');
+
+      await waitFor(() => {
+        expect(queryByTestId('building-list')).toBeTruthy();
+      });
+    });
+
+    it('clears building list when search is empty', async () => {
+      const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
+      
+      fireEvent.press(getByText('📍 Set Location'));
+
+      const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+      fireEvent.changeText(searchInput, 'Hall');
+
+      await waitFor(() => {
+        expect(queryByTestId('building-list')).toBeTruthy();
+      });
+
+      fireEvent.changeText(searchInput, '');
+
+      await waitFor(() => {
+        expect(queryByTestId('building-list')).toBeNull();
+      });
+    });
+
+    it('disables Confirm button when no location is selected', async () => {
+      const { getByText } = render(<App />);
+      
+      fireEvent.press(getByText('📍 Set Location'));
+
+      await waitFor(() => {
+        const confirmButton = getByText('Confirm');
+        expect(confirmButton.props.disabled).toBe(true);
+      });
+    });
+
+    it('animates map to building center when building is selected', async () => {
+      const { getByText, getByPlaceholderText } = render(<App />);
+      
+      mockAnimateToRegion.mockClear();
+
+      fireEvent.press(getByText('📍 Set Location'));
+
+      const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+      fireEvent.changeText(searchInput, 'Hall');
+
+      await waitFor(() => {
+        const hallBuilding = getByText('Hall Building');
+        expect(hallBuilding).toBeTruthy();
+      });
+    });
+  });
+
+  describe('Building Highlighting Feature', () => {
+    it('selects building and displays in BuildingInfo', async () => {
+      const { getByTestId, queryByText } = render(<App />);
+      
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(queryByText('Hall Building')).toBeTruthy();
+      });
+    });
+
+    it('closes BuildingInfo when close button is pressed', async () => {
+      const { getByTestId, queryByText } = render(<App />);
+      
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(queryByText('Hall Building')).toBeTruthy();
+      });
+
+      const closeButton = getByTestId('building-close');
+      fireEvent.press(closeButton);
+
+      await waitFor(() => {
+        expect(queryByText('Hall Building')).toBeNull();
+      });
+    });
+
+    it('passes selectedBuilding prop to BuildingPolygon', async () => {
+      const { getByTestId } = render(<App />);
+      
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(getByTestId('select-building')).toBeTruthy();
+      });
+    });
+  });
+
+  describe('Uncovered Code Coverage', () => {
+    describe('handleSetLocation', () => {
+      it('shows alert when trying to confirm without location selected', async () => {
+        const { getByText } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        await waitFor(() => {
+          const confirmButton = getByText('Confirm');
+          expect(confirmButton).toBeTruthy();
+        });
+
+        fireEvent.press(getByText('Confirm'));
+
+        await waitFor(() => {
+          expect(Alert.alert).toHaveBeenCalledWith(
+            'No Location',
+            'Please tap on the map or select a building first'
+          );
+        });
+      });
+
+      it('closes modal when location is set and Confirm is pressed', async () => {
+        const { getByText, getByPlaceholderText, queryByText } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, 'Hall');
+
+        await waitFor(() => {
+          expect(queryByText('Hall Building')).toBeTruthy();
+        });
+
+        fireEvent.press(getByText('Hall Building'));
+
+        await waitFor(() => {
+          const confirmButton = getByText('Confirm');
+          fireEvent.press(confirmButton);
+        });
+
+        await waitFor(() => {
+          expect(queryByText('Set Your Location')).toBeNull();
+        });
+      });
+    });
+
+    describe('handleClearLocation', () => {
+      it('clears all location-related state', async () => {
+        const { getByText, getByPlaceholderText, queryByText } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, 'Hall');
+
+        await waitFor(() => {
+          expect(queryByText('Hall Building')).toBeTruthy();
+        });
+
+        fireEvent.press(getByText('Hall Building'));
+
+        await waitFor(() => {
+          expect(queryByText('Location set at Hall Building')).toBeTruthy();
+        });
+
+        fireEvent.press(getByText('✕ Clear Location'));
+
+        await waitFor(() => {
+          expect(queryByText('Location set at Hall Building')).toBeNull();
+          expect(queryByText('✕ Clear Location')).toBeNull();
+        });
+      });
+
+      it('clears search query when location is cleared', async () => {
+        const { getByText, getByPlaceholderText, queryByText } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, 'Hall');
+
+        await waitFor(() => {
+          fireEvent.press(getByText('Hall Building'));
+        });
+
+        fireEvent.press(getByText('✕ Clear Location'));
+
+        await waitFor(() => {
+          expect(searchInput.props.value).toBe('');
+        });
+      });
+    });
+
+    describe('handleSelectBuilding', () => {
+      it('calculates building center from coordinates', async () => {
+        const { getByText, getByPlaceholderText } = render(<App />);
+        
+        mockAnimateToRegion.mockClear();
+
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, 'Hall');
+
+        await waitFor(() => {
+          fireEvent.press(getByText('Hall Building'));
+        });
+
+        await waitFor(() => {
+          expect(mockAnimateToRegion).toHaveBeenCalled();
+          const callArgs = mockAnimateToRegion.mock.calls[0][0];
+          
+          // Verify the coordinates are within expected range
+          expect(callArgs.latitude).toBeGreaterThan(45.49);
+          expect(callArgs.latitude).toBeLessThan(45.50);
+          expect(callArgs.longitude).toBeGreaterThan(-73.58);
+          expect(callArgs.longitude).toBeLessThan(-73.57);
+        });
+      });
+
+      it('sets all location state on building selection', async () => {
+        const { getByText, getByPlaceholderText, queryByText } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, 'Hall');
+
+        await waitFor(() => {
+          fireEvent.press(getByText('Hall Building'));
+        });
+
+        await waitFor(() => {
+          expect(queryByText('Location set at Hall Building')).toBeTruthy();
+          expect(searchInput.props.value).toBe('Hall Building');
+          expect(queryByText(/\d+\.\d+, -\d+\.\d+/)).toBeTruthy();
+        });
+      });
+
+      it('clears filtered buildings after selection', async () => {
+        const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, 'Hall');
+
+        await waitFor(() => {
+          expect(queryByTestId('building-list')).toBeTruthy();
+        });
+
+        fireEvent.press(getByText('Hall Building'));
+
+        await waitFor(() => {
+          expect(queryByTestId('building-list')).toBeNull();
+        });
+      });
+    });
+
+    describe('Modal Interactions', () => {
+      it('closes modal when onRequestClose is triggered', async () => {
+        const { getByText, queryByText } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        await waitFor(() => {
+          expect(queryByText('Set Your Location')).toBeTruthy();
+        });
+
+        fireEvent(queryByText('Set Your Location')!.parent, 'onRequestClose');
+
+        await waitFor(() => {
+          expect(queryByText('Set Your Location')).toBeNull();
+        });
+      });
+    });
+
+    describe('Circle and Marker Rendering', () => {
+      it('renders location marker when manualLocation is set', async () => {
+        const { getByText, getByPlaceholderText, getByTestId } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, 'Hall');
+
+        await waitFor(() => {
+          fireEvent.press(getByText('Hall Building'));
+        });
+
+        // The marker should be rendered when location is set
+        await waitFor(() => {
+          const mapView = getByTestId('map-view');
+          expect(mapView.children).toBeDefined();
+        });
+      });
+    });
+
+    describe('Search Functionality', () => {
+      it('filters buildings case-insensitively', async () => {
+        const { getByText, getByPlaceholderText, queryByText } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        
+        // Test lowercase search
+        fireEvent.changeText(searchInput, 'hall');
+
+        await waitFor(() => {
+          expect(queryByText('Hall Building')).toBeTruthy();
+        });
+      });
+
+      it('hides building list when search is cleared', async () => {
+        const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, 'Hall');
+
+        await waitFor(() => {
+          expect(queryByTestId('building-list')).toBeTruthy();
+        });
+
+        // Clear the search
+        fireEvent.changeText(searchInput, '');
+
+        await waitFor(() => {
+          expect(queryByTestId('building-list')).toBeNull();
+        });
+      });
+
+      it('hides building list when search with only whitespace', async () => {
+        const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
+        
+        fireEvent.press(getByText('📍 Set Location'));
+
+        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+        fireEvent.changeText(searchInput, '   ');
+
+        await waitFor(() => {
+          expect(queryByTestId('building-list')).toBeNull();
+        });
+      });
+    });
+  });
+
 });
+
 

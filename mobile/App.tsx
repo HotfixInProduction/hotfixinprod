@@ -174,7 +174,7 @@ export default function App() {
         initialRegion={INITIAL_REGION}
         onPress={handleMapPress}
       >
-        <BuildingPolygon onSelectBuilding={(building) => setSelectedBuilding(building)} />
+        <BuildingPolygon onSelectBuilding={(building) => setSelectedBuilding(building)} selectedBuilding={selectedBuilding} />
         {manualLocation && (
           <>
             <Circle
@@ -282,7 +282,7 @@ export default function App() {
             </View>
 
             {filteredBuildings.length > 0 && (
-              <View style={styles.buildingListContainer}>
+              <View style={styles.buildingListContainer} testID="building-list">
                 <FlatList
                   data={filteredBuildings}
                   keyExtractor={(item) => item.id}
