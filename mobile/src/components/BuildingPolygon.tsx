@@ -3,8 +3,29 @@ import { Polygon } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { buildings } from '../data/buildings';
 
+// Define types
+interface Coordinate {
+    latitude: number;
+    longitude: number;
+}
+
+interface Building {
+    id: string;
+    coordinates: Coordinate[];
+    // Add other building properties if needed
+}
+
+interface BuildingPolygonProps {
+    onSelectBuilding: (building: Building) => void;
+}
+
+interface Point {
+    latitude: number;
+    longitude: number;
+}
+
 // Extract point-in-polygon check to a separate function
-const isPointInPolygon = (point, polygon) => {
+const isPointInPolygon = (point: Point, polygon: Coordinate[]): boolean => {
     let inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
         const xi = polygon[i].latitude;
@@ -21,14 +42,18 @@ const isPointInPolygon = (point, polygon) => {
 };
 
 // Extract building detection logic
-const findBuildingAtLocation = (latitude, longitude) => {
+const findBuildingAtLocation = (latitude: number, longitude: number): Building | undefined => {
     return buildings.find(building => 
         isPointInPolygon({ latitude, longitude }, building.coordinates)
     );
 };
 
 // Extract location handler
-const handleLocationUpdate = (location, setUserLocation, setCurrentBuildingId) => {
+const handleLocationUpdate = (
+    location: Location.LocationObject,
+    setUserLocation: React.Dispatch<React.SetStateAction<Point | null>>,
+    setCurrentBuildingId: React.Dispatch<React.SetStateAction<string | null>>
+): void => {
     const { latitude, longitude } = location.coords;
     setUserLocation({ latitude, longitude });
 
@@ -37,7 +62,10 @@ const handleLocationUpdate = (location, setUserLocation, setCurrentBuildingId) =
 };
 
 // Extract permission check and subscription setup
-const setupLocationWatching = async (setUserLocation, setCurrentBuildingId) => {
+const setupLocationWatching = async (
+    setUserLocation: React.Dispatch<React.SetStateAction<Point | null>>,
+    setCurrentBuildingId: React.Dispatch<React.SetStateAction<string | null>>
+): Promise<Location.LocationSubscription | null> => {
     const { status } = await Location.getForegroundPermissionsAsync();
     
     if (status !== 'granted') {
@@ -55,12 +83,12 @@ const setupLocationWatching = async (setUserLocation, setCurrentBuildingId) => {
     return subscription;
 };
 
-export default function BuildingPolygon({ onSelectBuilding }) {
-    const [userLocation, setUserLocation] = useState(null);
-    const [currentBuildingId, setCurrentBuildingId] = useState(null);
+export default function BuildingPolygon({ onSelectBuilding }: BuildingPolygonProps) {
+    const [userLocation, setUserLocation] = useState<Point | null>(null);
+    const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 
     useEffect(() => {
-        let locationSubscription;
+        let locationSubscription: Location.LocationSubscription | null;
 
         setupLocationWatching(setUserLocation, setCurrentBuildingId)
             .then(subscription => {
