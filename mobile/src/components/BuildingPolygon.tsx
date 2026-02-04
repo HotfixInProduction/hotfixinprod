@@ -17,6 +17,7 @@ interface Building {
 
 interface BuildingPolygonProps {
     readonly onSelectBuilding: (building: Building) => void;
+    readonly selectedBuildingId: string | null;
 }
 
 interface Point {
@@ -80,7 +81,7 @@ const setupLocationWatching = async (
     return subscription;
 };
 
-export default function BuildingPolygon({ onSelectBuilding }: BuildingPolygonProps) {
+export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId }: BuildingPolygonProps) {
     const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -100,17 +101,20 @@ export default function BuildingPolygon({ onSelectBuilding }: BuildingPolygonPro
 
     return (
         <>
-            {buildings.map(b => (
+            {buildings.map(b =>  {
+                const isUserInside = currentBuildingId === b.id;
+                const isSelected = selectedBuildingId === b.id;
+                return(
                 <Polygon
                     key={b.id}
                     coordinates={b.coordinates}
-                    strokeColor={currentBuildingId === b.id ? "#0000FF" : "#FF0000"}
-                    fillColor={currentBuildingId === b.id ? "rgba(0,0,255,0.4)" : "rgba(255,0,0,0.4)"}
+                    strokeColor={isSelected ? "#FBBC05" : isUserInside ? "#0000FF" : "#FF0000"}
+                    fillColor={isSelected ? "rgb(251, 188, 5, 0.4)" : isUserInside ? "rgba(0,0,255,0.4)" : "rgba(255,0,0,0.4)"}
                     strokeWidth={2}
                     onPress={() => onSelectBuilding(b)}
                     tappable
                 />
-            ))}
+            )})}
         </>
     );
 }
