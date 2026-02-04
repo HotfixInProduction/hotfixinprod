@@ -52,3 +52,4 @@ mobile/android
 **/.expo-shared/
 # IDEs and editors
 .idea
+/mobile/config.ts

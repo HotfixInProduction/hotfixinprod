@@ -1,8 +1,7 @@
 import React, {useState} from 'react';
 import { StyleSheet } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-
-const GOOGLE_API_KEY = ''
+import { GOOGLE_API_KEY } from '../../../config';
 
 type BuildingSelectorProps = {
   placeholder: string;
@@ -14,27 +13,15 @@ type BuildingSelectorProps = {
 };
 
 const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect }) => {
-const [inputText, setInputText] = useState('');
   return (
     <GooglePlacesAutocomplete
       placeholder={placeholder}
       fetchDetails={true}
-      textInputProps={{
-          value: inputText,
-          onChangeText: (text) => {
-            setInputText(text);
-          },
-        }}
       onFail={(error) => {
           console.log('Places API error:', error);
-          console.log('User input at failure:', inputText);
         }}
       onPress={(data, details = null) => {
-        console.log('User tapped a suggestion:', data);
-        console.log('Full details object:', details);
-
         if (!details) return;
-
         const place = {
           name: data.structured_formatting.main_text,
           address: details.formatted_address || '',
@@ -44,7 +31,7 @@ const [inputText, setInputText] = useState('');
         onSelect(place);
       }}
       query={{
-        key: GOOGLE_API_KEY!,
+        key: GOOGLE_API_KEY,
         language: 'en',
       }}
       styles={autocompleteStyles}
