@@ -1,19 +1,44 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { Alert, Linking, AppState } from 'react-native';
 import App from '../App';
+import BuildingInfo from '../src/components/BuildingInfo';
 
 // Create mocks before jest.mock
 const mockRequestForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
+const mockGetForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
 const mockGetCurrentPosition = jest.fn().mockResolvedValue({
   coords: { latitude: 45.5, longitude: -73.58 },
 });
+const mockWatchPositionAsync = jest.fn().mockResolvedValue({
+  remove: jest.fn(),
+});
+const mockBuilding = {
+  id: 'Hall Building',
+  address: '1455 De Maisonneuve Blvd. W.'
+};
+
+// Mock BuildingPolygon to simulate building selection
+jest.mock('../src/components/BuildingPolygon', () => {
+  const { TouchableOpacity, Text } = require('react-native');
+  return ({ onSelectBuilding }: any) => (
+    <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
+      <Text>select</Text>
+    </TouchableOpacity>
+  );
+});
+const mockOpenSettings = jest.fn();
 
 // Mock Expo Location to avoid hitting native APIs during tests
 jest.mock('expo-location', () => {
   return {
     requestForegroundPermissionsAsync: (...args: any[]) => mockRequestForegroundPermissions(...args),
+    getForegroundPermissionsAsync: (...args: any[]) => mockGetForegroundPermissions(...args),
     getCurrentPositionAsync: (...args: any[]) => mockGetCurrentPosition(...args),
+    watchPositionAsync: (...args: any[]) => mockWatchPositionAsync(...args),
+    Accuracy: {
+      High: 4,
+    },
   };
 });
 
@@ -48,8 +73,35 @@ jest.mock('react-native-safe-area-context', () => {
   };
 });
 
+// Mock vector icons to avoid loading native modules in tests
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    MaterialIcons: (props: any) => <Text {...props}>{props.name}</Text>,
+  };
+}, { virtual: true });
+
 // Mock Alert
 jest.spyOn(Alert, 'alert');
+
+// Suppress React act warnings in test output (state updates happen inside async hooks)
+const originalConsoleError = console.error;
+beforeAll(() => {
+  jest.spyOn(console, 'error').mockImplementation((...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return;
+    originalConsoleError(...args);
+  });
+});
+
+afterAll(() => {
+  (console.error as jest.Mock).mockRestore();
+});
+
+const defaultAppStateRemove = jest.fn();
+jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({
+  remove: defaultAppStateRemove,
+}) as any);
 
 describe('App', () => {
   beforeEach(() => {
@@ -58,6 +110,8 @@ describe('App', () => {
     mockGetCurrentPosition.mockResolvedValue({
       coords: { latitude: 45.5, longitude: -73.58 },
     });
+    (Linking as any).openSettings = mockOpenSettings;
+    mockOpenSettings.mockClear();
   });
 
   it('renders without crashing', () => {
@@ -68,14 +122,14 @@ describe('App', () => {
   it('renders MapView with correct initial region', () => {
     const { getByTestId } = render(<App />);
     const mapView = getByTestId('map-view');
-    
+
     expect(mapView.props.initialRegion.latitude).toBeCloseTo(45.497, 2);
     expect(mapView.props.initialRegion.longitude).toBeCloseTo(-73.579, 2);
   });
 
   it('renders both campus selector buttons', () => {
     const { getByText } = render(<App />);
-    
+
     expect(getByText('Downtown')).toBeTruthy();
     expect(getByText('Loyola')).toBeTruthy();
   });
@@ -83,7 +137,7 @@ describe('App', () => {
   it('renders with Downtown campus selected by default', () => {
     const { getByText } = render(<App />);
     const downtownButton = getByText('Downtown');
-    
+
     expect(downtownButton.props.style).toContainEqual(
       expect.objectContaining({ color: '#FFFFFF' })
     );
@@ -92,7 +146,7 @@ describe('App', () => {
   describe('Location Permissions', () => {
     it('requests location permission on mount', async () => {
       render(<App />);
-      
+
       await waitFor(() => {
         expect(mockRequestForegroundPermissions).toHaveBeenCalled();
       });
@@ -146,6 +200,98 @@ describe('App', () => {
       expect(mockGetCurrentPosition).not.toHaveBeenCalled();
     });
 
+    it('shows location-off button when permission is denied', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+
+      const { getByTestId } = render(<App />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+    });
+
+    it('opens modal and can re-request permission', async () => {
+      mockRequestForegroundPermissions.mockResolvedValueOnce({ status: 'denied' });
+      const { getByTestId, queryByText } = render(<App />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('location-off-button'));
+      expect(queryByText('Location is off')).toBeTruthy();
+
+      mockRequestForegroundPermissions.mockResolvedValueOnce({ status: 'granted' });
+      fireEvent.press(getByTestId('request-permission-button'));
+
+      await waitFor(() => {
+        expect(mockRequestForegroundPermissions).toHaveBeenCalledTimes(2);
+        expect(mockGetCurrentPosition).toHaveBeenCalled();
+      });
+    });
+
+    it('opens device settings from modal', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+      const { getByTestId, queryByText } = render(<App />);
+
+      await waitFor(() => getByTestId('location-off-button'));
+
+      fireEvent.press(getByTestId('location-off-button'));
+      fireEvent.press(getByTestId('open-settings-button'));
+
+      expect(mockOpenSettings).toHaveBeenCalled();
+      expect(queryByText('Location is off')).toBeNull();
+    });
+
+    it('closes modal when tapping Not now', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+      const { getByTestId, queryByText, getByText } = render(<App />);
+
+      await waitFor(() => getByTestId('location-off-button'));
+      fireEvent.press(getByTestId('location-off-button'));
+      fireEvent.press(getByText('Not now'));
+
+      expect(queryByText('Location is off')).toBeNull();
+    });
+
+    it('closes modal when onRequestClose is triggered', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+      const { getByTestId, queryByText } = render(<App />);
+
+      await waitFor(() => getByTestId('location-off-button'));
+      fireEvent.press(getByTestId('location-off-button'));
+
+      fireEvent(getByTestId('location-modal'), 'onRequestClose');
+
+      expect(queryByText('Location is off')).toBeNull();
+    });
+
+    it('hides location-off icon after returning to foreground with permission granted', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+      mockGetForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      (AppState as any).currentState = 'background';
+
+      let appStateCallback: ((state: string) => void) | undefined;
+      const removeListener = jest.fn();
+      (AppState.addEventListener as jest.Mock).mockImplementationOnce((_, cb: any) => {
+        appStateCallback = cb;
+        return { remove: removeListener } as any;
+      });
+
+      const { getByTestId, queryByTestId } = render(<App />);
+
+      await waitFor(() => getByTestId('location-off-button'));
+      fireEvent.press(getByTestId('location-off-button'));
+
+      await act(async () => {
+        appStateCallback?.('active');
+      });
+
+      await waitFor(() => expect(mockGetForegroundPermissions).toHaveBeenCalled());
+      await waitFor(() => expect(queryByTestId('location-off-button')).toBeNull());
+
+    });
+
     it.each([
       ['timeout error', 'Location request timed out'],
       ['generic error', 'Failed to get location'],
@@ -171,9 +317,9 @@ describe('App', () => {
   describe('Campus Selection', () => {
     it('switches to Loyola campus when button is pressed', async () => {
       const { getByText } = render(<App />);
-      
+
       mockAnimateToRegion.mockClear();
-      
+
       const loyolaButton = getByText('Loyola');
       fireEvent.press(loyolaButton);
 
@@ -192,13 +338,13 @@ describe('App', () => {
 
     it('switches to Downtown campus when button is pressed', async () => {
       const { getByText } = render(<App />);
-      
+
       // First switch to Loyola
       const loyolaButton = getByText('Loyola');
       fireEvent.press(loyolaButton);
 
       mockAnimateToRegion.mockClear();
-      
+
       // Then switch back to Downtown
       const downtownButton = getByText('Downtown');
       fireEvent.press(downtownButton);
@@ -218,7 +364,7 @@ describe('App', () => {
 
     it('updates selected campus state when switching campuses', () => {
       const { getByText } = render(<App />);
-      
+
       const loyolaButton = getByText('Loyola');
       fireEvent.press(loyolaButton);
 
@@ -233,21 +379,21 @@ describe('App', () => {
     it('enables user location display', () => {
       const { getByTestId } = render(<App />);
       const mapView = getByTestId('map-view');
-      
+
       expect(mapView.props.showsUserLocation).toBe(true);
     });
 
     it('enables my location button', () => {
       const { getByTestId } = render(<App />);
       const mapView = getByTestId('map-view');
-      
+
       expect(mapView.props.showsMyLocationButton).toBe(true);
     });
 
     it('sets correct map padding', () => {
       const { getByTestId } = render(<App />);
       const mapView = getByTestId('map-view');
-      
+
       expect(mapView.props.mapPadding).toEqual({
         top: 100,
         right: 20,
@@ -256,4 +402,98 @@ describe('App', () => {
       });
     });
   });
+
+  describe('Building Info Pop-up Interaction', () => {
+    it('selects building and closes pop-up when close button is pressed', async () => {
+      const { getByTestId, queryByText, getByText } = render(<App />);
+      fireEvent.press(getByTestId('select-building'));
+      await waitFor(() => expect(getByText('Hall Building')).toBeTruthy());
+      fireEvent.press(getByTestId('building-close'));
+      await waitFor(() => expect(queryByText('Hall Building')).toBeNull());
+    })
+  })
+
+  describe('Display Building Info', () => {
+    test('returns null when building is null', () => {
+      const { queryByTestId } = render(
+        <BuildingInfo building={null} onClose={() => { }} />
+      );
+      expect(queryByTestId('building-title')).toBeNull();
+    })
+
+    // no icons are displayed if a building does not have an accessible entrance, parking lots, and bike racks
+    test('hide all icons', () => {
+      const b = { ...mockBuilding, isAccessible: false, hasParking: false, hasBikeRacks: false };
+      const { queryByTestId } = render(
+        <BuildingInfo building={b} onClose={() => { }} />
+      );
+      expect(queryByTestId('icon-wheelchair')).toBeNull();
+      expect(queryByTestId('icon-parking')).toBeNull();
+      expect(queryByTestId('icon-bike')).toBeNull();
+    })
+
+    test('shows parking icon if parking lots are available', () => {
+      const b = { ...mockBuilding, isAccessible: false, hasParking: true, hasBikeRacks: false };
+      const { getByTestId, queryByTestId } = render(
+        <BuildingInfo building={b} onClose={() => { }} />
+      );
+      expect(getByTestId('icon-parking')).toBeTruthy();
+      expect(queryByTestId('icon-wheelchair')).toBeNull();
+      expect(queryByTestId('icon-bike')).toBeNull();
+    })
+
+    test('shows wheelchair icon if building entrance is accessible', () => {
+      const b = { ...mockBuilding, isAccessible: true, hasParking: false, hasBikeRacks: false };
+      const { getByTestId, queryByTestId } = render(
+        <BuildingInfo building={b} onClose={() => { }} />
+      );
+      expect(getByTestId('icon-wheelchair')).toBeTruthy();
+      expect(queryByTestId('icon-parking')).toBeNull();
+      expect(queryByTestId('icon-bike')).toBeNull();
+    })
+
+    test('shows bike icon if bike racks are available', () => {
+      const b = { ...mockBuilding, isAccessible: false, hasParking: false, hasBikeRacks: true };
+      const { getByTestId, queryByTestId } = render(
+        <BuildingInfo building={b} onClose={() => { }} />
+      );
+      expect(getByTestId('icon-bike')).toBeTruthy();
+      expect(queryByTestId('icon-wheelchair')).toBeNull();
+      expect(queryByTestId('icon-parking')).toBeNull();
+    })
+
+    // no columns are displayed if a building has no departments and services associated to it
+    test('hides columns when no departments or services', () => {
+      const b = { ...mockBuilding, departments: [], services: [] };
+      const { queryByTestId, queryByText } = render(
+        <BuildingInfo building={b} onClose={() => { }} />
+      );
+      expect(queryByTestId('departments-column')).toBeNull();
+      expect(queryByTestId('services-column')).toBeNull();
+      expect(queryByText('Departments')).toBeNull();
+      expect(queryByText('Services')).toBeNull();
+    })
+
+    // if a building has services but no departments
+    test('renders services column only', () => {
+      const b = { ...mockBuilding, departments: [], services: ['IT Service'] };
+      const { getByTestId, queryByTestId, getByText } = render(
+        <BuildingInfo building={b} onClose={() => { }} />
+      );
+      expect(getByTestId('services-column')).toBeTruthy();
+      expect(queryByTestId('departments-column')).toBeNull();
+      expect(getByText('IT Service')).toBeTruthy();
+    })
+
+    test('renders multiple departments', () => {
+      const b = { ...mockBuilding, departments: ['Economics', 'Political Science'] };
+      const { getByText } = render(
+        <BuildingInfo building={b} onClose={() => { }} />
+      );
+      expect(getByText('Economics')).toBeTruthy();
+      expect(getByText('Political Science')).toBeTruthy();
+    })
+  })
+
 });
+

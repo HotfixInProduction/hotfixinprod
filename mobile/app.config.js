@@ -41,6 +41,10 @@ module.exports = {
     web: {
       favicon: "./assets/favicon.png"
     },
+    plugins: [
+      "expo-font",
+      "expo-asset"
+    ],
     extra: {
       googleApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY,
       eas: {

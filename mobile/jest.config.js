@@ -8,6 +8,15 @@ module.exports = {
         "!**/coverage/**",
         "!**/node_modules/**",
         "!**/babel.config.js",
-        "!**/jest.setup.js"
+        "!**/jest.setup.js",
+        "!index.ts"
+    ],
+    reporters: [
+        "default",
+        ["jest-junit", {
+            outputDirectory: ".",
+            outputName: "junit.xml",
+            classNameTemplate: "{filepath}",
+        }]
     ]
 };
