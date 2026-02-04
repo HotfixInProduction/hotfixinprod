@@ -41,6 +41,10 @@ module.exports = {
     web: {
       favicon: "./assets/favicon.png"
     },
+    plugins: [
+      "expo-font",
+      "expo-asset"
+    ],
     extra: {
       eas: {
         // EAS project ID for this app.
