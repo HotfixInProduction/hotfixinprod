@@ -123,6 +123,10 @@ export default function App() {
     }, 500);
   };
 
+  const handleSelectBuilding = (building: { id: string; coordinates: { latitude: number; longitude: number }[] }) => {
+    console.log('Selected building:', building.id);
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -133,7 +137,7 @@ export default function App() {
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
       >
-        <BuildingPolygon />
+        <BuildingPolygon onSelectBuilding={handleSelectBuilding} />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
