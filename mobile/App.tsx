@@ -1,11 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, TextInput, Modal, ScrollView, FlatList } from 'react-native';
-import MapView, { Marker, Circle } from 'react-native-maps';
+import MapView, { Marker, Circle, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
 import { buildings } from './src/data/buildings';
 import { useEffect, useRef, useState } from 'react';
+import { MaterialIcons } from '@expo/vector-icons'
+import BuildingInfo from './src/components/BuildingInfo';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -33,15 +35,28 @@ const CAMPUSES = {
 
 type CampusKey = keyof typeof CAMPUSES;
 
+type Building = {
+  id: string;
+  coordinates: Array<{ latitude: number; longitude: number }>;
+  address: string;
+  departments?: string[];
+  services?: string[];
+  isAccessible?: boolean;
+  hasBikeRacks?: boolean;
+  hasParking?: boolean;
+};
+
 export default function App() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
+
   const slideAnim = useRef(new Animated.Value(0)).current;
   const [manualLocation, setManualLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredBuildings, setFilteredBuildings] = useState<typeof buildings>([]);
-  const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
+  const [filteredBuildings, setFilteredBuildings] = useState<Building[]>([]);
+  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
+  const [selectedLocationBuildingName, setSelectedLocationBuildingName] = useState<string | null>(null);
 
   useEffect(() => {
     // Request foreground location permission on app load so iOS/Android show the system prompt.
@@ -76,7 +91,7 @@ export default function App() {
 
   const handleCampusChange = (campusKey: CampusKey) => {
     setSelectedCampus(campusKey);
-    
+
     // Animate slider
     Animated.spring(slideAnim, {
       toValue: campusKey === 'downtown' ? 0 : 1,
@@ -112,14 +127,14 @@ export default function App() {
     }
   };
 
-  const handleSelectBuilding = (building: typeof buildings[0]) => {
+  const handleSelectBuilding = (building: Building) => {
     // Calculate center of building from coordinates
     const coords = building.coordinates;
     const centerLat = coords.reduce((sum, c) => sum + c.latitude, 0) / coords.length;
     const centerLng = coords.reduce((sum, c) => sum + c.longitude, 0) / coords.length;
     
     setManualLocation({ latitude: centerLat, longitude: centerLng });
-    setSelectedBuilding(building.id);
+    setSelectedLocationBuildingName(building.id);
     setSearchQuery(building.id);
     setFilteredBuildings([]);
     
@@ -142,7 +157,7 @@ export default function App() {
 
   const handleClearLocation = () => {
     setManualLocation(null);
-    setSelectedBuilding(null);
+    setSelectedLocationBuildingName(null);
     setSearchQuery('');
     setFilteredBuildings([]);
   };
@@ -151,6 +166,7 @@ export default function App() {
     <View style={styles.container}>
       <MapView
         ref={mapRef}
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
         mapPadding={{ top: 100, right: 20, bottom: 0, left: 20 }}
         showsUserLocation={false}
@@ -158,7 +174,7 @@ export default function App() {
         initialRegion={INITIAL_REGION}
         onPress={handleMapPress}
       >
-        <BuildingPolygon />
+        <BuildingPolygon onSelectBuilding={(building) => setSelectedBuilding(building)} />
         {manualLocation && (
           <>
             <Circle
@@ -238,7 +254,9 @@ export default function App() {
           )}
         </View>
       </SafeAreaView>
-      
+
+      <BuildingInfo building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />
+
       <Modal
         visible={showLocationModal}
         transparent
@@ -273,13 +291,13 @@ export default function App() {
                     <TouchableOpacity
                       style={[
                         styles.buildingItem,
-                        selectedBuilding === item.id && styles.buildingItemSelected
+                        selectedLocationBuildingName === item.id && styles.buildingItemSelected
                       ]}
                       onPress={() => handleSelectBuilding(item)}
                     >
                       <Text style={[
                         styles.buildingItemText,
-                        selectedBuilding === item.id && styles.buildingItemTextSelected
+                        selectedLocationBuildingName === item.id && styles.buildingItemTextSelected
                       ]}>
                         {item.id}
                       </Text>
@@ -292,7 +310,7 @@ export default function App() {
             {manualLocation && (
               <View style={styles.locationInfo}>
                 <Text style={styles.locationInfoText}>
-                  📍 Location set at {selectedBuilding}
+                  📍 Location set at {selectedLocationBuildingName}
                 </Text>
                 <Text style={styles.coordinatesText}>
                   {manualLocation.latitude.toFixed(4)}, {manualLocation.longitude.toFixed(4)}

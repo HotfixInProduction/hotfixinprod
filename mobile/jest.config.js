@@ -10,5 +10,13 @@ module.exports = {
         "!**/babel.config.js",
         "!**/jest.setup.js",
         "!index.ts"
+    ],
+    reporters: [
+        "default",
+        ["jest-junit", {
+            outputDirectory: ".",
+            outputName: "junit.xml",
+            classNameTemplate: "{filepath}",
+        }]
     ]
 };
