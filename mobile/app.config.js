@@ -42,7 +42,7 @@ module.exports = {
       favicon: "./assets/favicon.png"
     },
     plugins: [
-      "@config-plugins/detox"
+      "@config-plugins/detox",
       "expo-font",
       "expo-asset"
     ],
