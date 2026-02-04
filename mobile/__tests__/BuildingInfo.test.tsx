@@ -2,15 +2,10 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import BuildingInfo from '../src/components/BuildingInfo';
 
-jest.mock('@expo/vector-icons/MaterialIcons', () => {
-  const { Text } = require('react-native');
-  return (props: any) => <Text {...props}>{props.name}</Text>;
-});
-
-jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => {
-  const { Text } = require('react-native');
-  return (props: any) => <Text {...props}>{props.name}</Text>;
-});
+jest.mock('@expo/vector-icons', () => ({
+  MaterialIcons: 'MaterialIcons',
+  MaterialCommunityIcons: 'MaterialCommunityIcons',
+}));
 
 const mockBuilding = {
   id: 'Hall Building',
