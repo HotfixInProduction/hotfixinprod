@@ -1,6 +1,4 @@
-import React from 'react';
-import { render } from '@testing-library/react-native';
-import { act } from 'react';
+import { render, act } from '@testing-library/react-native';
 import BuildingPolygon from '../src/components/BuildingPolygon';
 
 // Mock expo-location
@@ -15,7 +13,6 @@ jest.mock('expo-location', () => ({
 
 // Mock react-native-maps
 jest.mock('react-native-maps', () => {
-  const React = require('react');
   const { View } = require('react-native');
   return {
     Polygon: (props: any) => <View {...props} />,
@@ -30,7 +27,7 @@ describe('BuildingPolygon', () => {
   });
 
   it('renders building polygons', () => {
-    const { UNSAFE_getAllByType } = render(<BuildingPolygon />);
+    const { UNSAFE_getAllByType } = render(<BuildingPolygon onSelectBuilding={() => {}} />);
     const polygons = UNSAFE_getAllByType(require('react-native-maps').Polygon);
     
     expect(polygons.length).toBeGreaterThan(0);
@@ -43,7 +40,7 @@ describe('BuildingPolygon', () => {
       return Promise.resolve({ remove: jest.fn() });
     });
 
-    const { UNSAFE_getAllByType } = render(<BuildingPolygon />);
+    const { UNSAFE_getAllByType } = render(<BuildingPolygon onSelectBuilding={() => {}} />);
     await new Promise(resolve => setTimeout(resolve, 10));
 
     // Simulate user inside Hall Building (center point)
