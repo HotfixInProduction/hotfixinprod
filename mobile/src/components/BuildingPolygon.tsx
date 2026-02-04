@@ -16,7 +16,7 @@ interface Building {
 }
 
 interface BuildingPolygonProps {
-    onSelectBuilding: (building: Building) => void;
+    readonly onSelectBuilding: (building: Building) => void;
 }
 
 interface Point {
@@ -51,11 +51,9 @@ const findBuildingAtLocation = (latitude: number, longitude: number): Building |
 // Extract location handler
 const handleLocationUpdate = (
     location: Location.LocationObject,
-    setUserLocation: React.Dispatch<React.SetStateAction<Point | null>>,
     setCurrentBuildingId: React.Dispatch<React.SetStateAction<string | null>>
 ): void => {
     const { latitude, longitude } = location.coords;
-    setUserLocation({ latitude, longitude });
 
     const buildingFound = findBuildingAtLocation(latitude, longitude);
     setCurrentBuildingId(buildingFound ? buildingFound.id : null);
@@ -63,7 +61,6 @@ const handleLocationUpdate = (
 
 // Extract permission check and subscription setup
 const setupLocationWatching = async (
-    setUserLocation: React.Dispatch<React.SetStateAction<Point | null>>,
     setCurrentBuildingId: React.Dispatch<React.SetStateAction<string | null>>
 ): Promise<Location.LocationSubscription | null> => {
     const { status } = await Location.getForegroundPermissionsAsync();
@@ -77,20 +74,19 @@ const setupLocationWatching = async (
             accuracy: Location.Accuracy.High,
             distanceInterval: 5,
         },
-        (location) => handleLocationUpdate(location, setUserLocation, setCurrentBuildingId)
+        (location) => handleLocationUpdate(location, setCurrentBuildingId)
     );
 
     return subscription;
 };
 
 export default function BuildingPolygon({ onSelectBuilding }: BuildingPolygonProps) {
-    const [userLocation, setUserLocation] = useState<Point | null>(null);
     const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 
     useEffect(() => {
         let locationSubscription: Location.LocationSubscription | null;
 
-        setupLocationWatching(setUserLocation, setCurrentBuildingId)
+        setupLocationWatching(setCurrentBuildingId)
             .then(subscription => {
                 locationSubscription = subscription;
             });
