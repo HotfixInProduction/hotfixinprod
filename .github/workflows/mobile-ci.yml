@@ -30,7 +30,7 @@ jobs:
       - name: Clean npm cache
         run: rm -rf ~/.npm/_cacache
 
-      - run: npm ci --legacy-peer-deps
+      - run: npm ci
 
       - run: npx tsc --noEmit
 
