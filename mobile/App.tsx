@@ -1,11 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus } from 'react-native';
-import MapView from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons'
+import BuildingInfo from './src/components/BuildingInfo';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -36,6 +37,7 @@ type CampusKey = keyof typeof CAMPUSES;
 export default function App() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
+  const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const [locationStatus, setLocationStatus] = useState<Location.PermissionStatus | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -104,7 +106,7 @@ export default function App() {
 
   const handleCampusChange = (campusKey: CampusKey) => {
     setSelectedCampus(campusKey);
-    
+
     // Animate slider
     Animated.spring(slideAnim, {
       toValue: campusKey === 'downtown' ? 0 : 1,
@@ -123,21 +125,18 @@ export default function App() {
     }, 500);
   };
 
-  const handleSelectBuilding = (building: { id: string; coordinates: { latitude: number; longitude: number }[] }) => {
-    console.log('Selected building:', building.id);
-  };
-
   return (
     <View style={styles.container}>
       <MapView
         ref={mapRef}
+        provider={PROVIDER_GOOGLE}
         style={styles.map}
         mapPadding={{ top: 100, right: 20, bottom: 0, left: 20 }}
         showsUserLocation
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
       >
-        <BuildingPolygon onSelectBuilding={handleSelectBuilding} />
+      <BuildingPolygon onSelectBuilding={setSelectedBuilding} />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
@@ -184,6 +183,9 @@ export default function App() {
           </View>
         </View>
       </SafeAreaView>
+
+      <BuildingInfo building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />
+
       {locationStatus === 'denied' && (
         <TouchableOpacity
           style={styles.locationOffButton}
