@@ -1,103 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="46" failures="0" errors="0" time="9.005">
-  <testsuite name="undefined" errors="0" failures="0" skipped="0" timestamp="2026-02-04T04:54:46" time="1.344" tests="1">
-    <testcase classname="__tests__\smoke.test.js" name=" smoke" time="0.01">
+<testsuites name="jest tests" tests="46" failures="0" errors="0" time="7.659">
+  <testsuite name="undefined" errors="0" failures="0" skipped="0" timestamp="2026-02-04T21:21:03" time="0.856" tests="1">
+    <testcase classname="__tests__\smoke.test.js" name=" smoke" time="0.008">
     </testcase>
   </testsuite>
-  <testsuite name="BuildingPolygon" errors="0" failures="0" skipped="0" timestamp="2026-02-04T04:54:46" time="2.912" tests="2">
-    <testcase classname="__tests__\BuildingPolygon.test.tsx" name="BuildingPolygon renders building polygons" time="0.062">
+  <testsuite name="BuildingPolygon" errors="0" failures="0" skipped="0" timestamp="2026-02-04T21:21:03" time="1.288" tests="2">
+    <testcase classname="__tests__\Buildingpolygon.test.tsx" name="BuildingPolygon renders building polygons" time="0.047">
     </testcase>
-    <testcase classname="__tests__\BuildingPolygon.test.tsx" name="BuildingPolygon changes building color when user is inside" time="0.074">
-    </testcase>
-  </testsuite>
-  <testsuite name="BuildingInfo" errors="0" failures="0" skipped="0" timestamp="2026-02-04T04:54:46" time="2.996" tests="10">
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo returns null when building is null" time="0.035">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo renders title, address, and close button" time="0.444">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo calls onClose when close button pressed" time="0.009">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo shows correct icon for {&quot;isAccessible&quot;: true}" time="0.01">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo shows correct icon for {&quot;hasParking&quot;: true}" time="0.014">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo shows correct icon for {&quot;hasBikeRacks&quot;: true}" time="0.015">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo hides all icons when no amenities" time="0.012">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo renders departments column with items" time="0.193">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo renders services column with items" time="0.013">
-    </testcase>
-    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo hides columns when empty" time="0.007">
+    <testcase classname="__tests__\Buildingpolygon.test.tsx" name="BuildingPolygon changes building color when user is inside" time="0.073">
     </testcase>
   </testsuite>
-  <testsuite name="App" errors="0" failures="0" skipped="0" timestamp="2026-02-04T04:54:46" time="6.986" tests="33">
-    <testcase classname="__tests__\App.test.tsx" name="App renders without crashing" time="0.438">
+  <testsuite name="BuildingInfo" errors="0" failures="0" skipped="0" timestamp="2026-02-04T21:21:03" time="1.908" tests="10">
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo returns null when building is null" time="0.027">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App renders MapView with correct initial region" time="0.015">
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo renders title, address, and close button" time="0.275">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App renders both campus selector buttons" time="0.013">
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo calls onClose when close button pressed" time="0.006">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App renders with Downtown campus selected by default" time="0.011">
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo shows correct icon for {&quot;isAccessible&quot;: true}" time="0.009">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions requests location permission on mount" time="0.012">
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo shows correct icon for {&quot;hasParking&quot;: true}" time="0.008">
+    </testcase>
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo shows correct icon for {&quot;hasBikeRacks&quot;: true}" time="0.011">
+    </testcase>
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo hides all icons when no amenities" time="0.011">
+    </testcase>
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo renders departments column with items" time="0.183">
+    </testcase>
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo renders services column with items" time="0.012">
+    </testcase>
+    <testcase classname="__tests__\BuildingInfo.test.tsx" name="BuildingInfo hides columns when empty" time="0.01">
+    </testcase>
+  </testsuite>
+  <testsuite name="App" errors="0" failures="0" skipped="0" timestamp="2026-02-04T21:21:03" time="6.092" tests="33">
+    <testcase classname="__tests__\App.test.tsx" name="App renders without crashing" time="1.632">
+    </testcase>
+    <testcase classname="__tests__\App.test.tsx" name="App renders MapView with correct initial region" time="0.033">
+    </testcase>
+    <testcase classname="__tests__\App.test.tsx" name="App renders both campus selector buttons" time="0.023">
+    </testcase>
+    <testcase classname="__tests__\App.test.tsx" name="App renders with Downtown campus selected by default" time="0.02">
+    </testcase>
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions requests location permission on mount" time="0.029">
     </testcase>
     <testcase classname="__tests__\App.test.tsx" name="App Location Permissions animates to user location when permission is granted" time="0.064">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions shows alert when location permission is denied" time="0.057">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions shows alert when location permission is denied" time="0.075">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions does not call getCurrentPosition when permission is not granted" time="0.017">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions does not call getCurrentPosition when permission is not granted" time="0.045">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions shows location-off button when permission is denied" time="0.062">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions shows location-off button when permission is denied" time="0.077">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions opens modal and can re-request permission" time="0.127">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions opens modal and can re-request permission" time="0.146">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions opens device settings from modal" time="0.082">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions opens device settings from modal" time="0.106">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions closes modal when tapping Not now" time="0.083">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions closes modal when tapping Not now" time="0.107">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions closes modal when onRequestClose is triggered" time="0.074">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions closes modal when onRequestClose is triggered" time="0.132">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions hides location-off icon after returning to foreground with permission granted" time="0.081">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions hides location-off icon after returning to foreground with permission granted" time="0.114">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions handles getCurrentPositionAsync timeout error gracefully" time="0.069">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions handles getCurrentPositionAsync timeout error gracefully" time="0.079">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions handles getCurrentPositionAsync generic error gracefully" time="0.062">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions handles getCurrentPositionAsync generic error gracefully" time="0.078">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions handles getCurrentPositionAsync location services disabled after permission granted gracefully" time="0.062">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions handles getCurrentPositionAsync location services disabled after permission granted gracefully" time="0.074">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions handles getCurrentPositionAsync network error gracefully" time="0.061">
+    <testcase classname="__tests__\App.test.tsx" name="App Location Permissions handles getCurrentPositionAsync network error gracefully" time="0.081">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Campus Selection switches to Loyola campus when button is pressed" time="0.1">
+    <testcase classname="__tests__\App.test.tsx" name="App Campus Selection switches to Loyola campus when button is pressed" time="0.259">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Campus Selection switches to Downtown campus when button is pressed" time="0.036">
+    <testcase classname="__tests__\App.test.tsx" name="App Campus Selection switches to Downtown campus when button is pressed" time="0.057">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Campus Selection updates selected campus state when switching campuses" time="0.025">
+    <testcase classname="__tests__\App.test.tsx" name="App Campus Selection updates selected campus state when switching campuses" time="0.052">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App MapView Configuration enables user location display" time="0.013">
+    <testcase classname="__tests__\App.test.tsx" name="App MapView Configuration enables user location display" time="0.032">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App MapView Configuration enables my location button" time="0.012">
+    <testcase classname="__tests__\App.test.tsx" name="App MapView Configuration enables my location button" time="0.027">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App MapView Configuration sets correct map padding" time="0.014">
+    <testcase classname="__tests__\App.test.tsx" name="App MapView Configuration sets correct map padding" time="0.03">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Building Info Pop-up Interaction selects building and closes pop-up when close button is pressed" time="0.04">
+    <testcase classname="__tests__\App.test.tsx" name="App Building Info Pop-up Interaction selects building and closes pop-up when close button is pressed" time="0.095">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info returns null when building is null" time="0.002">
+    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info returns null when building is null" time="0.003">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info hide all icons" time="0.003">
+    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info hide all icons" time="0.01">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info shows parking icon if parking lots are available" time="0.005">
+    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info shows parking icon if parking lots are available" time="0.008">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info shows wheelchair icon if building entrance is accessible" time="0.009">
+    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info shows wheelchair icon if building entrance is accessible" time="0.007">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info shows bike icon if bike racks are available" time="0.004">
+    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info shows bike icon if bike racks are available" time="0.008">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info hides columns when no departments or services" time="0.005">
+    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info hides columns when no departments or services" time="0.006">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info renders services column only" time="0.006">
+    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info renders services column only" time="0.012">
     </testcase>
-    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info renders multiple departments" time="0.007">
+    <testcase classname="__tests__\App.test.tsx" name="App Display Building Info renders multiple departments" time="0.011">
     </testcase>
   </testsuite>
 </testsuites>
