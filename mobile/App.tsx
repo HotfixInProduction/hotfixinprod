@@ -42,8 +42,6 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredBuildings, setFilteredBuildings] = useState<typeof buildings>([]);
   const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
-  const [mapTapEnabled, setMapTapEnabled] = useState(true);
-  const [isSelectingMapLocation, setIsSelectingMapLocation] = useState(false);
 
   useEffect(() => {
     // Request foreground location permission on app load so iOS/Android show the system prompt.
@@ -76,11 +74,6 @@ export default function App() {
     })();
   }, []);
 
-  useEffect(() => {
-    // Enable map tap when selecting location, disable when modal closed
-    setMapTapEnabled(isSelectingMapLocation);
-  }, [isSelectingMapLocation]);
-
   const handleCampusChange = (campusKey: CampusKey) => {
     setSelectedCampus(campusKey);
     
@@ -103,11 +96,8 @@ export default function App() {
   };
 
   const handleMapPress = (e: any) => {
-    if (!isSelectingMapLocation) return;
-    
-    const { latitude, longitude } = e.nativeEvent.coordinate;
-    setManualLocation({ latitude, longitude });
-    setSelectedBuilding(null);
+    // Map press disabled - only building search allowed
+    return;
   };
 
   const handleSearchChange = (text: string) => {
@@ -255,152 +245,77 @@ export default function App() {
         animationType="slide"
         onRequestClose={() => {
           setShowLocationModal(false);
-          setIsSelectingMapLocation(false);
         }}
       >
         <View style={styles.modalOverlay}>
-          {!isSelectingMapLocation ? (
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Set Your Location</Text>
-              <Text style={styles.modalSubtitle}>Choose your method:</Text>
-              
-              {searchQuery === null ? (
-                <>
-                  <TouchableOpacity
-                    style={styles.methodButton}
-                    onPress={() => setIsSelectingMapLocation(true)}
-                  >
-                    <Text style={styles.methodButtonEmoji}>📍</Text>
-                    <View style={styles.methodButtonText}>
-                      <Text style={styles.methodButtonTitle}>Drop Pin on Map</Text>
-                      <Text style={styles.methodButtonDescription}>Tap on the map to select your location</Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.methodButton}
-                    onPress={() => setSearchQuery('')}
-                  >
-                    <Text style={styles.methodButtonEmoji}>🏢</Text>
-                    <View style={styles.methodButtonText}>
-                      <Text style={styles.methodButtonTitle}>Search Building</Text>
-                      <Text style={styles.methodButtonDescription}>Find a building by name</Text>
-                    </View>
-                  </TouchableOpacity>
-
-                  <View style={styles.divider} />
-
-                  <View style={styles.modalButtonGroup}>
-                    <TouchableOpacity
-                      style={[styles.modalButton, styles.cancelButton]}
-                      onPress={() => setShowLocationModal(false)}
-                    >
-                      <Text style={styles.modalButtonText}>Close</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              ) : (
-                <>
-                  <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Search Building</Text>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="Search (e.g., Hall, JMSB, etc.)"
-                      value={searchQuery}
-                      onChangeText={handleSearchChange}
-                      placeholderTextColor="#999"
-                    />
-                  </View>
-
-                  {filteredBuildings.length > 0 && (
-                    <View style={styles.buildingListContainer}>
-                      <FlatList
-                        data={filteredBuildings}
-                        keyExtractor={(item) => item.id}
-                        scrollEnabled={false}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity
-                            style={[
-                              styles.buildingItem,
-                              selectedBuilding === item.id && styles.buildingItemSelected
-                            ]}
-                            onPress={() => handleSelectBuilding(item)}
-                          >
-                            <Text style={[
-                              styles.buildingItemText,
-                              selectedBuilding === item.id && styles.buildingItemTextSelected
-                            ]}>
-                              {item.id}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      />
-                    </View>
-                  )}
-
-                  {manualLocation && (
-                    <View style={styles.locationInfo}>
-                      <Text style={styles.locationInfoText}>
-                        📍 Location set at {selectedBuilding}
-                      </Text>
-                      <Text style={styles.coordinatesText}>
-                        {manualLocation.latitude.toFixed(4)}, {manualLocation.longitude.toFixed(4)}
-                      </Text>
-                    </View>
-                  )}
-
-                  <View style={styles.modalButtonGroup}>
-                    <TouchableOpacity
-                      style={[styles.modalButton, styles.cancelButton]}
-                      onPress={() => setSearchQuery(null as any)}
-                    >
-                      <Text style={styles.modalButtonText}>Back</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.modalButton, styles.confirmButton, !manualLocation && styles.confirmButtonDisabled]}
-                      onPress={handleSetLocation}
-                      disabled={!manualLocation}
-                    >
-                      <Text style={[styles.modalButtonText, styles.confirmButtonText]}>Confirm</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              )}
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Set Your Location</Text>
+            <Text style={styles.modalSubtitle}>Search for a building</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Search Building</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Search (e.g., Hall, JMSB, etc.)"
+                value={searchQuery}
+                onChangeText={handleSearchChange}
+                placeholderTextColor="#999"
+              />
             </View>
-          ) : (
-            <View style={styles.mapSelectionContainer}>
-              <View style={styles.instructionCard}>
-                <Text style={styles.instructionText}>👉 Tap on the map to drop a pin at your desired location</Text>
-              </View>
 
-              {manualLocation && (
-                <View style={styles.locationInfoCard}>
-                  <Text style={styles.locationInfoText}>
-                    📍 Location selected
-                  </Text>
-                  <Text style={styles.coordinatesText}>
-                    {manualLocation.latitude.toFixed(4)}, {manualLocation.longitude.toFixed(4)}
-                  </Text>
-                </View>
-              )}
-
-              <View style={styles.mapSelectionButtonGroup}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setIsSelectingMapLocation(false)}
-                >
-                  <Text style={styles.modalButtonText}>Back</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.confirmButton, !manualLocation && styles.confirmButtonDisabled]}
-                  onPress={handleSetLocation}
-                  disabled={!manualLocation}
-                >
-                  <Text style={[styles.modalButtonText, styles.confirmButtonText]}>Confirm</Text>
-                </TouchableOpacity>
+            {filteredBuildings.length > 0 && (
+              <View style={styles.buildingListContainer}>
+                <FlatList
+                  data={filteredBuildings}
+                  keyExtractor={(item) => item.id}
+                  scrollEnabled={false}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.buildingItem,
+                        selectedBuilding === item.id && styles.buildingItemSelected
+                      ]}
+                      onPress={() => handleSelectBuilding(item)}
+                    >
+                      <Text style={[
+                        styles.buildingItemText,
+                        selectedBuilding === item.id && styles.buildingItemTextSelected
+                      ]}>
+                        {item.id}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
               </View>
+            )}
+
+            {manualLocation && (
+              <View style={styles.locationInfo}>
+                <Text style={styles.locationInfoText}>
+                  📍 Location set at {selectedBuilding}
+                </Text>
+                <Text style={styles.coordinatesText}>
+                  {manualLocation.latitude.toFixed(4)}, {manualLocation.longitude.toFixed(4)}
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.modalButtonGroup}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowLocationModal(false)}
+              >
+                <Text style={styles.modalButtonText}>Close</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton, !manualLocation && styles.confirmButtonDisabled]}
+                onPress={handleSetLocation}
+                disabled={!manualLocation}
+              >
+                <Text style={[styles.modalButtonText, styles.confirmButtonText]}>Confirm</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          </View>
         </View>
       </Modal>
       <StatusBar style="auto" />
