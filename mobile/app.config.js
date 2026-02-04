@@ -42,6 +42,7 @@ module.exports = {
       favicon: "./assets/favicon.png"
     },
     extra: {
+      googleApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY,
       eas: {
         // EAS project ID for this app.
         // See README.md ("EAS Project configuration") for details about this ID and how to update it.

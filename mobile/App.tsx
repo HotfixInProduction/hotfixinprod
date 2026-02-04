@@ -172,6 +172,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
   },
+  buildingSelectorContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
   campusSelector: {
     flexDirection: 'row',
     backgroundColor: 'rgba(255, 255, 255, 0.95)',

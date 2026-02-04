@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import { StyleSheet } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { GOOGLE_API_KEY } from '../../../config';
+import Constants from 'expo-constants';
 
 type BuildingSelectorProps = {
   placeholder: string;
@@ -31,7 +31,7 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
         onSelect(place);
       }}
       query={{
-        key: GOOGLE_API_KEY,
+        key: Constants.expoConfig?.extra?.googleApiKey,
         language: 'en',
       }}
       styles={autocompleteStyles}
