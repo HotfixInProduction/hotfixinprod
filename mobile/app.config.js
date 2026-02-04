@@ -43,6 +43,8 @@ module.exports = {
     },
     plugins: [
       "@config-plugins/detox"
+      "expo-font",
+      "expo-asset"
     ],
     extra: {
       eas: {
