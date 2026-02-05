@@ -41,18 +41,26 @@ const StartDestinationPicker: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 16,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   label: {
-    fontSize: 16,
-    marginBottom: 4,
-    fontWeight: '500',
+    fontSize: 15,
+    marginBottom: 8,
+    fontWeight: '600',
+    color: '#1f1f1f',
   },
   selected: {
     marginBottom: 12,
-    color: '#555',
+    marginTop: 4,
+    color: '#666',
+    fontSize: 13,
   },
 });
 

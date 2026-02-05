@@ -505,5 +505,58 @@ describe('App', () => {
     })
   })
 
+  describe('Building Selector Toggle', () => {
+    it('renders building selector toggle button', () => {
+      const { getByTestId } = render(<App />);
+      expect(getByTestId('building-selector-toggle')).toBeTruthy();
+    });
+
+    it('toggles building selector panel when button is pressed', async () => {
+      const { getByTestId } = render(<App />);
+      const toggleButton = getByTestId('building-selector-toggle');
+
+      // Initially, the panel should be hidden (translateX: -400)
+      // Press to show it
+      fireEvent.press(toggleButton);
+
+      // Wait for animation to complete
+      await new Promise(resolve => setTimeout(resolve, 350));
+
+      // Press again to hide it
+      fireEvent.press(toggleButton);
+
+      // Wait for animation to complete
+      await new Promise(resolve => setTimeout(resolve, 350));
+
+      // Button should still be present
+      expect(toggleButton).toBeTruthy();
+    });
+
+    it('shows directions icon when selector is closed and close icon when open', async () => {
+      const { getByTestId } = render(<App />);
+      const toggleButton = getByTestId('building-selector-toggle');
+
+      // Initially shows directions icon (selector is closed)
+      let icon = toggleButton.findByProps({ name: 'directions' });
+      expect(icon).toBeTruthy();
+
+      // Press to open
+      fireEvent.press(toggleButton);
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Should now show close icon
+      icon = toggleButton.findByProps({ name: 'close' });
+      expect(icon).toBeTruthy();
+
+      // Press to close again
+      fireEvent.press(toggleButton);
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Should show directions icon again
+      icon = toggleButton.findByProps({ name: 'directions' });
+      expect(icon).toBeTruthy();
+    });
+  })
+
 });
 

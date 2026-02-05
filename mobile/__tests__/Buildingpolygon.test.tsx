@@ -60,4 +60,37 @@ describe('BuildingPolygon', () => {
     
     expect(hallBuilding.props.strokeColor).toBe('#0000FF');
   });
+
+  it('does not watch location when permission is denied', async () => {
+    mockGetForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
+
+    render(<BuildingPolygon onSelectBuilding={() => {}} />);
+    await new Promise(resolve => setTimeout(resolve, 10));
+
+    // watchPositionAsync should not be called when permission is denied
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
+  });
+
+  it('cleans up location subscription on unmount when subscription exists', async () => {
+    const mockRemove = jest.fn();
+    mockWatchPositionAsync.mockResolvedValue({ remove: mockRemove });
+
+    const { unmount } = render(<BuildingPolygon onSelectBuilding={() => {}} />);
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    unmount();
+
+    expect(mockRemove).toHaveBeenCalled();
+  });
+
+  it('handles unmount safely when no location subscription exists', async () => {
+    mockGetForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
+
+    const { unmount } = render(<BuildingPolygon onSelectBuilding={() => {}} />);
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Should not throw error when unmounting with null subscription
+    expect(() => unmount()).not.toThrow();
+    expect(mockWatchPositionAsync).not.toHaveBeenCalled();
+  });
 });

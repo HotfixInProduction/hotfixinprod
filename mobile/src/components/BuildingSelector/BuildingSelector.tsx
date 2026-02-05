@@ -42,22 +42,25 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
 
 const autocompleteStyles = StyleSheet.create({
   textInputContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
     borderTopWidth: 0,
     borderBottomWidth: 0,
     marginBottom: 10,
   },
   textInput: {
     height: 44,
-    color: '#000',
-    fontSize: 16,
+    color: '#1f1f1f',
+    fontSize: 15,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    paddingHorizontal: 10,
+    borderColor: '#e3e3e3',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
   },
   listView: {
     backgroundColor: '#fff',
+    borderRadius: 10,
+    marginTop: 4,
   },
 });
 
