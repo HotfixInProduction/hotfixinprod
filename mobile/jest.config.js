@@ -10,6 +10,7 @@ module.exports = {
         "!**/node_modules/**",
         "!**/babel.config.js",
         "!**/jest.setup.js",
+        "!**/e2e/**",
         "!index.ts"
     ],
     reporters: [
