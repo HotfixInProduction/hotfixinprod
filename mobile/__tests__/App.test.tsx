@@ -411,9 +411,19 @@ describe('App', () => {
       const { getByTestId, queryByText, getByText } = render(<App />);
       fireEvent.press(getByTestId('select-building'));
       await waitFor(() => expect(getByText('Hall Building')).toBeTruthy());
+      
+      // Before clicking close, verify building info is visible
+      expect(getByText('Hall Building')).toBeTruthy();
+      
+      // Click close button
       fireEvent.press(getByTestId('building-close'));
-      await waitFor(() => expect(queryByText('Hall Building')).toBeNull());
-    })
+      
+      // Wait for slide-down animation to complete (250ms) and building to be removed
+      await new Promise(resolve => setTimeout(resolve, 350));
+      
+      // After animation, building info should be gone
+      expect(queryByText('Hall Building')).toBeNull();
+    }, 10000)
   })
 
   describe('Indoor Map Integration', () => {

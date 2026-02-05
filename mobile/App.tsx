@@ -41,6 +41,7 @@ export default function App() {
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
   const [showFloorPlan, setShowFloorPlan] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const buildingInfoSlideAnim = useRef(new Animated.Value(300)).current;
   const [locationStatus, setLocationStatus] = useState<Location.PermissionStatus | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const appState = useRef(AppState.currentState);
@@ -105,6 +106,33 @@ export default function App() {
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription.remove();
   }, []);
+
+  useEffect(() => {
+    if (selectedBuilding) {
+      Animated.spring(buildingInfoSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 10,
+      }).start();
+    } else {
+      Animated.timing(buildingInfoSlideAnim, {
+        toValue: 300,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [selectedBuilding]);
+
+  const handleCloseBuilding = () => {
+    Animated.timing(buildingInfoSlideAnim, {
+      toValue: 300,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setSelectedBuilding(null);
+    });
+  };
 
   const handleCampusChange = (campusKey: CampusKey) => {
     setSelectedCampus(campusKey);
@@ -172,6 +200,7 @@ export default function App() {
               style={styles.campusOption}
               onPress={() => handleCampusChange('downtown')}
               activeOpacity={0.7}
+              testID="campus-selector-downtown"
             >
               <Text style={[
                 styles.campusText,
@@ -184,6 +213,7 @@ export default function App() {
               style={styles.campusOption}
               onPress={() => handleCampusChange('loyola')}
               activeOpacity={0.7}
+              testID="campus-selector-loyola"
             >
               <Text style={[
                 styles.campusText,
@@ -196,7 +226,14 @@ export default function App() {
         </View>
       </SafeAreaView>
 
-      <BuildingInfo building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />
+      <Animated.View
+        style={{
+          transform: [{ translateY: buildingInfoSlideAnim }],
+        }}
+        pointerEvents={selectedBuilding ? 'auto' : 'none'}
+      >
+        <BuildingInfo building={selectedBuilding} onClose={handleCloseBuilding} />
+      </Animated.View>
 
       {showFloorPlan && (
         <FloorPlanViewer
