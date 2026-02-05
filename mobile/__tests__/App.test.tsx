@@ -114,6 +114,30 @@ jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({
   remove: defaultAppStateRemove,
 }) as any);
 
+const openLocationModal = async (getByText: any, queryByText?: any) => {
+  fireEvent.press(getByText('📍 Set Location'));
+
+  if (queryByText) {
+    await waitFor(() => {
+      expect(queryByText('Set Your Location')).toBeTruthy();
+    });
+  }
+};
+
+const setSearchValue = (getByPlaceholderText: any, value: string) => {
+  const input = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
+  fireEvent.changeText(input, value);
+  return input;
+};
+
+const selectHallBuilding = async (getByText: any) => {
+  await waitFor(() => {
+    expect(getByText('Hall Building')).toBeTruthy();
+  });
+
+  fireEvent.press(getByText('Hall Building'));
+};
+
 describe('App', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -509,23 +533,14 @@ describe('App', () => {
   describe('Location Selection Feature', () => {
     it('opens location modal when Set Location button is pressed', async () => {
       const { getByText, queryByText } = render(<App />);
-      
-      const setLocationButton = getByText('📍 Set Location');
-      fireEvent.press(setLocationButton);
 
-      await waitFor(() => {
-        expect(queryByText('Set Your Location')).toBeTruthy();
-      });
+      await openLocationModal(getByText, queryByText);
     });
 
     it('closes location modal when Close button is pressed', async () => {
       const { getByText, queryByText } = render(<App />);
-      
-      fireEvent.press(getByText('📍 Set Location'));
-      
-      await waitFor(() => {
-        expect(queryByText('Set Your Location')).toBeTruthy();
-      });
+
+      await openLocationModal(getByText, queryByText);
 
       fireEvent.press(getByText('Close'));
       
@@ -536,11 +551,9 @@ describe('App', () => {
 
     it('searches buildings by name', async () => {
       const { getByText, getByPlaceholderText, queryByText } = render(<App />);
-      
-      fireEvent.press(getByText('📍 Set Location'));
 
-      const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-      fireEvent.changeText(searchInput, 'Hall');
+      await openLocationModal(getByText);
+      setSearchValue(getByPlaceholderText, 'Hall');
 
       await waitFor(() => {
         expect(queryByText('Hall Building')).toBeTruthy();
@@ -549,11 +562,9 @@ describe('App', () => {
 
     it('displays building list when search has results', async () => {
       const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
-      
-      fireEvent.press(getByText('📍 Set Location'));
 
-      const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-      fireEvent.changeText(searchInput, 'Hall');
+      await openLocationModal(getByText);
+      setSearchValue(getByPlaceholderText, 'Hall');
 
       await waitFor(() => {
         expect(queryByTestId('building-list')).toBeTruthy();
@@ -562,11 +573,9 @@ describe('App', () => {
 
     it('clears building list when search is empty', async () => {
       const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
-      
-      fireEvent.press(getByText('📍 Set Location'));
 
-      const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-      fireEvent.changeText(searchInput, 'Hall');
+      await openLocationModal(getByText);
+      const searchInput = setSearchValue(getByPlaceholderText, 'Hall');
 
       await waitFor(() => {
         expect(queryByTestId('building-list')).toBeTruthy();
@@ -581,8 +590,8 @@ describe('App', () => {
 
     it('disables Confirm button when no location is selected', async () => {
       const { getByText, getByTestId } = render(<App />);
-      
-      fireEvent.press(getByText('📍 Set Location'));
+
+      await openLocationModal(getByText);
 
       await waitFor(() => {
         const confirmButton = getByTestId('confirm-location-button');
@@ -592,13 +601,10 @@ describe('App', () => {
 
     it('animates map to building center when building is selected', async () => {
       const { getByText, getByPlaceholderText } = render(<App />);
-      
+
       mockAnimateToRegion.mockClear();
-
-      fireEvent.press(getByText('📍 Set Location'));
-
-      const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-      fireEvent.changeText(searchInput, 'Hall');
+      await openLocationModal(getByText);
+      setSearchValue(getByPlaceholderText, 'Hall');
 
       await waitFor(() => {
         const hallBuilding = getByText('Hall Building');
@@ -650,17 +656,10 @@ describe('App', () => {
     describe('Location Confirmation', () => {
       it('closes modal when location is set and Confirm is pressed', async () => {
         const { getByText, getByPlaceholderText, queryByText } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, 'Hall');
-
-        await waitFor(() => {
-          expect(queryByText('Hall Building')).toBeTruthy();
-        });
-
-        fireEvent.press(getByText('Hall Building'));
+        await openLocationModal(getByText, queryByText);
+        setSearchValue(getByPlaceholderText, 'Hall');
+        await selectHallBuilding(getByText);
 
         await waitFor(() => {
           const confirmButton = getByText('Confirm');
@@ -676,17 +675,10 @@ describe('App', () => {
     describe('Clear Location', () => {
       it('clears all location-related state', async () => {
         const { getByText, getByPlaceholderText, queryByText } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, 'Hall');
-
-        await waitFor(() => {
-          expect(queryByText('Hall Building')).toBeTruthy();
-        });
-
-        fireEvent.press(getByText('Hall Building'));
+        await openLocationModal(getByText, queryByText);
+        setSearchValue(getByPlaceholderText, 'Hall');
+        await selectHallBuilding(getByText);
 
         await waitFor(() => {
           expect(queryByText(/Location set at Hall Building/)).toBeTruthy();
@@ -702,15 +694,10 @@ describe('App', () => {
 
       it('clears search query when location is cleared', async () => {
         const { getByText, getByPlaceholderText, queryByText } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, 'Hall');
-
-        await waitFor(() => {
-          fireEvent.press(getByText('Hall Building'));
-        });
+        await openLocationModal(getByText, queryByText);
+        const searchInput = setSearchValue(getByPlaceholderText, 'Hall');
+        await selectHallBuilding(getByText);
 
         fireEvent.press(getByText('✕ Clear Location'));
 
@@ -723,17 +710,11 @@ describe('App', () => {
     describe('Building Selection', () => {
       it('calculates building center from coordinates', async () => {
         const { getByText, getByPlaceholderText } = render(<App />);
-        
+
         mockAnimateToRegion.mockClear();
-
-        fireEvent.press(getByText('📍 Set Location'));
-
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, 'Hall');
-
-        await waitFor(() => {
-          fireEvent.press(getByText('Hall Building'));
-        });
+        await openLocationModal(getByText);
+        setSearchValue(getByPlaceholderText, 'Hall');
+        await selectHallBuilding(getByText);
 
         await waitFor(() => {
           expect(mockAnimateToRegion).toHaveBeenCalled();
@@ -749,15 +730,10 @@ describe('App', () => {
 
       it('sets all location state on building selection', async () => {
         const { getByText, getByPlaceholderText, queryByText } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, 'Hall');
-
-        await waitFor(() => {
-          fireEvent.press(getByText('Hall Building'));
-        });
+        await openLocationModal(getByText, queryByText);
+        const searchInput = setSearchValue(getByPlaceholderText, 'Hall');
+        await selectHallBuilding(getByText);
 
         await waitFor(() => {
           expect(queryByText(/Location set at Hall Building/)).toBeTruthy();
@@ -768,11 +744,9 @@ describe('App', () => {
 
       it('clears filtered buildings after selection', async () => {
         const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, 'Hall');
+        await openLocationModal(getByText);
+        setSearchValue(getByPlaceholderText, 'Hall');
 
         await waitFor(() => {
           expect(queryByTestId('building-list')).toBeTruthy();
@@ -789,12 +763,8 @@ describe('App', () => {
     describe('Location Modal', () => {
       it('closes modal when onRequestClose is triggered', async () => {
         const { getByText, queryByText } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        await waitFor(() => {
-          expect(queryByText('Set Your Location')).toBeTruthy();
-        });
+        await openLocationModal(getByText, queryByText);
 
         fireEvent(queryByText('Set Your Location')!.parent, 'onRequestClose');
 
@@ -807,15 +777,10 @@ describe('App', () => {
     describe('Map Markers', () => {
       it('renders location marker when manualLocation is set', async () => {
         const { getByText, getByPlaceholderText, getByTestId } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, 'Hall');
-
-        await waitFor(() => {
-          fireEvent.press(getByText('Hall Building'));
-        });
+        await openLocationModal(getByText);
+        setSearchValue(getByPlaceholderText, 'Hall');
+        await selectHallBuilding(getByText);
 
         // The marker should be rendered when location is set
         await waitFor(() => {
@@ -828,46 +793,20 @@ describe('App', () => {
     describe('Building Search', () => {
       it('filters buildings case-insensitively', async () => {
         const { getByText, getByPlaceholderText, queryByText } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        
-        // Test lowercase search
-        fireEvent.changeText(searchInput, 'hall');
+        await openLocationModal(getByText);
+        setSearchValue(getByPlaceholderText, 'hall');
 
         await waitFor(() => {
           expect(queryByText('Hall Building')).toBeTruthy();
         });
       });
 
-      it('hides building list when search is cleared', async () => {
-        const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
-
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, 'Hall');
-
-        await waitFor(() => {
-          expect(queryByTestId('building-list')).toBeTruthy();
-        });
-
-        // Clear the search
-        fireEvent.changeText(searchInput, '');
-
-        await waitFor(() => {
-          expect(queryByTestId('building-list')).toBeNull();
-        });
-      });
-
       it('hides building list when search with only whitespace', async () => {
         const { getByText, getByPlaceholderText, queryByTestId } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
 
-        const searchInput = getByPlaceholderText('Search (e.g., Hall, JMSB, etc.)');
-        fireEvent.changeText(searchInput, '   ');
+        await openLocationModal(getByText);
+        setSearchValue(getByPlaceholderText, '   ');
 
         await waitFor(() => {
           expect(queryByTestId('building-list')).toBeNull();
