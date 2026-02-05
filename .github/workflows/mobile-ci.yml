@@ -2,13 +2,9 @@ name: Mobile App CI
 
 on:
   push:
-    branches: [main, dev]
-    paths:
-      - "mobile/**"
+    branches: [main, dev, "**"]
   pull_request:
     branches: [main, dev]
-    paths:
-      - "mobile/**"
   workflow_dispatch:
 
 jobs:
