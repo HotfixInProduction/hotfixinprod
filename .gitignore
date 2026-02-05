@@ -46,6 +46,9 @@ junit.xml
 # Jest coverage output
 **/coverage/
 
+# Test reports
+junit.xml
+
 # tooling caches
 .lsp/
 .clj-kondo/
