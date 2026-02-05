@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Polygon } from 'react-native-maps';
+import { Polygon, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { buildings } from '../data/buildings';
+import { View, Text, StyleSheet } from 'react-native';
 
 // Define types
 interface Coordinate {
@@ -11,7 +12,9 @@ interface Coordinate {
 
 interface Building {
     id: string;
+    label: string;
     coordinates: Coordinate[];
+    labelCoord: Coordinate;
     // Add other building properties if needed
 }
 
@@ -36,7 +39,7 @@ const isPointInPolygon = (point: Point, polygon: Coordinate[]): boolean => {
 
         const intersect = ((yi > point.longitude) !== (yj > point.longitude))
             && (point.latitude < (xj - xi) * (point.longitude - yi) / (yj - yi) + xi);
-        
+
         if (intersect) inside = !inside;
     }
     return inside;
@@ -44,7 +47,7 @@ const isPointInPolygon = (point: Point, polygon: Coordinate[]): boolean => {
 
 // Extract building detection logic
 const findBuildingAtLocation = (latitude: number, longitude: number): Building | undefined => {
-    return buildings.find(building => 
+    return buildings.find(building =>
         isPointInPolygon({ latitude, longitude }, building.coordinates)
     );
 };
@@ -65,7 +68,7 @@ const setupLocationWatching = async (
     setCurrentBuildingId: React.Dispatch<React.SetStateAction<string | null>>
 ): Promise<Location.LocationSubscription | null> => {
     const { status } = await Location.getForegroundPermissionsAsync();
-    
+
     if (status !== 'granted') {
         return null;
     }
@@ -101,20 +104,58 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId }
 
     return (
         <>
-            {buildings.map(b =>  {
+            {buildings.map(b => {
                 const isUserInside = currentBuildingId === b.id;
                 const isSelected = selectedBuildingId === b.id;
-                return(
-                <Polygon
-                    key={b.id}
-                    coordinates={b.coordinates}
-                    strokeColor={isSelected ? "#FBBC05" : isUserInside ? "#0000FF" : "#FF0000"}
-                    fillColor={isSelected ? "rgb(251, 188, 5, 0.4)" : isUserInside ? "rgba(0,0,255,0.4)" : "rgba(255,0,0,0.4)"}
-                    strokeWidth={2}
-                    onPress={() => onSelectBuilding(b)}
-                    tappable
-                />
-            )})}
+
+                return (
+                    <React.Fragment key={b.id}>
+                        <Polygon
+                            coordinates={b.coordinates}
+                            strokeColor={isSelected ? "#FBBC05" : isUserInside ? "#0000FF" : "#FF0000"}
+                            fillColor={isSelected ? "rgb(251, 188, 5, 0.4)" : isUserInside ? "rgba(0,0,255,0.4)" : "rgba(255,0,0,0.4)"}
+                            strokeWidth={2}
+                            onPress={() => onSelectBuilding(b)}
+                            tappable
+                        />
+
+                        {(isSelected || isUserInside) && (
+                            <Marker
+                                coordinate={b.labelCoord}
+                                pointerEvents='none'
+                                anchor={{ x: 0.5, y: 0.5 }}
+                            >
+                                <View style={styles.labelContainer}>
+                                    <Text style={styles.labelText}>
+                                        {b.label}
+                                    </Text>
+                                </View>
+                            </Marker>
+                        )}
+                    </React.Fragment>
+                )
+            })}
         </>
     );
 }
+
+const styles = StyleSheet.create({
+    labelContainer: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        paddingVertical: 1,
+        paddingHorizontal: 5,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#ffffff',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    labelText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#912338',
+    }
+});
