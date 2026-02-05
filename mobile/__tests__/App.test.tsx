@@ -15,7 +15,10 @@ const mockWatchPositionAsync = jest.fn().mockResolvedValue({
 });
 const mockBuilding = {
   id: 'Hall Building',
-  address: '1455 De Maisonneuve Blvd. W.'
+  address: '1455 De Maisonneuve Blvd. W.',
+  floorPlans: {
+    '8': '<svg>Mock SVG</svg>'
+  }
 };
 
 // Mock BuildingPolygon to simulate building selection
@@ -412,6 +415,31 @@ describe('App', () => {
       await waitFor(() => expect(queryByText('Hall Building')).toBeNull());
     })
   })
+
+  describe('Indoor Map Integration', () => {
+  it('opens FloorPlanViewer when a building with floor plans is selected', async () => {
+    const { getByTestId, getByText } = render(<App />);
+    
+    fireEvent.press(getByTestId('select-building'));
+
+    await waitFor(() => {
+      expect(getByText('Hall Building - Floor 8')).toBeTruthy();
+    });
+  });
+
+  it('hides FloorPlanViewer when close button is pressed', async () => {
+    const { getByTestId, queryByText } = render(<App />);
+    
+    fireEvent.press(getByTestId('select-building'));
+    
+    await waitFor(() => getByTestId('floor-plan-close'));
+    fireEvent.press(getByTestId('floor-plan-close'));
+
+    await waitFor(() => {
+      expect(queryByText('Hall Building - Floor 8')).toBeNull();
+    });
+  });
+});
 
   describe('Display Building Info', () => {
     test('returns null when building is null', () => {
