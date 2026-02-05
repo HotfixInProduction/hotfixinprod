@@ -93,11 +93,12 @@ jobs:
 
       - name: Debug Workspace
         run: |
-          echo "Current directory: $(pwd)"
-          echo "Searching for workspaces:"
-          find . -maxdepth 4 -name "*.xcworkspace"
-          echo "Listing mobile/ios directory (if exists):"
-          ls -la ios || echo "ios directory not found"
+          echo "Full Runner Path: $GITHUB_WORKSPACE"
+          echo "Current Directory: $(pwd)"
+          echo "--- SEARCHING ALL SUBDIRECTORIES FOR WORKSPACES ---"
+          find $GITHUB_WORKSPACE -name "*.xcworkspace"
+          echo "--- LISTING ALL FILES IN MOBILE/IOS ---"
+          ls -R ios || echo "ios directory not found"
 
       - name: Build App
         run: npx detox build -c ios.sim.release
