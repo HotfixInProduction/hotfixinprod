@@ -1,3 +1,7 @@
+import { hall8Svg } from './svgs/hall8';
+import { hall9Svg } from './svgs/hall9';
+import { jmsbs2Svg } from './svgs/jmsbs2';
+
 export const buildings =[
     {
         id: 'Hall Building',
@@ -22,7 +26,11 @@ export const buildings =[
             'Zen Den'
         ],
         isAccessible: true,
-        hasBikeRacks: true
+        hasBikeRacks: true,
+        floorPlans: {
+            '8': hall8Svg,
+            '9': hall9Svg
+        }
     },
     {
         id: 'Q Annex',
@@ -437,7 +445,10 @@ export const buildings =[
             'John Molson Executive Centre', 'Performing Arts Facilities',
             'Zen Den'
         ],
-        isAccessible: true
+        isAccessible: true,
+        floorPlans: {
+            '8': jmsbs2Svg
+        }
     },
     {
         id: 'Toronto-Dominion Building',

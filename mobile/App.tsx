@@ -7,6 +7,7 @@ import BuildingPolygon from './src/components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from './src/components/BuildingInfo';
+import FloorPlanViewer from './src/components/FloorPlanViewer';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -38,6 +39,7 @@ export default function App() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
+  const [showFloorPlan, setShowFloorPlan] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const [locationStatus, setLocationStatus] = useState<Location.PermissionStatus | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -125,6 +127,16 @@ export default function App() {
     }, 500);
   };
 
+  const handleBuildingSelect = (building: any) => {
+    setSelectedBuilding(building);
+
+    if (building?.floorPlans) {
+      setShowFloorPlan(true);
+    } else {
+      setShowFloorPlan(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -136,7 +148,7 @@ export default function App() {
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
       >
-      <BuildingPolygon onSelectBuilding={setSelectedBuilding} />
+      <BuildingPolygon onSelectBuilding={handleBuildingSelect} />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
@@ -185,6 +197,14 @@ export default function App() {
       </SafeAreaView>
 
       <BuildingInfo building={selectedBuilding} onClose={() => setSelectedBuilding(null)} />
+
+      {showFloorPlan && (
+        <FloorPlanViewer
+          building={selectedBuilding}
+          floorLevel='8'
+          onClose={() => setShowFloorPlan(false)}
+        />
+      )}
 
       {locationStatus === 'denied' && (
         <TouchableOpacity
