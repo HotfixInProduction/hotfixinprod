@@ -21,13 +21,24 @@ const mockBuilding = {
   }
 };
 
+const mockBuildingNoPlans = {
+  id: 'Library Building',
+  address: '1400 De Maisonneuve Blvd. W.'
+};
+
 // Mock BuildingPolygon to simulate building selection
 jest.mock('../src/components/BuildingPolygon', () => {
-  const { TouchableOpacity, Text } = require('react-native');
+  const { View, TouchableOpacity, Text } = require('react-native');
   return ({ onSelectBuilding }: any) => (
-    <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
-      <Text>select</Text>
-    </TouchableOpacity>
+    <View>
+      <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
+        <Text>Select With Plan</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="select-building-no-plans" onPress={() => onSelectBuilding(mockBuildingNoPlans)}>
+        <Text>Select No Plans</Text>
+      </TouchableOpacity>
+    </View>
+    
   );
 });
 const mockOpenSettings = jest.fn();
@@ -445,6 +456,18 @@ describe('App', () => {
     await waitFor(() => getByTestId('floor-plan-close'));
     fireEvent.press(getByTestId('floor-plan-close'));
 
+    await waitFor(() => {
+      expect(queryByText('Hall Building - Floor 8')).toBeNull();
+    });
+  });
+
+  it('does not show floor plan viewer when a building without plans is selected', async () => {
+    const { getByTestId, queryByText } = render(<App />);
+    fireEvent.press(getByTestId('select-building'));
+    await waitFor(() => {
+      expect(queryByText('Hall Building - Floor 8')).toBeTruthy();
+    });
+    fireEvent.press(getByTestId('select-building-no-plans'));
     await waitFor(() => {
       expect(queryByText('Hall Building - Floor 8')).toBeNull();
     });
