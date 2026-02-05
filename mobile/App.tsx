@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   buildingSelectorToggleButton: {
     position: 'absolute',
     left: 18,
-    top: '50%',
+    top: '15%',
     marginTop: -24,
     backgroundColor: '#912338',
     borderRadius: 24,
@@ -368,8 +368,8 @@ const styles = StyleSheet.create({
   },
   buildingSelectorPanel: {
     position: 'absolute',
-    left: 0,
-    top: '50%',
+    left: 10,
+    top: '35%',
     marginTop: -150,
     width: 350,
     maxWidth: '85%',
