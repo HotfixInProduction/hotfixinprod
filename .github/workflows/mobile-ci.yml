@@ -54,3 +54,57 @@ jobs:
         with:
           files: mobile/junit.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  e2e-ios:
+    needs: validate
+    runs-on: macos-14
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install applesimutils
+        run: |
+          brew tap wix/brew
+          brew install applesimutils
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache Pods
+        uses: actions/cache@v4
+        with:
+          path: mobile/ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('mobile/ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install Pods
+        run: npx expo install:ios
+
+      - name: Build App
+        run: npx detox build -c ios.sim.release
+        env:
+          GOOGLE_MAPS_IOS_API_KEY: ${{ secrets.GOOGLE_MAPS_IOS_API_KEY }}
+
+      - name: Run E2E Tests
+        run: npx detox test -c ios.sim.release --cleanup --loglevel trace
+        env:
+          GOOGLE_MAPS_IOS_API_KEY: ${{ secrets.GOOGLE_MAPS_IOS_API_KEY }}
+
+      - name: Upload Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: detox-artifacts
+          path: mobile/artifacts
