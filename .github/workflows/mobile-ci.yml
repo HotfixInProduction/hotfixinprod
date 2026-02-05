@@ -87,7 +87,7 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Prebuild iOS
-        run: npx expo prebuild --platform ios --no-interactive
+        run: npx expo prebuild --platform ios --clean
         env:
           GOOGLE_MAPS_IOS_API_KEY: ${{ secrets.GOOGLE_MAPS_IOS_API_KEY }}
 
