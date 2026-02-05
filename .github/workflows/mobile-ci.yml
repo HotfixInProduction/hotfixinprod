@@ -86,9 +86,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
-      - name: Install Pods
-        run: pod install
-        working-directory: mobile/ios
+      - name: Prebuild iOS
+        run: npx expo prebuild --platform ios
 
       - name: Build App
         run: npx detox build -c ios.sim.release
