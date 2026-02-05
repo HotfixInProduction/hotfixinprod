@@ -40,6 +40,8 @@ yarn-error.*
 # generated native folders
 mobile/ios
 mobile/android
+mobile/artifacts
+junit.xml
 
 # Jest coverage output
 **/coverage/

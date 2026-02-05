@@ -188,6 +188,7 @@ export default function App() {
               style={styles.campusOption}
               onPress={() => handleCampusChange('downtown')}
               activeOpacity={0.7}
+              testID="campus-selector-downtown"
             >
               <Text style={[
                 styles.campusText,
@@ -200,6 +201,7 @@ export default function App() {
               style={styles.campusOption}
               onPress={() => handleCampusChange('loyola')}
               activeOpacity={0.7}
+              testID="campus-selector-loyola"
             >
               <Text style={[
                 styles.campusText,
