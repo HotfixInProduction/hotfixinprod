@@ -5,6 +5,7 @@ import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
+import StartDestinationPicker from './src/components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from './src/components/BuildingInfo';
 
@@ -212,6 +213,9 @@ export default function App() {
             </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.buildingSelectorContainer}>
+          <StartDestinationPicker />
+        </View>
       </SafeAreaView>
 
       <Animated.View
@@ -298,6 +302,10 @@ const styles = StyleSheet.create({
   campusSelectorContainer: {
     alignItems: 'center',
     paddingTop: 28,
+  },
+  buildingSelectorContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
   campusSelector: {
     flexDirection: 'row',
