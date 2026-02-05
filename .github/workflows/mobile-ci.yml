@@ -26,7 +26,7 @@ jobs:
           cache: 'npm'
           cache-dependency-path: mobile/package-lock.json
 
-      # Clear any restored npm cache corruption that can trigger EEXIST during npm ci on GitHub-hosted runners
+      # Clear any restored npm cache corruption that can trigger EXIST during npm ci on GitHub-hosted runners
       - name: Clean npm cache
         run: rm -rf ~/.npm/_cacache
 

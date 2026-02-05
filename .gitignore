@@ -33,7 +33,6 @@ yarn-error.*
 # local env files
 .env*.local
 .env
-.env.example
 local.properties
 
 # typescript
@@ -46,7 +45,7 @@ mobile/android
 # Jest coverage output
 **/coverage/
 
-**/junit.xml
+junit.xml
 
 # tooling caches
 .lsp/

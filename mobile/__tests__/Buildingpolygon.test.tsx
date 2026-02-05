@@ -33,6 +33,19 @@ describe('BuildingPolygon', () => {
     expect(polygons.length).toBeGreaterThan(0);
   });
 
+    it('does not set up location watching if permission denied', async () => {
+      mockGetForegroundPermissionsAsync.mockResolvedValueOnce({ status: 'denied' });
+      const { UNSAFE_getAllByType } = render(<BuildingPolygon onSelectBuilding={() => {}} />);
+      await act(async () => {
+        // Wait for useEffect to run
+        await new Promise(resolve => setTimeout(resolve, 10));
+      });
+      expect(mockWatchPositionAsync).not.toHaveBeenCalled();
+      // Polygons still render
+      const polygons = UNSAFE_getAllByType(require('react-native-maps').Polygon);
+      expect(polygons.length).toBeGreaterThan(0);
+    });
+
   it('changes building color when user is inside', async () => {
     let locationCallback: any;
     mockWatchPositionAsync.mockImplementation((config, callback) => {
@@ -60,4 +73,15 @@ describe('BuildingPolygon', () => {
     
     expect(hallBuilding.props.strokeColor).toBe('#0000FF');
   });
+
+    it('cleans up location subscription on unmount', async () => {
+      const removeMock = jest.fn();
+      mockWatchPositionAsync.mockResolvedValueOnce({ remove: removeMock });
+      const { unmount } = render(<BuildingPolygon onSelectBuilding={() => {}} />);
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      });
+      unmount();
+      expect(removeMock).toHaveBeenCalled();
+    });
 });
