@@ -42,6 +42,14 @@ module.exports = {
       favicon: "./assets/favicon.png"
     },
     plugins: [
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ],
       "@config-plugins/detox",
       "expo-font",
       "expo-asset"
