@@ -41,10 +41,12 @@ local.properties
 # generated native folders
 mobile/ios
 mobile/android
+mobile/artifacts
 
 # Jest coverage output
 **/coverage/
 
+# Test reports
 junit.xml
 
 # tooling caches
