@@ -108,12 +108,26 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId }
                 const isUserInside = currentBuildingId === b.id;
                 const isSelected = selectedBuildingId === b.id;
 
+                let strokeColor = "#FF0000";
+                if (isSelected) {
+                    strokeColor = "#FBBC05";
+                } else if (isUserInside) {
+                    strokeColor = "#0000FF";
+                }
+
+                let fillColor = "rgba(255, 0, 0, 0.4)";
+                if (isSelected) {
+                    fillColor = "rgba(251, 188, 5, 0.4)";
+                } else if (isUserInside) {
+                    fillColor = "rgba(0, 0, 255, 0.4)";
+                }
+
                 return (
                     <React.Fragment key={b.id}>
                         <Polygon
                             coordinates={b.coordinates}
-                            strokeColor={isSelected ? "#FBBC05" : isUserInside ? "#0000FF" : "#FF0000"}
-                            fillColor={isSelected ? "rgb(251, 188, 5, 0.4)" : isUserInside ? "rgba(0,0,255,0.4)" : "rgba(255,0,0,0.4)"}
+                            strokeColor={strokeColor}
+                            fillColor={fillColor}
                             strokeWidth={2}
                             onPress={() => onSelectBuilding(b)}
                             tappable
@@ -144,7 +158,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
         paddingVertical: 1,
         paddingHorizontal: 5,
-        borderRadius: 10,
+        borderRadius: 20,
         borderWidth: 1,
         borderColor: '#ffffff',
         shadowColor: '#000',
