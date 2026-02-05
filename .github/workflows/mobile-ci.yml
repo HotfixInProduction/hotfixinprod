@@ -87,12 +87,15 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Prebuild iOS
-        run: npx expo prebuild --platform ios --clean
+        run: npx expo prebuild --platform ios --clean --verbose
         env:
           GOOGLE_MAPS_IOS_API_KEY: ${{ secrets.GOOGLE_MAPS_IOS_API_KEY }}
 
       - name: Debug Workspace
-        run: ls -R ios
+        run: |
+          pwd
+          find . -maxdepth 3 -name "*.xcworkspace"
+          ls -R ios
 
       - name: Build App
         run: npx detox build -c ios.sim.release
