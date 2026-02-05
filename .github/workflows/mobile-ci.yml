@@ -87,15 +87,17 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Prebuild iOS
-        run: npx expo prebuild --platform ios --clean --verbose
+        run: npx expo prebuild --platform ios --clean
         env:
           GOOGLE_MAPS_IOS_API_KEY: ${{ secrets.GOOGLE_MAPS_IOS_API_KEY }}
 
       - name: Debug Workspace
         run: |
-          pwd
-          find . -maxdepth 3 -name "*.xcworkspace"
-          ls -R ios
+          echo "Current directory: $(pwd)"
+          echo "Searching for workspaces:"
+          find . -maxdepth 4 -name "*.xcworkspace"
+          echo "Listing mobile/ios directory (if exists):"
+          ls -la ios || echo "ios directory not found"
 
       - name: Build App
         run: npx detox build -c ios.sim.release
