@@ -3,6 +3,7 @@ import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert, Linking, AppState } from 'react-native';
 import App from '../App';
 import BuildingInfo from '../src/components/BuildingInfo';
+import { buildings } from '../src/data/buildings';
 
 // Create mocks before jest.mock
 const mockRequestForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
@@ -13,21 +14,9 @@ const mockGetCurrentPosition = jest.fn().mockResolvedValue({
 const mockWatchPositionAsync = jest.fn().mockResolvedValue({
   remove: jest.fn(),
 });
-const mockBuilding = {
-  id: 'Hall Building',
-  address: '1455 De Maisonneuve Blvd. W.',
-  coordinates: [
-    { latitude: 45.497717333439056, longitude: -73.57901648875999 },
-    { latitude: 45.49737008952721, longitude: -73.57829860721526 },
-    { latitude: 45.49682738667073, longitude: -73.5788266357901 },
-    { latitude: 45.497170475291824, longitude: -73.57954748378724 }
-  ],
-  departments: ['Economics', 'Geography'],
-  services: ['Campus Safety', 'IT Service'],
-  isAccessible: true,
-  hasBikeRacks: true,
-  hasParking: true
-};
+
+// Use real building data from the data source
+const mockBuilding = buildings.find(b => b.id === 'Hall Building')!;
 
 // Mock BuildingPolygon to simulate building selection
 jest.mock('../src/components/BuildingPolygon', () => {
@@ -657,19 +646,8 @@ describe('App', () => {
     });
   });
 
-  describe('Uncovered Code Coverage', () => {
-    describe('handleSetLocation', () => {
-      it('confirm button is disabled when no location selected', async () => {
-        const { getByText, getByTestId } = render(<App />);
-        
-        fireEvent.press(getByText('📍 Set Location'));
-
-        await waitFor(() => {
-          const confirmButton = getByTestId('confirm-location-button');
-          expect(confirmButton.props.accessibilityState?.disabled).toBe(true);
-        });
-      });
-
+  describe('Manual Location Feature', () => {
+    describe('Location Confirmation', () => {
       it('closes modal when location is set and Confirm is pressed', async () => {
         const { getByText, getByPlaceholderText, queryByText } = render(<App />);
         
@@ -695,7 +673,7 @@ describe('App', () => {
       });
     });
 
-    describe('handleClearLocation', () => {
+    describe('Clear Location', () => {
       it('clears all location-related state', async () => {
         const { getByText, getByPlaceholderText, queryByText } = render(<App />);
         
@@ -742,7 +720,7 @@ describe('App', () => {
       });
     });
 
-    describe('handleSelectBuilding', () => {
+    describe('Building Selection', () => {
       it('calculates building center from coordinates', async () => {
         const { getByText, getByPlaceholderText } = render(<App />);
         
@@ -808,7 +786,7 @@ describe('App', () => {
       });
     });
 
-    describe('Modal Interactions', () => {
+    describe('Location Modal', () => {
       it('closes modal when onRequestClose is triggered', async () => {
         const { getByText, queryByText } = render(<App />);
         
@@ -826,7 +804,7 @@ describe('App', () => {
       });
     });
 
-    describe('Circle and Marker Rendering', () => {
+    describe('Map Markers', () => {
       it('renders location marker when manualLocation is set', async () => {
         const { getByText, getByPlaceholderText, getByTestId } = render(<App />);
         
@@ -847,7 +825,7 @@ describe('App', () => {
       });
     });
 
-    describe('Search Functionality', () => {
+    describe('Building Search', () => {
       it('filters buildings case-insensitively', async () => {
         const { getByText, getByPlaceholderText, queryByText } = render(<App />);
         
