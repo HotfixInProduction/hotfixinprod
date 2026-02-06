@@ -9,94 +9,16 @@ import {
   setupAppStateMock,
 } from './utils/testUtils';
 
-// Setup mocks
-jest.mock('expo-location', () => {
-  const {
-    mockRequestForegroundPermissions,
-    mockGetForegroundPermissions,
-    mockGetCurrentPosition,
-    mockWatchPositionAsync,
-  } = require('./utils/testUtils');
-  
-  return {
-    requestForegroundPermissionsAsync: (...args: any[]) => mockRequestForegroundPermissions(...args),
-    getForegroundPermissionsAsync: (...args: any[]) => mockGetForegroundPermissions(...args),
-    getCurrentPositionAsync: (...args: any[]) => mockGetCurrentPosition(...args),
-    watchPositionAsync: (...args: any[]) => mockWatchPositionAsync(...args),
-    Accuracy: {
-      High: 4,
-    },
-  };
-});
-
-jest.mock('react-native-maps', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  const { mockAnimateToRegion } = require('./utils/testUtils');
-
-  const MockMapView = React.forwardRef((props: any, ref: any) => {
-    React.useImperativeHandle(ref, () => ({
-      animateToRegion: mockAnimateToRegion,
-    }));
-    return <View testID="map-view" {...props}>{props.children}</View>;
-  });
-
-  const MockPolygon = (props: any) => <View {...props} />;
-
-  return {
-    __esModule: true,
-    default: MockMapView,
-    Polygon: MockPolygon,
-  };
-});
-
-jest.mock('../src/components/BuildingPolygon', () => {
-  const { View, TouchableOpacity, Text } = require('react-native');
-  const { mockBuilding, mockBuildingNoPlans } = require('./utils/testUtils');
-  
-  return ({ onSelectBuilding }: any) => (
-    <View>
-      <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
-        <Text>Select With Plan</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="select-building-no-plans" onPress={() => onSelectBuilding(mockBuildingNoPlans)}>
-        <Text>Select No Plans</Text>
-      </TouchableOpacity>
-    </View>
-  );
-});
-
-jest.mock('react-native-safe-area-context', () => {
-  const { View } = require('react-native');
-  return {
-    SafeAreaView: (props: any) => <View {...props} />,
-    SafeAreaProvider: (props: any) => <View {...props} />,
-  };
-});
-
-jest.mock('@expo/vector-icons', () => {
-  const React = require('react');
-  const { Text } = require('react-native');
-  return {
-    MaterialIcons: (props: any) => <Text {...props}>{props.name}</Text>,
-  };
-}, { virtual: true });
+// Setup all mocks using factory functions
+jest.mock('expo-location', () => require('./utils/testUtils').createLocationMock());
+jest.mock('react-native-maps', () => require('./utils/testUtils').createMapMock());
+jest.mock('react-native-safe-area-context', () => require('./utils/testUtils').createSafeAreaMock());
+jest.mock('@expo/vector-icons', () => require('./utils/testUtils').createVectorIconsMock(), { virtual: true });
+jest.mock('../src/components/BuildingPolygon', () => require('./utils/testUtils').createBuildingPolygonMock());
 
 // Mock React Navigation
-jest.mock('@react-navigation/native', () => {
-  const actualNav = jest.requireActual('@react-navigation/native');
-  return {
-    ...actualNav,
-    NavigationContainer: ({ children }: any) => children,
-  };
-});
-
-jest.mock('@react-navigation/bottom-tabs', () => ({
-  createBottomTabNavigator: () => ({
-    Navigator: ({ children }: any) => children,
-    Screen: ({ children }: any) => children,
-  }),
-}));
+jest.mock('@react-navigation/native', () => require('./utils/testUtils').createNavigationMock());
+jest.mock('@react-navigation/bottom-tabs', () => require('./utils/testUtils').createBottomTabsMock());
 
 jest.spyOn(Alert, 'alert');
 
