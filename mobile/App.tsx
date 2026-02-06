@@ -5,6 +5,7 @@ import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from './src/components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
+import StartDestinationPicker from './src/components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from './src/components/BuildingInfo';
 import FloorPlanViewer from './src/components/FloorPlanViewer';
@@ -44,6 +45,8 @@ export default function App() {
   const buildingInfoSlideAnim = useRef(new Animated.Value(300)).current;
   const [locationStatus, setLocationStatus] = useState<Location.PermissionStatus | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [buildingSelectorVisible, setBuildingSelectorVisible] = useState(false);
+  const buildingSelectorSlideAnim = useRef(new Animated.Value(-400)).current;
   const appState = useRef(AppState.currentState);
 
   const centerOnUser = async () => {
@@ -124,6 +127,23 @@ export default function App() {
     }
   }, [selectedBuilding]);
 
+  useEffect(() => {
+    if (buildingSelectorVisible) {
+      Animated.spring(buildingSelectorSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 10,
+      }).start();
+    } else {
+      Animated.timing(buildingSelectorSlideAnim, {
+        toValue: -400,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [buildingSelectorVisible]);
+
   const handleCloseBuilding = () => {
     Animated.timing(buildingInfoSlideAnim, {
       toValue: 300,
@@ -132,6 +152,10 @@ export default function App() {
     }).start(() => {
       setSelectedBuilding(null);
     });
+  };
+
+  const toggleBuildingSelector = () => {
+    setBuildingSelectorVisible(!buildingSelectorVisible);
   };
 
   const handleCampusChange = (campusKey: CampusKey) => {
@@ -176,7 +200,7 @@ export default function App() {
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
       >
-      <BuildingPolygon onSelectBuilding={handleBuildingSelect} />
+      <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
@@ -225,6 +249,31 @@ export default function App() {
           </View>
         </View>
       </SafeAreaView>
+
+      <TouchableOpacity
+        style={styles.buildingSelectorToggleButton}
+        onPress={toggleBuildingSelector}
+        activeOpacity={0.7}
+        testID="building-selector-toggle"
+      >
+        <MaterialIcons
+          name={buildingSelectorVisible ? 'close' : 'directions'}
+          size={24}
+          color="#fff"
+        />
+      </TouchableOpacity>
+
+      <Animated.View
+        style={[
+          styles.buildingSelectorPanel,
+          {
+            transform: [{ translateX: buildingSelectorSlideAnim }],
+          },
+        ]}
+        pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
+      >
+        <StartDestinationPicker />
+      </Animated.View>
 
       <Animated.View
         style={{
@@ -318,6 +367,33 @@ const styles = StyleSheet.create({
   campusSelectorContainer: {
     alignItems: 'center',
     paddingTop: 28,
+  },
+  buildingSelectorToggleButton: {
+    position: 'absolute',
+    left: 18,
+    top: '15%',
+    marginTop: -24,
+    backgroundColor: '#912338',
+    borderRadius: 24,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 10,
+  },
+  buildingSelectorPanel: {
+    position: 'absolute',
+    left: 10,
+    top: '35%',
+    marginTop: -150,
+    width: 350,
+    maxWidth: '85%',
+    zIndex: 9,
   },
   campusSelector: {
     flexDirection: 'row',

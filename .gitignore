@@ -57,3 +57,4 @@ junit.xml
 **/.expo-shared/
 # IDEs and editors
 .idea
+/mobile/config.ts
