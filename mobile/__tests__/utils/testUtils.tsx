@@ -158,6 +158,8 @@ export const suppressActWarnings = () => {
 
 export const setupAppStateMock = () => {
   const defaultAppStateRemove = jest.fn();
+  // Mock currentState as a string
+  (AppState as any).currentState = 'active';
   jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({
     remove: defaultAppStateRemove,
   }) as any);

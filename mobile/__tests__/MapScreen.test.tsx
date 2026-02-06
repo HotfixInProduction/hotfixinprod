@@ -1,9 +1,10 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert, Linking } from 'react-native';
 import MapScreen from '../src/screens/MapScreen';
 import {
   mockRequestForegroundPermissions,
+  mockGetForegroundPermissions,
   mockGetCurrentPosition,
   mockOpenSettings,
   mockAnimateToRegion,
@@ -113,6 +114,139 @@ describe('MapScreen', () => {
         expect(getByTestId('location-off-button')).toBeTruthy();
       });
     });
+
+    it('handles location retrieval errors gracefully', async () => {
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockRejectedValue(new Error('Location timeout'));
+
+      render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          'Failed to get current location:',
+          expect.any(Error)
+        );
+      });
+
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('opens location modal when location-off button is pressed', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+
+      const { getByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('location-off-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('location-modal')).toBeTruthy();
+      });
+    });
+
+    it('closes location modal when "Not now" is pressed', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+
+      const { getByTestId, getByText, queryByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('location-off-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('location-modal')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Not now'));
+
+      await waitFor(() => {
+        expect(queryByTestId('location-modal')).toBeNull();
+      });
+    });
+
+    it('opens settings when "Open settings" is pressed', async () => {
+      const mockOpenSettings = jest.fn();
+      jest.spyOn(require('react-native').Linking, 'openSettings').mockImplementation(mockOpenSettings);
+
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+
+      const { getByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('location-off-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('location-modal')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('open-settings-button'));
+
+      await waitFor(() => {
+        expect(mockOpenSettings).toHaveBeenCalled();
+      });
+    });
+
+    it('re-requests permission when "Turn on location" is pressed', async () => {
+      mockRequestForegroundPermissions.mockResolvedValueOnce({ status: 'denied' });
+
+      const { getByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('location-off-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('location-modal')).toBeTruthy();
+      });
+
+      mockRequestForegroundPermissions.mockResolvedValueOnce({ status: 'granted' });
+
+      fireEvent.press(getByTestId('request-permission-button'));
+
+      await waitFor(() => {
+        expect(mockRequestForegroundPermissions).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it('updates location status when app returns from background with permission granted', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+      mockGetForegroundPermissions.mockResolvedValue({ status: 'granted' });
+
+      const { getByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+
+      // Get the app state listener that was registered
+      const appStateListener = (require('react-native').AppState.addEventListener as jest.Mock).mock.calls[0][1];
+      
+      // First simulate the app going to background
+      await act(async () => {
+        await appStateListener('background');
+      });
+
+      // Then simulate app returning to active (from background)
+      await act(async () => {
+        await appStateListener('active');
+      });
+
+      await waitFor(() => {
+        expect(mockGetForegroundPermissions).toHaveBeenCalled();
+        expect(mockGetCurrentPosition).toHaveBeenCalled();
+      });
+    });
   });
 
   describe('Campus Selection', () => {
@@ -189,6 +323,61 @@ describe('MapScreen', () => {
       await new Promise(resolve => setTimeout(resolve, 350));
       
       expect(queryByText('Hall Building')).toBeNull();
+    });
+
+    it('does not open FloorPlanViewer when building has no floor plans', async () => {
+      const { getByTestId, queryByText } = render(<MapScreen />);
+      
+      // Mock a building selection without floor plans
+      fireEvent.press(getByTestId('select-building-no-plans'));
+
+      await waitFor(() => {
+        expect(queryByText('Hall Building - Floor 8')).toBeNull();
+      });
+    });
+
+    it('closes FloorPlanViewer when close button is pressed', async () => {
+      const { getByTestId, getByText, queryByText } = render(<MapScreen />);
+      
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(getByText('Hall Building - Floor 8')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('floor-plan-close'));
+
+      await waitFor(() => {
+        expect(queryByText('Hall Building - Floor 8')).toBeNull();
+      });
+    });
+  });
+
+  describe('Location Modal', () => {
+    it('closes modal when hardware back button is pressed (onRequestClose)', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId('location-off-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('location-off-button'));
+
+      await waitFor(() => {
+        expect(getByTestId('location-modal')).toBeTruthy();
+      });
+
+      // Simulate Android back button press (onRequestClose)
+      const modal = getByTestId('location-modal');
+      if (modal.props.onRequestClose) {
+        modal.props.onRequestClose();
+      }
+
+      await waitFor(() => {
+        expect(queryByTestId('location-modal')).toBeNull();
+      });
     });
   });
 
