@@ -90,16 +90,56 @@ export const createNavigationMock = () => {
   const actualNav = jest.requireActual('@react-navigation/native');
   return {
     ...actualNav,
-    NavigationContainer: ({ children }: any) => children,
+    NavigationContainer: ({ children }: any) => (
+      React.createElement('View', { testID: 'navigation-container' }, children)
+    ),
   };
 };
 
-export const createBottomTabsMock = () => ({
-  createBottomTabNavigator: () => ({
-    Navigator: ({ children }: any) => children,
-    Screen: ({ children }: any) => children,
-  }),
-});
+export const createBottomTabsMock = () => {
+  const Tab = {
+    Navigator: ({ children, screenOptions }: any) => {
+      // Render the navigator with test ID
+      return React.createElement(
+        'View',
+        { testID: 'tab-navigator' },
+        // Call screenOptions for each route to test icon rendering
+        React.Children.map(children, (child: any) => {
+          if (child?.props?.name) {
+            const routeName = child.props.name;
+            const options = typeof screenOptions === 'function'
+              ? screenOptions({ route: { name: routeName } })
+              : screenOptions;
+            
+            // Render the tab icon
+            if (options?.tabBarIcon) {
+              const icon = options.tabBarIcon({ focused: false, color: '#666', size: 24 });
+              // Clone the icon to add testID based on route name
+              const iconWithTestId = React.cloneElement(icon, {
+                testID: `icon-${routeName.toLowerCase()}`,
+              });
+              
+              return React.createElement(
+                'View',
+                { key: routeName },
+                iconWithTestId,
+                React.createElement('Text', {}, routeName),
+                child.props.component ? React.createElement(child.props.component) : null
+              );
+            }
+          }
+          return child;
+        })
+      );
+    },
+    Screen: ({ name, component }: any) => 
+      React.createElement('View', { testID: `screen-${name}` }, null),
+  };
+
+  return {
+    createBottomTabNavigator: () => Tab,
+  };
+};
 
 // Test setup utilities
 export const suppressActWarnings = () => {

@@ -31,6 +31,30 @@ describe('App', () => {
     expect(result).toBeTruthy();
   });
 
+  it('renders all three navigation tabs', () => {
+    const { getByText } = render(<App />);
+    expect(getByText('Schedule')).toBeTruthy();
+    expect(getByText('Map')).toBeTruthy();
+    expect(getByText('Settings')).toBeTruthy();
+  });
+
+  it('renders icons for each tab', () => {
+    const { getByTestId } = render(<App />);
+    expect(getByTestId('icon-schedule')).toBeTruthy();
+    expect(getByTestId('icon-map')).toBeTruthy();
+    expect(getByTestId('icon-settings')).toBeTruthy();
+  });
+
+  it('renders navigation container', () => {
+    const { getByTestId } = render(<App />);
+    expect(getByTestId('navigation-container')).toBeTruthy();
+  });
+
+  it('renders tab navigator', () => {
+    const { getByTestId } = render(<App />);
+    expect(getByTestId('tab-navigator')).toBeTruthy();
+  });
+
   describe('Display Building Info', () => {
     test('returns null when building is null', () => {
       const { queryByTestId } = render(
