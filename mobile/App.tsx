@@ -188,7 +188,7 @@ export default function App() {
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
       >
-      <BuildingPolygon onSelectBuilding={setSelectedBuilding} />
+      <BuildingPolygon onSelectBuilding={setSelectedBuilding} selectedBuildingId={selectedBuilding?.id || null} />
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <View style={styles.campusSelectorContainer}>
