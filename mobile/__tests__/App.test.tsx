@@ -1,50 +1,23 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert, Linking, AppState } from 'react-native';
+import { render } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import App from '../App';
 import BuildingInfo from '../src/components/BuildingInfo';
+import {
+  mockBuilding,
+  suppressActWarnings,
+  setupAppStateMock,
+} from './utils/testUtils';
 
-// Create mocks before jest.mock
-const mockRequestForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
-const mockGetForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
-const mockGetCurrentPosition = jest.fn().mockResolvedValue({
-  coords: { latitude: 45.5, longitude: -73.58 },
-});
-const mockWatchPositionAsync = jest.fn().mockResolvedValue({
-  remove: jest.fn(),
-});
-const mockBuilding = {
-  id: 'Hall Building',
-  address: '1455 De Maisonneuve Blvd. W.',
-  floorPlans: {
-    '8': '<svg>Mock SVG</svg>'
-  }
-};
-
-const mockBuildingNoPlans = {
-  id: 'Library Building',
-  address: '1400 De Maisonneuve Blvd. W.'
-};
-
-// Mock BuildingPolygon to simulate building selection
-jest.mock('../src/components/BuildingPolygon', () => {
-  const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onSelectBuilding }: any) => (
-    <View>
-      <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
-        <Text>Select With Plan</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="select-building-no-plans" onPress={() => onSelectBuilding(mockBuildingNoPlans)}>
-        <Text>Select No Plans</Text>
-      </TouchableOpacity>
-    </View>
-    
-  );
-});
-const mockOpenSettings = jest.fn();
-
-// Mock Expo Location to avoid hitting native APIs during tests
+// Setup mocks
 jest.mock('expo-location', () => {
+  const {
+    mockRequestForegroundPermissions,
+    mockGetForegroundPermissions,
+    mockGetCurrentPosition,
+    mockWatchPositionAsync,
+  } = require('./utils/testUtils');
+  
   return {
     requestForegroundPermissionsAsync: (...args: any[]) => mockRequestForegroundPermissions(...args),
     getForegroundPermissionsAsync: (...args: any[]) => mockGetForegroundPermissions(...args),
@@ -56,11 +29,10 @@ jest.mock('expo-location', () => {
   };
 });
 
-// Mock react-native-maps
-const mockAnimateToRegion = jest.fn();
 jest.mock('react-native-maps', () => {
   const React = require('react');
   const { View } = require('react-native');
+  const { mockAnimateToRegion } = require('./utils/testUtils');
 
   const MockMapView = React.forwardRef((props: any, ref: any) => {
     React.useImperativeHandle(ref, () => ({
@@ -78,7 +50,22 @@ jest.mock('react-native-maps', () => {
   };
 });
 
-// Mock safe area context
+jest.mock('../src/components/BuildingPolygon', () => {
+  const { View, TouchableOpacity, Text } = require('react-native');
+  const { mockBuilding, mockBuildingNoPlans } = require('./utils/testUtils');
+  
+  return ({ onSelectBuilding }: any) => (
+    <View>
+      <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
+        <Text>Select With Plan</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="select-building-no-plans" onPress={() => onSelectBuilding(mockBuildingNoPlans)}>
+        <Text>Select No Plans</Text>
+      </TouchableOpacity>
+    </View>
+  );
+});
+
 jest.mock('react-native-safe-area-context', () => {
   const { View } = require('react-native');
   return {
@@ -87,7 +74,6 @@ jest.mock('react-native-safe-area-context', () => {
   };
 });
 
-// Mock vector icons to avoid loading native modules in tests
 jest.mock('@expo/vector-icons', () => {
   const React = require('react');
   const { Text } = require('react-native');
@@ -112,38 +98,12 @@ jest.mock('@react-navigation/bottom-tabs', () => ({
   }),
 }));
 
-// Mock Alert
 jest.spyOn(Alert, 'alert');
 
-// Suppress React act warnings in test output (state updates happen inside async hooks)
-const originalConsoleError = console.error;
-beforeAll(() => {
-  jest.spyOn(console, 'error').mockImplementation((...args: any[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return;
-    originalConsoleError(...args);
-  });
-});
-
-afterAll(() => {
-  (console.error as jest.Mock).mockRestore();
-});
-
-const defaultAppStateRemove = jest.fn();
-jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({
-  remove: defaultAppStateRemove,
-}) as any);
+suppressActWarnings();
+setupAppStateMock();
 
 describe('App', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
-    mockGetCurrentPosition.mockResolvedValue({
-      coords: { latitude: 45.5, longitude: -73.58 },
-    });
-    (Linking as any).openSettings = mockOpenSettings;
-    mockOpenSettings.mockClear();
-  });
-
   it('renders without crashing', () => {
     const result = render(<App />);
     expect(result).toBeTruthy();
