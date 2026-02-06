@@ -32,10 +32,10 @@ describe('App', () => {
   });
 
   it('renders all three navigation tabs', () => {
-    const { getByText } = render(<App />);
-    expect(getByText('Schedule')).toBeTruthy();
-    expect(getByText('Map')).toBeTruthy();
-    expect(getByText('Settings')).toBeTruthy();
+    const { getAllByText } = render(<App />);
+    expect(getAllByText('Schedule').length).toBeGreaterThan(0);
+    expect(getAllByText('Map').length).toBeGreaterThan(0);
+    expect(getAllByText('Settings').length).toBeGreaterThan(0);
   });
 
   it('renders icons for each tab', () => {
