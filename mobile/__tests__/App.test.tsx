@@ -1,478 +1,59 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { Alert, Linking, AppState } from 'react-native';
+import { render } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import App from '../App';
 import BuildingInfo from '../src/components/BuildingInfo';
+import {
+  mockBuilding,
+  suppressActWarnings,
+  setupAppStateMock,
+} from './utils/testUtils';
 
-// Create mocks before jest.mock
-const mockRequestForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
-const mockGetForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
-const mockGetCurrentPosition = jest.fn().mockResolvedValue({
-  coords: { latitude: 45.5, longitude: -73.58 },
-});
-const mockWatchPositionAsync = jest.fn().mockResolvedValue({
-  remove: jest.fn(),
-});
-const mockBuilding = {
-  id: 'Hall Building',
-  address: '1455 De Maisonneuve Blvd. W.',
-  floorPlans: {
-    '8': '<svg>Mock SVG</svg>'
-  }
-};
+// Setup all mocks using factory functions
+jest.mock('expo-location', () => require('./utils/testUtils').createLocationMock());
+jest.mock('react-native-maps', () => require('./utils/testUtils').createMapMock());
+jest.mock('react-native-safe-area-context', () => require('./utils/testUtils').createSafeAreaMock());
+jest.mock('@expo/vector-icons', () => require('./utils/testUtils').createVectorIconsMock(), { virtual: true });
+jest.mock('../src/components/BuildingPolygon', () => require('./utils/testUtils').createBuildingPolygonMock());
 
-const mockBuildingNoPlans = {
-  id: 'Library Building',
-  address: '1400 De Maisonneuve Blvd. W.'
-};
+// Mock React Navigation
+jest.mock('@react-navigation/native', () => require('./utils/testUtils').createNavigationMock());
+jest.mock('@react-navigation/bottom-tabs', () => require('./utils/testUtils').createBottomTabsMock());
 
-// Mock BuildingPolygon to simulate building selection
-jest.mock('../src/components/BuildingPolygon', () => {
-  const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onSelectBuilding }: any) => (
-    <View>
-      <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
-        <Text>Select With Plan</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="select-building-no-plans" onPress={() => onSelectBuilding(mockBuildingNoPlans)}>
-        <Text>Select No Plans</Text>
-      </TouchableOpacity>
-    </View>
-    
-  );
-});
-const mockOpenSettings = jest.fn();
-
-// Mock Expo Location to avoid hitting native APIs during tests
-jest.mock('expo-location', () => {
-  return {
-    requestForegroundPermissionsAsync: (...args: any[]) => mockRequestForegroundPermissions(...args),
-    getForegroundPermissionsAsync: (...args: any[]) => mockGetForegroundPermissions(...args),
-    getCurrentPositionAsync: (...args: any[]) => mockGetCurrentPosition(...args),
-    watchPositionAsync: (...args: any[]) => mockWatchPositionAsync(...args),
-    Accuracy: {
-      High: 4,
-    },
-  };
-});
-
-// Mock react-native-maps
-const mockAnimateToRegion = jest.fn();
-jest.mock('react-native-maps', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-
-  const MockMapView = React.forwardRef((props: any, ref: any) => {
-    React.useImperativeHandle(ref, () => ({
-      animateToRegion: mockAnimateToRegion,
-    }));
-    return <View testID="map-view" {...props}>{props.children}</View>;
-  });
-
-  const MockPolygon = (props: any) => <View {...props} />;
-
-  return {
-    __esModule: true,
-    default: MockMapView,
-    Polygon: MockPolygon,
-  };
-});
-
-// Mock safe area context
-jest.mock('react-native-safe-area-context', () => {
-  const { View } = require('react-native');
-  return {
-    SafeAreaView: (props: any) => <View {...props} />,
-    SafeAreaProvider: (props: any) => <View {...props} />,
-  };
-});
-
-// Mock vector icons to avoid loading native modules in tests
-jest.mock('@expo/vector-icons', () => {
-  const React = require('react');
-  const { Text } = require('react-native');
-  return {
-    MaterialIcons: (props: any) => <Text {...props}>{props.name}</Text>,
-  };
-}, { virtual: true });
-
-// Mock Alert
 jest.spyOn(Alert, 'alert');
 
-// Suppress React act warnings in test output (state updates happen inside async hooks)
-const originalConsoleError = console.error;
-beforeAll(() => {
-  jest.spyOn(console, 'error').mockImplementation((...args: any[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return;
-    originalConsoleError(...args);
-  });
-});
-
-afterAll(() => {
-  (console.error as jest.Mock).mockRestore();
-});
-
-const defaultAppStateRemove = jest.fn();
-jest.spyOn(AppState, 'addEventListener').mockImplementation(() => ({
-  remove: defaultAppStateRemove,
-}) as any);
+suppressActWarnings();
+setupAppStateMock();
 
 describe('App', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
-    mockGetCurrentPosition.mockResolvedValue({
-      coords: { latitude: 45.5, longitude: -73.58 },
-    });
-    (Linking as any).openSettings = mockOpenSettings;
-    mockOpenSettings.mockClear();
-  });
-
   it('renders without crashing', () => {
+    const result = render(<App />);
+    expect(result).toBeTruthy();
+  });
+
+  it('renders all three navigation tabs', () => {
+    const { getAllByText } = render(<App />);
+    expect(getAllByText('Schedule').length).toBeGreaterThan(0);
+    expect(getAllByText('Map').length).toBeGreaterThan(0);
+    expect(getAllByText('Settings').length).toBeGreaterThan(0);
+  });
+
+  it('renders icons for each tab', () => {
     const { getByTestId } = render(<App />);
-    expect(getByTestId('map-view')).toBeTruthy();
+    expect(getByTestId('icon-schedule')).toBeTruthy();
+    expect(getByTestId('icon-map')).toBeTruthy();
+    expect(getByTestId('icon-settings')).toBeTruthy();
   });
 
-  it('renders MapView with correct initial region', () => {
+  it('renders navigation container', () => {
     const { getByTestId } = render(<App />);
-    const mapView = getByTestId('map-view');
-
-    expect(mapView.props.initialRegion.latitude).toBeCloseTo(45.497, 2);
-    expect(mapView.props.initialRegion.longitude).toBeCloseTo(-73.579, 2);
+    expect(getByTestId('navigation-container')).toBeTruthy();
   });
 
-  it('renders both campus selector buttons', () => {
-    const { getByText } = render(<App />);
-
-    expect(getByText('Downtown')).toBeTruthy();
-    expect(getByText('Loyola')).toBeTruthy();
+  it('renders tab navigator', () => {
+    const { getByTestId } = render(<App />);
+    expect(getByTestId('tab-navigator')).toBeTruthy();
   });
-
-  it('renders with Downtown campus selected by default', () => {
-    const { getByText } = render(<App />);
-    const downtownButton = getByText('Downtown');
-
-    expect(downtownButton.props.style).toContainEqual(
-      expect.objectContaining({ color: '#FFFFFF' })
-    );
-  });
-
-  describe('Location Permissions', () => {
-    it('requests location permission on mount', async () => {
-      render(<App />);
-
-      await waitFor(() => {
-        expect(mockRequestForegroundPermissions).toHaveBeenCalled();
-      });
-    });
-
-    it('animates to user location when permission is granted', async () => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
-      mockGetCurrentPosition.mockResolvedValue({
-        coords: { latitude: 45.5, longitude: -73.58 },
-      });
-
-      render(<App />);
-
-      await waitFor(() => {
-        expect(mockGetCurrentPosition).toHaveBeenCalled();
-        expect(mockAnimateToRegion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            latitude: 45.5,
-            longitude: -73.58,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          }),
-          600
-        );
-      });
-    });
-
-    it('shows alert when location permission is denied', async () => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
-
-      render(<App />);
-
-      await waitFor(() => {
-        expect(Alert.alert).toHaveBeenCalledWith(
-          'Location needed',
-          'Please allow location so we can show where you are on the map.'
-        );
-        expect(mockGetCurrentPosition).not.toHaveBeenCalled();
-      });
-    });
-
-    it('does not call getCurrentPosition when permission is not granted', async () => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
-
-      render(<App />);
-
-      await waitFor(() => {
-        expect(mockRequestForegroundPermissions).toHaveBeenCalled();
-      });
-
-      expect(mockGetCurrentPosition).not.toHaveBeenCalled();
-    });
-
-    it('shows location-off button when permission is denied', async () => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
-
-      const { getByTestId } = render(<App />);
-
-      await waitFor(() => {
-        expect(getByTestId('location-off-button')).toBeTruthy();
-      });
-    });
-
-    it('opens modal and can re-request permission', async () => {
-      mockRequestForegroundPermissions.mockResolvedValueOnce({ status: 'denied' });
-      const { getByTestId, queryByText } = render(<App />);
-
-      await waitFor(() => {
-        expect(getByTestId('location-off-button')).toBeTruthy();
-      });
-
-      fireEvent.press(getByTestId('location-off-button'));
-      expect(queryByText('Location is off')).toBeTruthy();
-
-      mockRequestForegroundPermissions.mockResolvedValueOnce({ status: 'granted' });
-      fireEvent.press(getByTestId('request-permission-button'));
-
-      await waitFor(() => {
-        expect(mockRequestForegroundPermissions).toHaveBeenCalledTimes(2);
-        expect(mockGetCurrentPosition).toHaveBeenCalled();
-      });
-    });
-
-    it('opens device settings from modal', async () => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
-      const { getByTestId, queryByText } = render(<App />);
-
-      await waitFor(() => getByTestId('location-off-button'));
-
-      fireEvent.press(getByTestId('location-off-button'));
-      fireEvent.press(getByTestId('open-settings-button'));
-
-      expect(mockOpenSettings).toHaveBeenCalled();
-      expect(queryByText('Location is off')).toBeNull();
-    });
-
-    it('closes modal when tapping Not now', async () => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
-      const { getByTestId, queryByText, getByText } = render(<App />);
-
-      await waitFor(() => getByTestId('location-off-button'));
-      fireEvent.press(getByTestId('location-off-button'));
-      fireEvent.press(getByText('Not now'));
-
-      expect(queryByText('Location is off')).toBeNull();
-    });
-
-    it('closes modal when onRequestClose is triggered', async () => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
-      const { getByTestId, queryByText } = render(<App />);
-
-      await waitFor(() => getByTestId('location-off-button'));
-      fireEvent.press(getByTestId('location-off-button'));
-
-      fireEvent(getByTestId('location-modal'), 'onRequestClose');
-
-      expect(queryByText('Location is off')).toBeNull();
-    });
-
-    it('hides location-off icon after returning to foreground with permission granted', async () => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
-      mockGetForegroundPermissions.mockResolvedValue({ status: 'granted' });
-      (AppState as any).currentState = 'background';
-
-      let appStateCallback: ((state: string) => void) | undefined;
-      const removeListener = jest.fn();
-      (AppState.addEventListener as jest.Mock).mockImplementationOnce((_, cb: any) => {
-        appStateCallback = cb;
-        return { remove: removeListener } as any;
-      });
-
-      const { getByTestId, queryByTestId } = render(<App />);
-
-      await waitFor(() => getByTestId('location-off-button'));
-      fireEvent.press(getByTestId('location-off-button'));
-
-      await act(async () => {
-        appStateCallback?.('active');
-      });
-
-      await waitFor(() => expect(mockGetForegroundPermissions).toHaveBeenCalled());
-      await waitFor(() => expect(queryByTestId('location-off-button')).toBeNull());
-
-    });
-
-    it.each([
-      ['timeout error', 'Location request timed out'],
-      ['generic error', 'Failed to get location'],
-      ['location services disabled after permission granted', 'Location services are disabled'],
-      ['network error', 'Network error'],
-    ])('handles getCurrentPositionAsync %s gracefully', async (scenario, errorMessage) => {
-      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
-      mockGetCurrentPosition.mockRejectedValue(new Error(errorMessage));
-
-      const { getByTestId } = render(<App />);
-
-      await waitFor(() => {
-        expect(mockGetCurrentPosition).toHaveBeenCalled();
-      });
-
-      // App should still render without crashing
-      expect(getByTestId('map-view')).toBeTruthy();
-      // animateToRegion should not be called when location fails
-      expect(mockAnimateToRegion).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Campus Selection', () => {
-    it('switches to Loyola campus when button is pressed', async () => {
-      const { getByText } = render(<App />);
-
-      mockAnimateToRegion.mockClear();
-
-      const loyolaButton = getByText('Loyola');
-      fireEvent.press(loyolaButton);
-
-      await waitFor(() => {
-        expect(mockAnimateToRegion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            latitude: 45.4582,
-            longitude: -73.6402,
-            latitudeDelta: 0.004,
-            longitudeDelta: 0.004,
-          }),
-          500
-        );
-      });
-    });
-
-    it('switches to Downtown campus when button is pressed', async () => {
-      const { getByText } = render(<App />);
-
-      // First switch to Loyola
-      const loyolaButton = getByText('Loyola');
-      fireEvent.press(loyolaButton);
-
-      mockAnimateToRegion.mockClear();
-
-      // Then switch back to Downtown
-      const downtownButton = getByText('Downtown');
-      fireEvent.press(downtownButton);
-
-      await waitFor(() => {
-        expect(mockAnimateToRegion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            latitude: 45.4972,
-            longitude: -73.5789,
-            latitudeDelta: 0.004,
-            longitudeDelta: 0.004,
-          }),
-          500
-        );
-      });
-    });
-
-    it('updates selected campus state when switching campuses', () => {
-      const { getByText } = render(<App />);
-
-      const loyolaButton = getByText('Loyola');
-      fireEvent.press(loyolaButton);
-
-      // Check if Loyola now has active styling
-      expect(loyolaButton.props.style).toContainEqual(
-        expect.objectContaining({ color: '#FFFFFF' })
-      );
-    });
-  });
-
-  describe('MapView Configuration', () => {
-    it('enables user location display', () => {
-      const { getByTestId } = render(<App />);
-      const mapView = getByTestId('map-view');
-
-      expect(mapView.props.showsUserLocation).toBe(true);
-    });
-
-    it('enables my location button', () => {
-      const { getByTestId } = render(<App />);
-      const mapView = getByTestId('map-view');
-
-      expect(mapView.props.showsMyLocationButton).toBe(true);
-    });
-
-    it('sets correct map padding', () => {
-      const { getByTestId } = render(<App />);
-      const mapView = getByTestId('map-view');
-
-      expect(mapView.props.mapPadding).toEqual({
-        top: 100,
-        right: 20,
-        bottom: 0,
-        left: 20,
-      });
-    });
-  });
-
-  describe('Building Info Pop-up Interaction', () => {
-    it('selects building and closes pop-up when close button is pressed', async () => {
-      const { getByTestId, queryByText, getByText } = render(<App />);
-      fireEvent.press(getByTestId('select-building'));
-      await waitFor(() => expect(getByText('Hall Building')).toBeTruthy());
-      
-      // Before clicking close, verify building info is visible
-      expect(getByText('Hall Building')).toBeTruthy();
-      
-      // Click close button
-      fireEvent.press(getByTestId('building-close'));
-      
-      // Wait for slide-down animation to complete (250ms) and building to be removed
-      await new Promise(resolve => setTimeout(resolve, 350));
-      
-      // After animation, building info should be gone
-      expect(queryByText('Hall Building')).toBeNull();
-    }, 10000)
-  })
-
-  describe('Indoor Map Integration', () => {
-  it('opens FloorPlanViewer when a building with floor plans is selected', async () => {
-    const { getByTestId, getByText } = render(<App />);
-    
-    fireEvent.press(getByTestId('select-building'));
-
-    await waitFor(() => {
-      expect(getByText('Hall Building - Floor 8')).toBeTruthy();
-    });
-  });
-
-  it('hides FloorPlanViewer when close button is pressed', async () => {
-    const { getByTestId, queryByText } = render(<App />);
-    
-    fireEvent.press(getByTestId('select-building'));
-    
-    await waitFor(() => getByTestId('floor-plan-close'));
-    fireEvent.press(getByTestId('floor-plan-close'));
-
-    await waitFor(() => {
-      expect(queryByText('Hall Building - Floor 8')).toBeNull();
-    });
-  });
-
-  it('does not show floor plan viewer when a building without plans is selected', async () => {
-    const { getByTestId, queryByText } = render(<App />);
-    fireEvent.press(getByTestId('select-building'));
-    await waitFor(() => {
-      expect(queryByText('Hall Building - Floor 8')).toBeTruthy();
-    });
-    fireEvent.press(getByTestId('select-building-no-plans'));
-    await waitFor(() => {
-      expect(queryByText('Hall Building - Floor 8')).toBeNull();
-    });
-  });
-});
 
   describe('Display Building Info', () => {
     test('returns null when building is null', () => {
@@ -554,59 +135,6 @@ describe('App', () => {
       expect(getByText('Economics')).toBeTruthy();
       expect(getByText('Political Science')).toBeTruthy();
     })
-  })
-
-  describe('Building Selector Toggle', () => {
-    it('renders building selector toggle button', () => {
-      const { getByTestId } = render(<App />);
-      expect(getByTestId('building-selector-toggle')).toBeTruthy();
-    });
-
-    it('toggles building selector panel when button is pressed', async () => {
-      const { getByTestId } = render(<App />);
-      const toggleButton = getByTestId('building-selector-toggle');
-
-      // Initially, the panel should be hidden (translateX: -400)
-      // Press to show it
-      fireEvent.press(toggleButton);
-
-      // Wait for animation to complete
-      await new Promise(resolve => setTimeout(resolve, 350));
-
-      // Press again to hide it
-      fireEvent.press(toggleButton);
-
-      // Wait for animation to complete
-      await new Promise(resolve => setTimeout(resolve, 350));
-
-      // Button should still be present
-      expect(toggleButton).toBeTruthy();
-    });
-
-    it('shows directions icon when selector is closed and close icon when open', async () => {
-      const { getByTestId } = render(<App />);
-      const toggleButton = getByTestId('building-selector-toggle');
-
-      // Initially shows directions icon (selector is closed)
-      let icon = toggleButton.findByProps({ name: 'directions' });
-      expect(icon).toBeTruthy();
-
-      // Press to open
-      fireEvent.press(toggleButton);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Should now show close icon
-      icon = toggleButton.findByProps({ name: 'close' });
-      expect(icon).toBeTruthy();
-
-      // Press to close again
-      fireEvent.press(toggleButton);
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Should show directions icon again
-      icon = toggleButton.findByProps({ name: 'directions' });
-      expect(icon).toBeTruthy();
-    });
   })
 
 });
