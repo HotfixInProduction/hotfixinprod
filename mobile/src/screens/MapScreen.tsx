@@ -44,6 +44,7 @@ export default function MapScreen() {
   const slideAnim = useRef(new Animated.Value(0)).current;
   const buildingInfoSlideAnim = useRef(new Animated.Value(300)).current;
   const [locationStatus, setLocationStatus] = useState<Location.PermissionStatus | null>(null);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [buildingSelectorVisible, setBuildingSelectorVisible] = useState(false);
   const buildingSelectorSlideAnim = useRef(new Animated.Value(-400)).current;
@@ -52,6 +53,7 @@ export default function MapScreen() {
   const centerOnUser = async () => {
     try {
       const { coords } = await Location.getCurrentPositionAsync({});
+      setUserLocation({ latitude: coords.latitude, longitude: coords.longitude });
       mapRef.current?.animateToRegion(
         {
           latitude: coords.latitude,
@@ -202,7 +204,7 @@ export default function MapScreen() {
       >
       <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
       </MapView>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} testID="safe-area-view">
         <View style={styles.campusSelectorContainer}>
           <View style={styles.campusSelector}>
             <Animated.View
@@ -248,20 +250,20 @@ export default function MapScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </SafeAreaView>
 
-      <TouchableOpacity
-        style={styles.buildingSelectorToggleButton}
-        onPress={toggleBuildingSelector}
-        activeOpacity={0.7}
-        testID="building-selector-toggle"
-      >
-        <MaterialIcons
-          name={buildingSelectorVisible ? 'close' : 'directions'}
-          size={24}
-          color="#fff"
-        />
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.buildingSelectorToggleButton}
+          onPress={toggleBuildingSelector}
+          activeOpacity={0.7}
+          testID="building-selector-toggle"
+        >
+          <MaterialIcons
+            name={buildingSelectorVisible ? 'close' : 'directions'}
+            size={24}
+            color="#fff"
+          />
+        </TouchableOpacity>
+      </SafeAreaView>
 
       <Animated.View
         style={[
@@ -272,7 +274,7 @@ export default function MapScreen() {
         ]}
         pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
       >
-        <StartDestinationPicker />
+        <StartDestinationPicker userLocation={userLocation} />
       </Animated.View>
 
       <Animated.View
@@ -365,14 +367,17 @@ const styles = StyleSheet.create({
     pointerEvents: 'box-none',
   },
   campusSelectorContainer: {
+    position: 'absolute',
+    top: 40,
+    left: 70, // Adjusted to align horizontally with the toggle button
     alignItems: 'center',
-    paddingTop: 28,
+    paddingTop: 0,
+    zIndex: 10,
   },
   buildingSelectorToggleButton: {
     position: 'absolute',
-    left: 18,
-    top: '15%',
-    marginTop: -24,
+    left: 10, // Adjusted to align horizontally with the campus selector
+    top: 40, // Same vertical alignment as campus selector
     backgroundColor: '#912338',
     borderRadius: 24,
     width: 48,
@@ -389,8 +394,8 @@ const styles = StyleSheet.create({
   buildingSelectorPanel: {
     position: 'absolute',
     left: 10,
-    top: '35%',
-    marginTop: -150,
+    top: 110,
+    marginTop: 0,
     width: 350,
     maxWidth: '85%',
     zIndex: 9,

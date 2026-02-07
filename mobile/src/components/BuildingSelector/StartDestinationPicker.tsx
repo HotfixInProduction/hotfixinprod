@@ -8,7 +8,11 @@ type Place = {
   location: { lat: number; lng: number };
 };
 
-const StartDestinationPicker: React.FC = () => {
+type StartDestinationPickerProps = {
+  userLocation: { latitude: number; longitude: number } | null;
+};
+
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation }) => {
   const [start, setStart] = useState<Place | null>(null);
   const [destination, setDestination] = useState<Place | null>(null);
 
@@ -29,11 +33,11 @@ const StartDestinationPicker: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Start Building</Text>
-      <BuildingSelector placeholder="Select start building" onSelect={setStart} />
+      <BuildingSelector placeholder="Select start building" onSelect={setStart} userLocation={userLocation} />
       {start && <Text style={styles.selected}>Selected: {start.name}</Text>}
 
       <Text style={styles.label}>Destination Building</Text>
-      <BuildingSelector placeholder="Select destination building" onSelect={setDestination} />
+      <BuildingSelector placeholder="Select destination building" onSelect={setDestination} userLocation={userLocation} />
       {destination && <Text style={styles.selected}>Selected: {destination.name}</Text>}
     </View>
   );
