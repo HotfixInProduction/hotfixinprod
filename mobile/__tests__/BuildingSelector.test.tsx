@@ -41,20 +41,20 @@ describe('BuildingSelector', () => {
 
   it('renders without crashing', () => {
     const { getByTestId } = render(
-      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />
+      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />
     );
     expect(getByTestId('google-places-autocomplete')).toBeTruthy();
   });
 
   it('passes correct placeholder to GooglePlacesAutocomplete', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const { GooglePlacesAutocomplete } = require('react-native-google-places-autocomplete');
     const View = require('react-native').View;
     expect(View.mockProps.placeholder).toBe(placeholder);
   });
 
   it('configures GooglePlacesAutocomplete with correct query parameters', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
     expect(View.mockProps.query).toEqual({
       key: 'test-api-key',
@@ -63,19 +63,19 @@ describe('BuildingSelector', () => {
   });
 
   it('sets fetchDetails to true', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
     expect(View.mockProps.fetchDetails).toBe(true);
   });
 
   it('sets debounce to 300', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
     expect(View.mockProps.debounce).toBe(300);
   });
 
   it('handles onPress with valid details', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
 
     const mockData = {
@@ -107,7 +107,7 @@ describe('BuildingSelector', () => {
   });
 
   it('handles onPress when details is null', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
 
     const mockData = {
@@ -122,7 +122,7 @@ describe('BuildingSelector', () => {
   });
 
   it('handles onPress with missing formatted_address', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
 
     const mockData = {
@@ -147,7 +147,7 @@ describe('BuildingSelector', () => {
   });
 
   it('handles onPress with missing geometry location', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
 
     const mockData = {
@@ -170,7 +170,7 @@ describe('BuildingSelector', () => {
   });
 
   it('handles onFail callback', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
 
     const mockError = new Error('API Error');
@@ -180,7 +180,7 @@ describe('BuildingSelector', () => {
   });
 
   it('applies custom styles to GooglePlacesAutocomplete', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} />);
+    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} />);
     const View = require('react-native').View;
     
     expect(View.mockProps.styles).toBeDefined();

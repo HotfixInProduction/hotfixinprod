@@ -26,18 +26,18 @@ describe('StartDestinationPicker', () => {
   });
 
   it('renders without crashing', () => {
-    const { getByText } = render(<StartDestinationPicker />);
+    const { getByText } = render(<StartDestinationPicker userLocation={null} />);
     expect(getByText('Start Building')).toBeTruthy();
     expect(getByText('Destination Building')).toBeTruthy();
   });
 
   it('renders both BuildingSelector components', () => {
-    render(<StartDestinationPicker />);
+    render(<StartDestinationPicker userLocation={null} />);
     expect(BuildingSelector).toHaveBeenCalledTimes(2);
   });
 
   it('passes correct placeholder for start building selector', () => {
-    render(<StartDestinationPicker />);
+    render(<StartDestinationPicker userLocation={null} />);
     const calls = (BuildingSelector as jest.Mock).mock.calls;
     const startCall = calls.find(call => call[0].placeholder === 'Select start building');
     expect(startCall).toBeDefined();
@@ -45,7 +45,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('passes correct placeholder for destination building selector', () => {
-    render(<StartDestinationPicker />);
+    render(<StartDestinationPicker userLocation={null} />);
     const calls = (BuildingSelector as jest.Mock).mock.calls;
     const destCall = calls.find(call => call[0].placeholder === 'Select destination building');
     expect(destCall).toBeDefined();
@@ -53,7 +53,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('handles start building selection', async () => {
-    const { getByTestId, getByText } = render(<StartDestinationPicker />);
+    const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} />);
     
     // Get the onSelect callback from the mock
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
@@ -78,7 +78,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('handles destination building selection', async () => {
-    const { getByTestId, getByText } = render(<StartDestinationPicker />);
+    const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} />);
     
     // Get the onSelect callback from the mock
     const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
@@ -103,7 +103,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('logs start building selection in useEffect', async () => {
-    const { getByTestId } = render(<StartDestinationPicker />);
+    const { getByTestId } = render(<StartDestinationPicker userLocation={null} />);
     
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
       call => call[0].placeholder === 'Select start building'
@@ -126,7 +126,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('logs destination building selection in useEffect', async () => {
-    const { getByTestId } = render(<StartDestinationPicker />);
+    const { getByTestId } = render(<StartDestinationPicker userLocation={null} />);
     
     const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
       call => call[0].placeholder === 'Select destination building'
@@ -149,12 +149,12 @@ describe('StartDestinationPicker', () => {
   });
 
   it('does not show selected text when no building is selected', () => {
-    const { queryByText } = render(<StartDestinationPicker />);
+    const { queryByText } = render(<StartDestinationPicker userLocation={null} />);
     expect(queryByText(/^Selected:/)).toBeNull();
   });
 
   it('handles multiple selections for start building', async () => {
-    const { getByText, queryByText } = render(<StartDestinationPicker />);
+    const { getByText, queryByText } = render(<StartDestinationPicker userLocation={null} />);
     
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
       call => call[0].placeholder === 'Select start building'
@@ -192,7 +192,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('handles independent selections for start and destination', async () => {
-    const { getByText } = render(<StartDestinationPicker />);
+    const { getByText } = render(<StartDestinationPicker userLocation={null} />);
     
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
       call => call[0].placeholder === 'Select start building'
@@ -228,13 +228,13 @@ describe('StartDestinationPicker', () => {
   });
 
   it('applies correct styles to container', () => {
-    const { getByText } = render(<StartDestinationPicker />);
+    const { getByText } = render(<StartDestinationPicker userLocation={null} />);
     const container = getByText('Start Building').parent?.parent;
     expect(container?.props.style).toBeDefined();
   });
 
   it('applies correct styles to labels', () => {
-    const { getByText } = render(<StartDestinationPicker />);
+    const { getByText } = render(<StartDestinationPicker userLocation={null} />);
     const startLabel = getByText('Start Building');
     const destLabel = getByText('Destination Building');
     
