@@ -10,9 +10,23 @@ type BuildingSelectorProps = {
     address: string;
     location: { lat: number; lng: number };
   }) => void;
+  userLocation: { latitude: number; longitude: number } | null;
 };
 
-const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect }) => {
+const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation }) => {
+  const queryConfig: any = {
+    key: Constants.expoConfig?.extra?.googleApiKey,
+    language: 'en',
+  };
+
+  // Add location-based filtering if user location is available
+  // Restrict suggestions to places within 50km radius
+  if (userLocation) {
+    queryConfig.location = `${userLocation.latitude},${userLocation.longitude}`;
+    queryConfig.radius = 50000; // 50km in meters
+    queryConfig.strictbounds = true; // Enforce strict boundary restrictions
+  }
+
   return (
     <GooglePlacesAutocomplete
       placeholder={placeholder}
@@ -30,10 +44,7 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
         console.log('Creating place object:', place);
         onSelect(place);
       }}
-      query={{
-        key: Constants.expoConfig?.extra?.googleApiKey,
-        language: 'en',
-      }}
+      query={queryConfig}
       styles={autocompleteStyles}
       debounce={300}
     />
