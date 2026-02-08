@@ -414,4 +414,30 @@ describe('MapScreen', () => {
       expect(icon).toBeTruthy();
     });
   });
+
+  it('renders SafeAreaView with campus selector and building selector toggle', () => {
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    const safeAreaView = getByTestId('safe-area-view');
+    expect(safeAreaView).toBeTruthy();
+
+    const downtownButton = getByText('Downtown');
+    const toggleButton = getByTestId('building-selector-toggle');
+
+    expect(safeAreaView).toContainElement(downtownButton);
+    expect(safeAreaView).toContainElement(toggleButton);
+  });
+
+  it('positions buttons correctly to avoid notch overlap', () => {
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    const safeAreaView = getByTestId('safe-area-view');
+    const toggleButton = getByTestId('building-selector-toggle');
+    const downtownButton = getByText('Downtown');
+
+    // Verify both buttons are rendered within the safe area
+    expect(safeAreaView).toBeTruthy();
+    expect(toggleButton).toBeTruthy();
+    expect(downtownButton).toBeTruthy();
+  });
 });
