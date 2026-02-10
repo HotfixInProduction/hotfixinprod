@@ -1,0 +1,24 @@
+name: Task
+description: Small unit of work to be completed
+title: "[Task] "
+labels: ["task"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What needs to be done?
+      placeholder: Clear and concise task description
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: What defines this task as done?
+      placeholder: |
+        - [ ] Implementation completed
+        - [ ] Tests updated or added
+    validations:
+      required: false

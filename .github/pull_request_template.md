@@ -1,12 +1,9 @@
-## What changed
--
-
-## Why
--
+## What does this PR do?
+Brief summary of the change.
 
 ## How to test
-- [ ] mobile: npm test
-- [ ] server: npm test (or npm run test:coverage)
+- [ ] Unit tests: npm test
+- [ ] Test Coverage: npm test (or npm run test:coverage)
 
 ## Linked issue
 Closes #
