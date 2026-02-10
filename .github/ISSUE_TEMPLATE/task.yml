@@ -11,14 +11,3 @@ body:
       placeholder: Clear and concise task description
     validations:
       required: true
-
-  - type: textarea
-    id: acceptance
-    attributes:
-      label: Acceptance Criteria
-      description: What defines this task as done?
-      placeholder: |
-        - [ ] Implementation completed
-        - [ ] Tests updated or added
-    validations:
-      required: false
