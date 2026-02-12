@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import BuildingSelector from './BuildingSelector';
+import ConfirmButton from '../confirmButton';
+import Config from "react-native-config";
 
-type Place = {
+export type Place = {
   name: string;
   address: string;
   location: { lat: number; lng: number };
@@ -10,35 +12,46 @@ type Place = {
 
 type StartDestinationPickerProps = {
   userLocation: { latitude: number; longitude: number } | null;
+  start: Place | null ;
+  destination: Place | null ;
+  setStart : (place: Place | null) => void;
+  setDestination: (place: Place | null) => void;
+  setConfirmRoute: (val : boolean ) => void;
+  setInstructions: (val :any[]) => void;
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation }) => {
-  const [start, setStart] = useState<Place | null>(null);
-  const [destination, setDestination] = useState<Place | null>(null);
+const handleDirections = async (start: Place | null, destination: Place | null, setConfirmRoute: (value: boolean) => void, setInstructions: (val: any[]) => void ) => {
+    if (start && destination){
 
-
-    useEffect(() => {
-      if (start) {
-        console.log('Start building selected:', start);
+      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${start.location.lat},${start.location.lng}&destination=${destination.location.lat},${destination.location.lng}&key=${Config.GOOGLE_MAPS_ANDROID_API_KEY}`;
+  
+      try {
+        const response = await fetch(url); 
+        const data = await response.json();
+        setInstructions(data.routes[0].legs[0].steps);
+        console.log(data.routes[0].legs[0].steps)
+        setConfirmRoute(true); 
+      } catch (error) {
+        console.error("Fetch failed", error);
       }
-    }, [start]);
 
+      setConfirmRoute(true);
+    }
+}
 
-    useEffect(() => {
-      if (destination) {
-        console.log('Destination building selected:', destination);
-      }
-    }, [destination]);
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setConfirmRoute, setInstructions }) => {
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Start Building</Text>
-      <BuildingSelector placeholder="Select start building" onSelect={setStart} userLocation={userLocation} />
+      <BuildingSelector placeholder="Select start building" onSelect={data => setStart(data)} userLocation={userLocation} />
       {start && <Text style={styles.selected}>Selected: {start.name}</Text>}
 
       <Text style={styles.label}>Destination Building</Text>
-      <BuildingSelector placeholder="Select destination building" onSelect={setDestination} userLocation={userLocation} />
+      <BuildingSelector placeholder="Select destination building" onSelect={data => setDestination(data)} userLocation={userLocation} />
       {destination && <Text style={styles.selected}>Selected: {destination.name}</Text>}
+
+      <ConfirmButton onPress={() => handleDirections(start, destination, setConfirmRoute, setInstructions)}></ConfirmButton>
     </View>
   );
 };
