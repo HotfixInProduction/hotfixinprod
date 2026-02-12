@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import { StyleSheet } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import Constants from 'expo-constants';
@@ -11,9 +11,12 @@ type BuildingSelectorProps = {
     location: { lat: number; lng: number };
   }) => void;
   userLocation: { latitude: number; longitude: number } | null;
+  value?: string;
 };
 
-const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation }) => {
+const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation, value }) => {
+  const ref = useRef<any>(null);
+
   const queryConfig: any = {
     key: Constants.expoConfig?.extra?.googleApiKey,
     language: 'en',
@@ -27,8 +30,19 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
     queryConfig.strictbounds = true; // Enforce strict boundary restrictions
   }
 
+  useEffect(() => {
+    if (ref.current) {
+      if (value) {
+        ref.current?.setAddressText(value);
+      } else {
+        ref.current?.setAddressText('');
+      }
+    }
+  }, [value]);
+
   return (
     <GooglePlacesAutocomplete
+      ref={ref}
       placeholder={placeholder}
       fetchDetails={true}
       onFail={(error) => {

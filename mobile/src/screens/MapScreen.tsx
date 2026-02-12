@@ -368,7 +368,7 @@ const styles = StyleSheet.create({
   },
   campusSelectorContainer: {
     position: 'absolute',
-    top: 40,
+    top: 55,
     left: 70, // Adjusted to align horizontally with the toggle button
     alignItems: 'center',
     paddingTop: 0,
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
   buildingSelectorToggleButton: {
     position: 'absolute',
     left: 10, // Adjusted to align horizontally with the campus selector
-    top: 40, // Same vertical alignment as campus selector
+    top: 55, // Same vertical alignment as campus selector
     backgroundColor: '#912338',
     borderRadius: 24,
     width: 48,
