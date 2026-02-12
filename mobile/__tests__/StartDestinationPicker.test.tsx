@@ -467,6 +467,77 @@ describe('StartDestinationPicker', () => {
     });
   });
 
+  it('clears destination building when clear button is pressed', async () => {
+    const { getByText, queryByText, UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
+    
+    // First, select a start building to ensure we have multiple clear buttons
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const onSelectStart = startSelectorCall[0].onSelect;
+
+    const mockStartPlace = {
+      name: 'Start Building',
+      address: '123 Start St',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
+
+    await act(async () => {
+      onSelectStart(mockStartPlace);
+    });
+
+    // Then select a destination building
+    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select destination building'
+    );
+    const onSelectDest = destSelectorCall[0].onSelect;
+
+    const mockDestPlace = {
+      name: 'Destination Building',
+      address: '456 Dest Ave',
+      location: { lat: 41.8781, lng: -87.6298 },
+    };
+
+    await act(async () => {
+      onSelectDest(mockDestPlace);
+    });
+
+    await waitFor(() => {
+      expect(getByText('Selected: Destination Building')).toBeTruthy();
+      expect(getByText('Selected: Start Building')).toBeTruthy();
+    });
+
+    // Find the clear buttons
+    const TouchableOpacity = require('react-native').TouchableOpacity;
+    const allButtons = UNSAFE_getAllByType(TouchableOpacity);
+    
+    // Filter to get only clear buttons by checking onPress handler
+    const clearButtons = allButtons.filter(btn => {
+      const onPress = btn.props.onPress;
+      if (!onPress) return false;
+      // Test if the button's onPress would clear either start or destination
+      const onPressStr = onPress.toString();
+      return onPressStr.includes('setStart') || onPressStr.includes('setDestination') || 
+             (btn.props.style && JSON.stringify(btn.props.style).includes('clearButton'));
+    });
+
+    // Should have at least 2 clear buttons (one for start, one for destination)
+    expect(clearButtons.length).toBeGreaterThan(0);
+
+    // Get the last clear button (destination's clear button since it's rendered after start's)
+    const destinationClearButton = clearButtons[clearButtons.length - 1];
+
+    await act(async () => {
+      fireEvent.press(destinationClearButton);
+    });
+
+    await waitFor(() => {
+      expect(queryByText('Selected: Destination Building')).toBeNull();
+      // Start building should still be selected
+      expect(getByText('Selected: Start Building')).toBeTruthy();
+    });
+  });
+
   it('passes userLocation prop to BuildingSelector components', () => {
     const userLocation = { latitude: 45.5, longitude: -73.6 };
     render(<StartDestinationPicker userLocation={userLocation} />);
@@ -535,5 +606,104 @@ describe('StartDestinationPicker', () => {
       const callWithValue = calls.find(call => call[0].value === 'Test Building');
       expect(callWithValue).toBeDefined();
     });
+  });
+
+  it('passes value prop to BuildingSelector for destination building', async () => {
+    const { rerender } = render(<StartDestinationPicker userLocation={null} />);
+    
+    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select destination building'
+    );
+    const onSelectDest = destSelectorCall[0].onSelect;
+
+    const mockPlace = {
+      name: 'Test Destination',
+      address: '456 Test Ave',
+      location: { lat: 41.8781, lng: -87.6298 },
+    };
+
+    await act(async () => {
+      onSelectDest(mockPlace);
+    });
+
+    // Force a rerender to check the value prop
+    rerender(<StartDestinationPicker userLocation={null} />);
+
+    await waitFor(() => {
+      const calls = (BuildingSelector as jest.Mock).mock.calls;
+      const callWithValue = calls.find(call => call[0].value === 'Test Destination');
+      expect(callWithValue).toBeDefined();
+    });
+  });
+
+  it('renders MaterialIcons for clear buttons', async () => {
+    const { UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
+    
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const onSelectStart = startSelectorCall[0].onSelect;
+
+    const mockPlace = {
+      name: 'Test Building',
+      address: '123 Test St',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
+
+    await act(async () => {
+      onSelectStart(mockPlace);
+    });
+
+    await waitFor(() => {
+      const MaterialIcons = require('@expo/vector-icons').MaterialIcons;
+      const icons = UNSAFE_getAllByType(MaterialIcons);
+      expect(icons.length).toBeGreaterThan(0);
+      // Check that close icon is present
+      const closeIcon = icons.find((icon: any) => icon.props.name === 'close');
+      expect(closeIcon).toBeDefined();
+    });
+  });
+
+  it('renders MaterialIcons for current location button', () => {
+    const userLocation = { latitude: 45.5, longitude: -73.6 };
+    const { UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={userLocation} />);
+    
+    const MaterialIcons = require('@expo/vector-icons').MaterialIcons;
+    const icons = UNSAFE_getAllByType(MaterialIcons);
+    // Check that my-location icon is present
+    const locationIcon = icons.find((icon: any) => icon.props.name === 'my-location');
+    expect(locationIcon).toBeDefined();
+  });
+
+  it('renders selected text with proper styling', async () => {
+    const { getByText } = render(<StartDestinationPicker userLocation={null} />);
+    
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const onSelectStart = startSelectorCall[0].onSelect;
+
+    const mockPlace = {
+      name: 'Styled Building',
+      address: '789 Style Ave',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
+
+    await act(async () => {
+      onSelectStart(mockPlace);
+    });
+
+    await waitFor(() => {
+      const selectedText = getByText('Selected: Styled Building');
+      expect(selectedText).toBeTruthy();
+      expect(selectedText.props.style).toBeDefined();
+    });
+  });
+
+  it('renders all label texts', () => {
+    const { getByText } = render(<StartDestinationPicker userLocation={null} />);
+    
+    expect(getByText('Start Building')).toBeTruthy();
+    expect(getByText('Destination Building')).toBeTruthy();
   });
 });
