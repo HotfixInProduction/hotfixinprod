@@ -12,6 +12,7 @@ import FloorPlanViewer from '../components/FloorPlanViewer';
 import { Place } from '../components/BuildingSelector/StartDestinationPicker';
 import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
+import RouteInfo from '../components/RouteInfo';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -64,6 +65,7 @@ export default function MapScreen() {
   const [destination, setDestination] = useState<Place | null>(null);
   const [confirmRoute, setConfirmRoute] = useState(false);
   const [instructions, setInstructions] = useState<MapStep[]>([]);
+  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
 
   useEffect(() => {
     if (start) {
@@ -262,6 +264,15 @@ export default function MapScreen() {
     };
   };
 
+  const handleClearRoute = () => {
+    setStart(null);
+    setDestination(null);
+    setRouteInfo(null);
+    setConfirmRoute(false);
+    setInstructions([]);
+    mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
+  }
+
   return (
     <View style={styles.container}>
       <MapView
@@ -283,6 +294,12 @@ export default function MapScreen() {
             strokeWidth={3}
             strokeColor="hotpink"
             mode="DRIVING"
+            onReady={result => {
+              setRouteInfo({
+                distance: result.distance, // in km
+                duration: result.duration, // in mins
+              })
+            }}
           />
         )}
 
@@ -402,6 +419,7 @@ export default function MapScreen() {
           <MaterialIcons name="location-off" size={26} color="#fff" />
         </TouchableOpacity>
       )}
+
       <Modal
         visible={showLocationModal}
         transparent
@@ -446,6 +464,15 @@ export default function MapScreen() {
           </View>
         </View>
       </Modal>
+
+      {routeInfo && start && destination && (
+        <RouteInfo
+          duration={routeInfo.duration}
+          distance={routeInfo.distance}
+          onStart={() => console.log("Starting navigation...")}
+          onClose={handleClearRoute}
+        />
+      )}
       <StatusBar style="auto" />
     </View>
   );

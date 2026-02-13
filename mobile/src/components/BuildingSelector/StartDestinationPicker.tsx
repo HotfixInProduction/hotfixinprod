@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import BuildingSelector from './BuildingSelector';
-import ConfirmButton from '../confirmButton';
 import Config from "react-native-config";
 
 export type Place = {
@@ -12,46 +11,46 @@ export type Place = {
 
 type StartDestinationPickerProps = {
   userLocation: { latitude: number; longitude: number } | null;
-  start: Place | null ;
-  destination: Place | null ;
-  setStart : (place: Place | null) => void;
+  start: Place | null;
+  destination: Place | null;
+  setStart: (place: Place | null) => void;
   setDestination: (place: Place | null) => void;
-  setConfirmRoute: (val : boolean ) => void;
-  setInstructions: (val :any[]) => void;
+  setConfirmRoute: (val: boolean) => void;
+  setInstructions: (val: any[]) => void;
 };
 
-const handleDirections = async (start: Place | null, destination: Place | null, setConfirmRoute: (value: boolean) => void, setInstructions: (val: any[]) => void ) => {
-    if (start && destination){
-
-      const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${start.location.lat},${start.location.lng}&destination=${destination.location.lat},${destination.location.lng}&key=${Config.GOOGLE_MAPS_ANDROID_API_KEY}`;
-  
-      try {
-        const response = await fetch(url); 
-        const data = await response.json();
-        setInstructions(data.routes[0].legs[0].steps);
-        console.log(data.routes[0].legs[0].steps)
-        setConfirmRoute(true); 
-      } catch (error) {
-        console.error("Fetch failed", error);
-      }
-
-      setConfirmRoute(true);
-    }
-}
-
 const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setConfirmRoute, setInstructions }) => {
+
+  useEffect(() => {
+    const fetchDirections = async () => {
+      if (start && destination) {
+
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${start.location.lat},${start.location.lng}&destination=${destination.location.lat},${destination.location.lng}&key=${Config.GOOGLE_MAPS_ANDROID_API_KEY}`;
+
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          if (data.routes.length > 0) {
+            setInstructions(data.routes[0].legs[0].steps);
+            console.log(data.routes[0].legs[0].steps)
+            setConfirmRoute(true);
+          }
+        } catch (error) {
+          console.error("Fetch failed", error);
+        }
+      } else {
+        setConfirmRoute(false);
+      }
+    }
+    fetchDirections();
+  }, [start, destination]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>Start Building</Text>
-      <BuildingSelector placeholder="Select start building" onSelect={data => setStart(data)} userLocation={userLocation} />
-      {start && <Text style={styles.selected}>Selected: {start.name}</Text>}
-
+      <BuildingSelector placeholder="Select start building" onSelect={data => setStart(data)} userLocation={userLocation} value={start ? start.name : ''} />
       <Text style={styles.label}>Destination Building</Text>
-      <BuildingSelector placeholder="Select destination building" onSelect={data => setDestination(data)} userLocation={userLocation} />
-      {destination && <Text style={styles.selected}>Selected: {destination.name}</Text>}
-
-      <ConfirmButton onPress={() => handleDirections(start, destination, setConfirmRoute, setInstructions)}></ConfirmButton>
+      <BuildingSelector placeholder="Select destination building" onSelect={data => setDestination(data)} userLocation={userLocation} value={destination ? destination.name : ''} />
     </View>
   );
 };

@@ -26,14 +26,17 @@ const ConfirmButton : React.FC<ConfirmButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 15,
-    paddingHorizontal: 60,
-    borderRadius: 30,
+    backgroundColor: '#912338',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   disabled: {
     backgroundColor: '#a1a1a1',
@@ -41,7 +44,7 @@ const styles = StyleSheet.create({
   text: {
     color: 'white',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
 });
 

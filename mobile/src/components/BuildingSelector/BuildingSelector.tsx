@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet } from 'react-native';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { GooglePlacesAutocomplete, GooglePlacesAutocompleteRef } from 'react-native-google-places-autocomplete';
 import Constants from 'expo-constants';
 
 type BuildingSelectorProps = {
@@ -11,9 +11,19 @@ type BuildingSelectorProps = {
     location: { lat: number; lng: number };
   }) => void;
   userLocation: { latitude: number; longitude: number } | null;
+  value: string; // Add value prop to control input text 
 };
 
-const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation }) => {
+const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation, value }) => {
+  const ref = useRef<GooglePlacesAutocompleteRef>(null);
+
+  useEffect(() => {
+    if (!value && ref.current) {
+      ref.current.setAddressText(''); // Clear input when value is reset
+      ref.current.clear();
+    }
+  }, [value]);
+
   const queryConfig: any = {
     key: Constants.expoConfig?.extra?.googleApiKey,
     language: 'en',
@@ -32,8 +42,8 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
       placeholder={placeholder}
       fetchDetails={true}
       onFail={(error) => {
-          console.log('Places API error:', error);
-        }}
+        console.log('Places API error:', error);
+      }}
       onPress={(data, details = null) => {
         if (!details) return;
         const place = {
