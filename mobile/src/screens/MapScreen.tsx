@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus } from 'react-native';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
-import { useEffect, useRef, useState} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import StartDestinationPicker from '../components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
@@ -66,17 +66,17 @@ export default function MapScreen() {
   const [instructions, setInstructions] = useState<MapStep[]>([]);
 
   useEffect(() => {
-      if (start) {
-        console.log('Start building selected:', start);
-      }
-    }, [start]);
+    if (start) {
+      console.log('Start building selected:', start);
+    }
+  }, [start]);
 
 
-    useEffect(() => {
-      if (destination) {
-        console.log('Destination building selected:', destination);
-      }
-    }, [destination]);
+  useEffect(() => {
+    if (destination) {
+      console.log('Destination building selected:', destination);
+    }
+  }, [destination]);
 
   const centerOnUser = async () => {
     try {
@@ -174,6 +174,41 @@ export default function MapScreen() {
     }
   }, [buildingSelectorVisible]);
 
+  // auto-fit map to show both start and destination
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const startCoords = getCoordinates(start);
+    const destCoords = getCoordinates(destination);
+
+    // both start and destination are selected -> fit both
+    if (startCoords && destCoords) {
+      mapRef.current.fitToCoordinates(
+        [startCoords, destCoords],
+        {
+          edgePadding: { top: 150, right: 60, bottom: 60, left: 60 },
+          animated: true,
+        }
+      );
+    }
+    // only start is selected -> zoom to start
+    else if (startCoords) {
+      mapRef.current.animateToRegion({
+        ...startCoords,
+        latitudeDelta: 0.002,
+        longitudeDelta: 0.002,
+      }, 1000);
+    }
+    // only destination is selected -> zoom to destination
+    else if (destCoords) {
+      mapRef.current.animateToRegion({
+        ...destCoords,
+        latitudeDelta: 0.002,
+        longitudeDelta: 0.002,
+      }, 1000);
+    }
+  }, [start, destination]);
+
   const handleCloseBuilding = () => {
     Animated.timing(buildingInfoSlideAnim, {
       toValue: 300,
@@ -219,7 +254,7 @@ export default function MapScreen() {
     }
   };
 
-  const getCoordinates = (place : Place | null) => {
+  const getCoordinates = (place: Place | null) => {
     if (!place) return undefined;
     return {
       latitude: place.location.lat,
@@ -238,18 +273,27 @@ export default function MapScreen() {
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
       >
-      <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
+        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
 
-      {start && destination && (
-        <MapViewDirections
-          origin={getCoordinates(start)}
-          destination={getCoordinates(destination)}
-          apikey={Config.GOOGLE_MAPS_ANDROID_API_KEY!}
-          strokeWidth={3}
-          strokeColor="hotpink"
-          mode="DRIVING"
-        />
-      )}
+        {start && destination && (
+          <MapViewDirections
+            origin={getCoordinates(start)}
+            destination={getCoordinates(destination)}
+            apikey={Config.GOOGLE_MAPS_ANDROID_API_KEY!}
+            strokeWidth={3}
+            strokeColor="hotpink"
+            mode="DRIVING"
+          />
+        )}
+
+        {start && (
+          <Marker coordinate={getCoordinates(start)!} title="Start" pinColor="blue" />
+        )}
+
+        {destination && (
+          <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" />
+        )}
+
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} testID="safe-area-view">
         <View style={styles.campusSelectorContainer}>
@@ -321,14 +365,14 @@ export default function MapScreen() {
         ]}
         pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
       >
-        <StartDestinationPicker 
-        userLocation={userLocation} 
-        start={start} 
-        destination={destination} 
-        setStart={setStart} 
-        setDestination={setDestination} 
-        setConfirmRoute={setConfirmRoute} 
-        setInstructions={setInstructions} />
+        <StartDestinationPicker
+          userLocation={userLocation}
+          start={start}
+          destination={destination}
+          setStart={setStart}
+          setDestination={setDestination}
+          setConfirmRoute={setConfirmRoute}
+          setInstructions={setInstructions} />
       </Animated.View>
 
       <Animated.View
