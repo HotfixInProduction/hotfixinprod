@@ -27,7 +27,7 @@ const RouteInfo = ({ duration, distance, onStart, onClose }: RouteInfoProps) => 
                     <Text style={styles.headerText}>Drive</Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                    <MaterialIcons name="close" size={22} color="#912338" />
+                    <MaterialIcons name="close" size={18} color="#912338" />
                 </TouchableOpacity>
             </View>
 

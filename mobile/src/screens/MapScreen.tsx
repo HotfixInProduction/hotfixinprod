@@ -13,6 +13,7 @@ import { Place } from '../components/BuildingSelector/StartDestinationPicker';
 import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
 import RouteInfo from '../components/RouteInfo';
+import RouteInstructions from '../components/RouteInstructions';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -66,6 +67,7 @@ export default function MapScreen() {
   const [confirmRoute, setConfirmRoute] = useState(false);
   const [instructions, setInstructions] = useState<MapStep[]>([]);
   const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
     if (start) {
@@ -270,6 +272,7 @@ export default function MapScreen() {
     setRouteInfo(null);
     setConfirmRoute(false);
     setInstructions([]);
+    setShowInstructions(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
 
@@ -465,14 +468,22 @@ export default function MapScreen() {
         </View>
       </Modal>
 
-      {routeInfo && start && destination && (
+      {routeInfo && start && destination && !showInstructions && (
         <RouteInfo
           duration={routeInfo.duration}
           distance={routeInfo.distance}
-          onStart={() => console.log("Starting navigation...")}
+          onStart={() => setShowInstructions(true)}
           onClose={handleClearRoute}
         />
       )}
+
+      {showInstructions && (
+        <RouteInstructions
+          instructions={instructions}
+          onClose={() => setShowInstructions(false)}
+        />
+      )}
+
       <StatusBar style="auto" />
     </View>
   );
