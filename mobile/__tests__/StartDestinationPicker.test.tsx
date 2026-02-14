@@ -43,6 +43,31 @@ jest.mock('../src/data/buildings', () => ({
 }));
 
 describe('StartDestinationPicker', () => {
+  // Helper functions to reduce code duplication
+  const getStartSelector = () => {
+    const calls = (BuildingSelector as jest.Mock).mock.calls;
+    const startCall = calls.find(call => call[0].placeholder === 'Select start building');
+    return startCall[0].onSelect;
+  };
+
+  const getDestinationSelector = () => {
+    const calls = (BuildingSelector as jest.Mock).mock.calls;
+    const destCall = calls.find(call => call[0].placeholder === 'Select destination building');
+    return destCall[0].onSelect;
+  };
+
+  const createMockPlace = (name: string, address: string, lat: number = 40.7128, lng: number = -74.006) => ({
+    name,
+    address,
+    location: { lat, lng },
+  });
+
+  const selectPlace = async (onSelect: (place: any) => void, place: any) => {
+    await act(async () => {
+      onSelect(place);
+    });
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     console.log = jest.fn();
@@ -78,24 +103,11 @@ describe('StartDestinationPicker', () => {
   });
 
   it('handles start building selection', async () => {
-    const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} />);
-    
-    // Get the onSelect callback from the mock
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    const { getByText } = render(<StartDestinationPicker userLocation={null} />);
+    const onSelectStart = getStartSelector();
+    const mockPlace = createMockPlace('Start Building', '123 Start St');
 
-    const mockPlace = {
-      name: 'Start Building',
-      address: '123 Start St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
-
-    // Simulate selection
-    await act(async () => {
-      onSelectStart(mockPlace);
-    });
+    await selectPlace(onSelectStart, mockPlace);
 
     await waitFor(() => {
       expect(getByText('Selected: Start Building')).toBeTruthy();
@@ -103,24 +115,11 @@ describe('StartDestinationPicker', () => {
   });
 
   it('handles destination building selection', async () => {
-    const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} />);
-    
-    // Get the onSelect callback from the mock
-    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select destination building'
-    );
-    const onSelectDest = destSelectorCall[0].onSelect;
+    const { getByText } = render(<StartDestinationPicker userLocation={null} />);
+    const onSelectDest = getDestinationSelector();
+    const mockPlace = createMockPlace('Destination Building', '456 Dest Ave', 41.8781, -87.6298);
 
-    const mockPlace = {
-      name: 'Destination Building',
-      address: '456 Dest Ave',
-      location: { lat: 41.8781, lng: -87.6298 },
-    };
-
-    // Simulate selection
-    await act(async () => {
-      onSelectDest(mockPlace);
-    });
+    await selectPlace(onSelectDest, mockPlace);
 
     await waitFor(() => {
       expect(getByText('Selected: Destination Building')).toBeTruthy();
@@ -128,22 +127,11 @@ describe('StartDestinationPicker', () => {
   });
 
   it('logs start building selection in useEffect', async () => {
-    const { getByTestId } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    render(<StartDestinationPicker userLocation={null} />);
+    const onSelectStart = getStartSelector();
+    const mockPlace = createMockPlace('Start Building', '123 Start St');
 
-    const mockPlace = {
-      name: 'Start Building',
-      address: '123 Start St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
-
-    await act(async () => {
-      onSelectStart(mockPlace);
-    });
+    await selectPlace(onSelectStart, mockPlace);
 
     await waitFor(() => {
       expect(console.log).toHaveBeenCalledWith('Start building selected:', mockPlace);
@@ -151,22 +139,11 @@ describe('StartDestinationPicker', () => {
   });
 
   it('logs destination building selection in useEffect', async () => {
-    const { getByTestId } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select destination building'
-    );
-    const onSelectDest = destSelectorCall[0].onSelect;
+    render(<StartDestinationPicker userLocation={null} />);
+    const onSelectDest = getDestinationSelector();
+    const mockPlace = createMockPlace('Destination Building', '456 Dest Ave', 41.8781, -87.6298);
 
-    const mockPlace = {
-      name: 'Destination Building',
-      address: '456 Dest Ave',
-      location: { lat: 41.8781, lng: -87.6298 },
-    };
-
-    await act(async () => {
-      onSelectDest(mockPlace);
-    });
+    await selectPlace(onSelectDest, mockPlace);
 
     await waitFor(() => {
       expect(console.log).toHaveBeenCalledWith('Destination building selected:', mockPlace);
@@ -180,35 +157,17 @@ describe('StartDestinationPicker', () => {
 
   it('handles multiple selections for start building', async () => {
     const { getByText, queryByText } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectStart = getStartSelector();
 
-    // First selection
-    const mockPlace1 = {
-      name: 'First Building',
-      address: '123 First St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
-    await act(async () => {
-      onSelectStart(mockPlace1);
-    });
+    const mockPlace1 = createMockPlace('First Building', '123 First St');
+    await selectPlace(onSelectStart, mockPlace1);
 
     await waitFor(() => {
       expect(getByText('Selected: First Building')).toBeTruthy();
     });
 
-    // Second selection
-    const mockPlace2 = {
-      name: 'Second Building',
-      address: '456 Second St',
-      location: { lat: 41.8781, lng: -87.6298 },
-    };
-    await act(async () => {
-      onSelectStart(mockPlace2);
-    });
+    const mockPlace2 = createMockPlace('Second Building', '456 Second St', 41.8781, -87.6298);
+    await selectPlace(onSelectStart, mockPlace2);
 
     await waitFor(() => {
       expect(getByText('Selected: Second Building')).toBeTruthy();
@@ -218,28 +177,11 @@ describe('StartDestinationPicker', () => {
 
   it('handles independent selections for start and destination', async () => {
     const { getByText } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select destination building'
-    );
+    const onSelectStart = getStartSelector();
+    const onSelectDest = getDestinationSelector();
 
-    const onSelectStart = startSelectorCall[0].onSelect;
-    const onSelectDest = destSelectorCall[0].onSelect;
-
-    const startPlace = {
-      name: 'Start Building',
-      address: '123 Start St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
-
-    const destPlace = {
-      name: 'Destination Building',
-      address: '456 Dest Ave',
-      location: { lat: 41.8781, lng: -87.6298 },
-    };
+    const startPlace = createMockPlace('Start Building', '123 Start St');
+    const destPlace = createMockPlace('Destination Building', '456 Dest Ave', 41.8781, -87.6298);
 
     await act(async () => {
       onSelectStart(startPlace);
@@ -379,21 +321,10 @@ describe('StartDestinationPicker', () => {
 
   it('shows clear button when start building is selected', async () => {
     const { UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectStart = getStartSelector();
+    const mockPlace = createMockPlace('Start Building', '123 Start St');
 
-    const mockPlace = {
-      name: 'Start Building',
-      address: '123 Start St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
-
-    await act(async () => {
-      onSelectStart(mockPlace);
-    });
+    await selectPlace(onSelectStart, mockPlace);
 
     await waitFor(() => {
       const TouchableOpacity = require('react-native').TouchableOpacity;
@@ -404,27 +335,15 @@ describe('StartDestinationPicker', () => {
 
   it('clears start building when clear button is pressed', async () => {
     const { getByText, queryByText, getByTestId } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectStart = getStartSelector();
+    const mockPlace = createMockPlace('Start Building', '123 Start St');
 
-    const mockPlace = {
-      name: 'Start Building',
-      address: '123 Start St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
-
-    await act(async () => {
-      onSelectStart(mockPlace);
-    });
+    await selectPlace(onSelectStart, mockPlace);
 
     await waitFor(() => {
       expect(getByText('Selected: Start Building')).toBeTruthy();
     });
 
-    // Find and press the clear button using testID
     const clearButton = getByTestId('clear-start-button');
     
     await act(async () => {
@@ -438,21 +357,10 @@ describe('StartDestinationPicker', () => {
 
   it('shows clear button when destination building is selected', async () => {
     const { UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select destination building'
-    );
-    const onSelectDest = destSelectorCall[0].onSelect;
+    const onSelectDest = getDestinationSelector();
+    const mockPlace = createMockPlace('Destination Building', '456 Dest Ave', 41.8781, -87.6298);
 
-    const mockPlace = {
-      name: 'Destination Building',
-      address: '456 Dest Ave',
-      location: { lat: 41.8781, lng: -87.6298 },
-    };
-
-    await act(async () => {
-      onSelectDest(mockPlace);
-    });
+    await selectPlace(onSelectDest, mockPlace);
 
     await waitFor(() => {
       const TouchableOpacity = require('react-native').TouchableOpacity;
@@ -463,45 +371,20 @@ describe('StartDestinationPicker', () => {
 
   it('clears destination building when clear button is pressed', async () => {
     const { getByText, queryByText, getByTestId } = render(<StartDestinationPicker userLocation={null} />);
-    
-    // First, select a start building to ensure we have multiple clear buttons
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectStart = getStartSelector();
+    const onSelectDest = getDestinationSelector();
 
-    const mockStartPlace = {
-      name: 'Start Building',
-      address: '123 Start St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
+    const mockStartPlace = createMockPlace('Start Building', '123 Start St');
+    const mockDestPlace = createMockPlace('Destination Building', '456 Dest Ave', 41.8781, -87.6298);
 
-    await act(async () => {
-      onSelectStart(mockStartPlace);
-    });
-
-    // Then select a destination building
-    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select destination building'
-    );
-    const onSelectDest = destSelectorCall[0].onSelect;
-
-    const mockDestPlace = {
-      name: 'Destination Building',
-      address: '456 Dest Ave',
-      location: { lat: 41.8781, lng: -87.6298 },
-    };
-
-    await act(async () => {
-      onSelectDest(mockDestPlace);
-    });
+    await selectPlace(onSelectStart, mockStartPlace);
+    await selectPlace(onSelectDest, mockDestPlace);
 
     await waitFor(() => {
       expect(getByText('Selected: Destination Building')).toBeTruthy();
       expect(getByText('Selected: Start Building')).toBeTruthy();
     });
 
-    // Find and press the destination clear button using testID
     const destinationClearButton = getByTestId('clear-destination-button');
 
     await act(async () => {
@@ -510,7 +393,6 @@ describe('StartDestinationPicker', () => {
 
     await waitFor(() => {
       expect(queryByText('Selected: Destination Building')).toBeNull();
-      // Start building should still be selected
       expect(getByText('Selected: Start Building')).toBeTruthy();
     });
   });
@@ -559,23 +441,11 @@ describe('StartDestinationPicker', () => {
 
   it('passes value prop to BuildingSelector for start building', async () => {
     const { rerender } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectStart = getStartSelector();
+    const mockPlace = createMockPlace('Test Building', '123 Test St');
 
-    const mockPlace = {
-      name: 'Test Building',
-      address: '123 Test St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
+    await selectPlace(onSelectStart, mockPlace);
 
-    await act(async () => {
-      onSelectStart(mockPlace);
-    });
-
-    // Force a rerender to check the value prop
     rerender(<StartDestinationPicker userLocation={null} />);
 
     await waitFor(() => {
@@ -587,23 +457,11 @@ describe('StartDestinationPicker', () => {
 
   it('passes value prop to BuildingSelector for destination building', async () => {
     const { rerender } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select destination building'
-    );
-    const onSelectDest = destSelectorCall[0].onSelect;
+    const onSelectDest = getDestinationSelector();
+    const mockPlace = createMockPlace('Test Destination', '456 Test Ave', 41.8781, -87.6298);
 
-    const mockPlace = {
-      name: 'Test Destination',
-      address: '456 Test Ave',
-      location: { lat: 41.8781, lng: -87.6298 },
-    };
+    await selectPlace(onSelectDest, mockPlace);
 
-    await act(async () => {
-      onSelectDest(mockPlace);
-    });
-
-    // Force a rerender to check the value prop
     rerender(<StartDestinationPicker userLocation={null} />);
 
     await waitFor(() => {
@@ -615,27 +473,15 @@ describe('StartDestinationPicker', () => {
 
   it('renders MaterialIcons for clear buttons', async () => {
     const { UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectStart = getStartSelector();
+    const mockPlace = createMockPlace('Test Building', '123 Test St');
 
-    const mockPlace = {
-      name: 'Test Building',
-      address: '123 Test St',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
-
-    await act(async () => {
-      onSelectStart(mockPlace);
-    });
+    await selectPlace(onSelectStart, mockPlace);
 
     await waitFor(() => {
       const MaterialIcons = require('@expo/vector-icons').MaterialIcons;
       const icons = UNSAFE_getAllByType(MaterialIcons);
       expect(icons.length).toBeGreaterThan(0);
-      // Check that close icon is present
       const closeIcon = icons.find((icon: any) => icon.props.name === 'close');
       expect(closeIcon).toBeDefined();
     });
@@ -654,21 +500,10 @@ describe('StartDestinationPicker', () => {
 
   it('renders selected text with proper styling', async () => {
     const { getByText } = render(<StartDestinationPicker userLocation={null} />);
-    
-    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-      call => call[0].placeholder === 'Select start building'
-    );
-    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectStart = getStartSelector();
+    const mockPlace = createMockPlace('Styled Building', '789 Style Ave');
 
-    const mockPlace = {
-      name: 'Styled Building',
-      address: '789 Style Ave',
-      location: { lat: 40.7128, lng: -74.006 },
-    };
-
-    await act(async () => {
-      onSelectStart(mockPlace);
-    });
+    await selectPlace(onSelectStart, mockPlace);
 
     await waitFor(() => {
       const selectedText = getByText('Selected: Styled Building');
