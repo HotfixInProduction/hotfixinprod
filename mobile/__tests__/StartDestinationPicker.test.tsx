@@ -70,180 +70,128 @@ describe('StartDestinationPicker', () => {
     expect(destCall[0].placeholder).toBe('Select destination building');
   });
 
-  // it('handles start building selection', async () => {
-  //   const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+  it('handles start building selection', async () => {
+    const mockSetStart = jest.fn();
+    const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={mockSetStart} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
     
-  //   // Get the onSelect callback from the mock
-  //   const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-  //     call => call[0].placeholder === 'Select start building'
-  //   );
-  //   const onSelectStart = startSelectorCall[0].onSelect;
+    // Get the onSelect callback from the mock
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const onSelectStart = startSelectorCall[0].onSelect;
 
-  //   const mockPlace = {
-  //     name: 'Start Building',
-  //     address: '123 Start St',
-  //     location: { lat: 40.7128, lng: -74.006 },
-  //   };
+    const mockPlace = {
+      name: 'Start Building',
+      address: '123 Start St',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
 
-  //   // Simulate selection
-  //   await act(async () => {
-  //     onSelectStart(mockPlace);
-  //   });
+    // Simulate selection
+    await act(async () => {
+      onSelectStart(mockPlace);
+    });
 
-  //   await waitFor(() => {
-  //     expect(getByText('Selected: Start Building')).toBeTruthy();
-  //   });
-  // });
+    expect(mockSetStart).toHaveBeenCalledWith(mockPlace);
+  });
 
-  // it('handles destination building selection', async () => {
-  //   const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+  it('handles destination building selection', async () => {
+    const mockSetDestination = jest.fn();
+    const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={mockSetDestination} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
     
-  //   // Get the onSelect callback from the mock
-  //   const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-  //     call => call[0].placeholder === 'Select destination building'
-  //   );
-  //   const onSelectDest = destSelectorCall[0].onSelect;
+    // Get the onSelect callback from the mock
+    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select destination building'
+    );
+    const onSelectDest = destSelectorCall[0].onSelect;
 
-  //   const mockPlace = {
-  //     name: 'Destination Building',
-  //     address: '456 Dest Ave',
-  //     location: { lat: 41.8781, lng: -87.6298 },
-  //   };
+    const mockPlace = {
+      name: 'Destination Building',
+      address: '456 Dest Ave',
+      location: { lat: 41.8781, lng: -87.6298 },
+    };
 
-  //   // Simulate selection
-  //   await act(async () => {
-  //     onSelectDest(mockPlace);
-  //   });
+    // Simulate selection
+    await act(async () => {
+      onSelectDest(mockPlace);
+    });
 
-  //   await waitFor(() => {
-  //     expect(getByText('Selected: Destination Building')).toBeTruthy();
-  //   });
-  // });
+    expect(mockSetDestination).toHaveBeenCalledWith(mockPlace);
+  });
 
-  // it('logs start building selection in useEffect', async () => {
-  //   const { getByTestId } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+  it('does not show selected text when no building is selected', () => {
+    const { queryByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    expect(queryByText(/^Selected:/)).toBeNull();
+  });
+
+  it('handles multiple selections for start building', async () => {
+    const mockSetStart = jest.fn();
+    const { getByText, queryByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={mockSetStart} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
     
-  //   const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-  //     call => call[0].placeholder === 'Select start building'
-  //   );
-  //   const onSelectStart = startSelectorCall[0].onSelect;
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const onSelectStart = startSelectorCall[0].onSelect;
 
-  //   const mockPlace = {
-  //     name: 'Start Building',
-  //     address: '123 Start St',
-  //     location: { lat: 40.7128, lng: -74.006 },
-  //   };
+    // First selection
+    const mockPlace1 = {
+      name: 'First Building',
+      address: '123 First St',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
+    await act(async () => {
+      onSelectStart(mockPlace1);
+    });
 
-  //   await act(async () => {
-  //     onSelectStart(mockPlace);
-  //   });
+    expect(mockSetStart).toHaveBeenNthCalledWith(1, mockPlace1);
 
-  //   await waitFor(() => {
-  //     expect(console.log).toHaveBeenCalledWith('Start building selected:', mockPlace);
-  //   });
-  // });
+    // Second selection
+    const mockPlace2 = {
+      name: 'Second Building',
+      address: '456 Second St',
+      location: { lat: 41.8781, lng: -87.6298 },
+    };
+    await act(async () => {
+      onSelectStart(mockPlace2);
+    });
 
-  // it('logs destination building selection in useEffect', async () => {
-  //   const { getByTestId } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    expect(mockSetStart).toHaveBeenNthCalledWith(2, mockPlace2);
+  });
+
+  it('handles independent selections for start and destination', async () => {
+    const mockSetStart = jest.fn();
+    const mockSetDestination = jest.fn();
+    const { getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={mockSetStart} setDestination={mockSetDestination} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
     
-  //   const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-  //     call => call[0].placeholder === 'Select destination building'
-  //   );
-  //   const onSelectDest = destSelectorCall[0].onSelect;
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select destination building'
+    );
 
-  //   const mockPlace = {
-  //     name: 'Destination Building',
-  //     address: '456 Dest Ave',
-  //     location: { lat: 41.8781, lng: -87.6298 },
-  //   };
+    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectDest = destSelectorCall[0].onSelect;
 
-  //   await act(async () => {
-  //     onSelectDest(mockPlace);
-  //   });
+    const startPlace = {
+      name: 'Start Building',
+      address: '123 Start St',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
 
-  //   await waitFor(() => {
-  //     expect(console.log).toHaveBeenCalledWith('Destination building selected:', mockPlace);
-  //   });
-  // });
+    const destPlace = {
+      name: 'Destination Building',
+      address: '456 Dest Ave',
+      location: { lat: 41.8781, lng: -87.6298 },
+    };
 
-  // it('does not show selected text when no building is selected', () => {
-  //   const { queryByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
-  //   expect(queryByText(/^Selected:/)).toBeNull();
-  // });
+    await act(async () => {
+      onSelectStart(startPlace);
+      onSelectDest(destPlace);
+    });
 
-  // it('handles multiple selections for start building', async () => {
-  //   const { getByText, queryByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
-    
-  //   const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-  //     call => call[0].placeholder === 'Select start building'
-  //   );
-  //   const onSelectStart = startSelectorCall[0].onSelect;
-
-  //   // First selection
-  //   const mockPlace1 = {
-  //     name: 'First Building',
-  //     address: '123 First St',
-  //     location: { lat: 40.7128, lng: -74.006 },
-  //   };
-  //   await act(async () => {
-  //     onSelectStart(mockPlace1);
-  //   });
-
-  //   await waitFor(() => {
-  //     expect(getByText('Selected: First Building')).toBeTruthy();
-  //   });
-
-  //   // Second selection
-  //   const mockPlace2 = {
-  //     name: 'Second Building',
-  //     address: '456 Second St',
-  //     location: { lat: 41.8781, lng: -87.6298 },
-  //   };
-  //   await act(async () => {
-  //     onSelectStart(mockPlace2);
-  //   });
-
-  //   await waitFor(() => {
-  //     expect(getByText('Selected: Second Building')).toBeTruthy();
-  //     expect(queryByText('Selected: First Building')).toBeNull();
-  //   });
-  // });
-
-  // it('handles independent selections for start and destination', async () => {
-  //   const { getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
-    
-  //   const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-  //     call => call[0].placeholder === 'Select start building'
-  //   );
-  //   const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
-  //     call => call[0].placeholder === 'Select destination building'
-  //   );
-
-  //   const onSelectStart = startSelectorCall[0].onSelect;
-  //   const onSelectDest = destSelectorCall[0].onSelect;
-
-  //   const startPlace = {
-  //     name: 'Start Building',
-  //     address: '123 Start St',
-  //     location: { lat: 40.7128, lng: -74.006 },
-  //   };
-
-  //   const destPlace = {
-  //     name: 'Destination Building',
-  //     address: '456 Dest Ave',
-  //     location: { lat: 41.8781, lng: -87.6298 },
-  //   };
-
-  //   await act(async () => {
-  //     onSelectStart(startPlace);
-  //     onSelectDest(destPlace);
-  //   });
-
-  //   await waitFor(() => {
-  //     expect(getByText('Selected: Start Building')).toBeTruthy();
-  //     expect(getByText('Selected: Destination Building')).toBeTruthy();
-  //   });
-  // });
+    expect(mockSetStart).toHaveBeenCalledWith(startPlace);
+    expect(mockSetDestination).toHaveBeenCalledWith(destPlace);
+  });
 
   it('applies correct styles to container', () => {
     const { getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
