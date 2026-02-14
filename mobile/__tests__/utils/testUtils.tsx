@@ -96,12 +96,12 @@ export const createStartDestinationPickerMock = () => {
 
   const mockStart = {
     id: 'start-place',
-    location: { lat: 45.501, lng: -73.57 },
+    location: { lat: 45.4972, lng: -73.5789 },
   };
 
   const mockDestination = {
     id: 'destination-place',
-    location: { lat: 45.492, lng: -73.585 },
+    location: { lat: 45.4582, lng: -73.6402 },
   };
 
   return ({ setStart, setDestination }: any) => (
@@ -123,8 +123,19 @@ export const createStartDestinationPickerMock = () => {
 };
 
 export const createMapDirectionsMock = () => {
-  const { View } = require('react-native');
-  return (props: any) => <View testID="map-directions" {...props} />;
+  const { View, TouchableOpacity } = require('react-native');
+  return (props: any) => (
+    <View testID="map-directions">
+      <TouchableOpacity 
+        testID="trigger-directions-ready" 
+        onPress={() => props.onReady({
+          distance: 12.5,
+          duration: 25,
+          coordinates: []
+        })} 
+      />
+    </View>
+  );
 };
 
 export const createNavigationMock = () => {
@@ -151,7 +162,7 @@ export const createBottomTabsMock = () => {
             const options = typeof screenOptions === 'function'
               ? screenOptions({ route: { name: routeName } })
               : screenOptions;
-            
+
             // Render the tab icon
             if (options?.tabBarIcon) {
               const icon = options.tabBarIcon({ focused: false, color: '#666', size: 24 });
@@ -159,7 +170,7 @@ export const createBottomTabsMock = () => {
               const iconWithTestId = React.cloneElement(icon, {
                 testID: `icon-${routeName.toLowerCase()}`,
               });
-              
+
               return React.createElement(
                 'View',
                 { key: routeName },
@@ -173,7 +184,7 @@ export const createBottomTabsMock = () => {
         })
       );
     },
-    Screen: ({ name, component }: any) => 
+    Screen: ({ name, component }: any) =>
       React.createElement('View', { testID: `screen-${name}` }, null),
   };
 
@@ -205,6 +216,23 @@ export const setupAppStateMock = () => {
     remove: defaultAppStateRemove,
   }) as any);
   return defaultAppStateRemove;
+};
+
+export const createRouteInfoMock = () => {
+  const { View, TouchableOpacity, Text } = require('react-native');
+  return ({ onClose, duration, distance }: any) => (
+    <View testID="route-info-mock">
+      <Text>Arrive at Destination</Text>
+      <Text>{duration}</Text>
+      <Text>{distance}</Text>
+      <TouchableOpacity
+        testID="route-info-close-button"
+        onPress={onClose}
+      >
+        <Text>Close</Text>
+      </TouchableOpacity>
+    </View>
+  );
 };
 
 // Test data reset helper
