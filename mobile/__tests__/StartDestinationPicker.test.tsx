@@ -43,19 +43,29 @@ describe('StartDestinationPicker', () => {
     console.log = jest.fn();
   });
 
+  const defaultStartDestProps = {
+    userLocation: null,
+    start: null,
+    destination: null,
+    setStart: jest.fn(),
+    setDestination: jest.fn(),
+    setInstructions: jest.fn(),
+    setConfirmRoute: jest.fn(),
+  };
+
   it('renders without crashing', () => {
-    const { getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    const { getByText } = render(<StartDestinationPicker {...defaultStartDestProps} />);
     expect(getByText('Start Building')).toBeTruthy();
     expect(getByText('Destination Building')).toBeTruthy();
   });
 
   it('renders both BuildingSelector components', () => {
-    render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()}/>);
+    render(<StartDestinationPicker {...defaultStartDestProps}/>);
     expect(BuildingSelector).toHaveBeenCalledTimes(2);
   });
 
   it('passes correct placeholder for start building selector', () => {
-    render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    render(<StartDestinationPicker {...defaultStartDestProps} />);
     const calls = (BuildingSelector as jest.Mock).mock.calls;
     const startCall = calls.find(call => call[0].placeholder === 'Select start building');
     expect(startCall).toBeDefined();
@@ -63,7 +73,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('passes correct placeholder for destination building selector', () => {
-    render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    render(<StartDestinationPicker {...defaultStartDestProps} />);
     const calls = (BuildingSelector as jest.Mock).mock.calls;
     const destCall = calls.find(call => call[0].placeholder === 'Select destination building');
     expect(destCall).toBeDefined();
@@ -72,7 +82,7 @@ describe('StartDestinationPicker', () => {
 
   it('handles start building selection', async () => {
     const mockSetStart = jest.fn();
-    const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={mockSetStart} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart} />);
     
     // Get the onSelect callback from the mock
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
@@ -96,7 +106,7 @@ describe('StartDestinationPicker', () => {
 
   it('handles destination building selection', async () => {
     const mockSetDestination = jest.fn();
-    const { getByTestId, getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={mockSetDestination} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    render(<StartDestinationPicker {...defaultStartDestProps }setDestination={mockSetDestination} />);
     
     // Get the onSelect callback from the mock
     const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
@@ -119,13 +129,13 @@ describe('StartDestinationPicker', () => {
   });
 
   it('does not show selected text when no building is selected', () => {
-    const { queryByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    const { queryByText } = render(<StartDestinationPicker {...defaultStartDestProps} />);
     expect(queryByText(/^Selected:/)).toBeNull();
   });
 
   it('handles multiple selections for start building', async () => {
     const mockSetStart = jest.fn();
-    const { getByText, queryByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={mockSetStart} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart}  />);
     
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
       call => call[0].placeholder === 'Select start building'
@@ -160,7 +170,7 @@ describe('StartDestinationPicker', () => {
   it('handles independent selections for start and destination', async () => {
     const mockSetStart = jest.fn();
     const mockSetDestination = jest.fn();
-    const { getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={mockSetStart} setDestination={mockSetDestination} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart} setDestination={mockSetDestination}  />);
     
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
       call => call[0].placeholder === 'Select start building'
@@ -194,13 +204,13 @@ describe('StartDestinationPicker', () => {
   });
 
   it('applies correct styles to container', () => {
-    const { getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    const { getByText } = render(<StartDestinationPicker {...defaultStartDestProps} />);
     const container = getByText('Start Building').parent?.parent;
     expect(container?.props.style).toBeDefined();
   });
 
   it('applies correct styles to labels', () => {
-    const { getByText } = render(<StartDestinationPicker userLocation={null} start={null} destination={null} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={jest.fn()} setConfirmRoute={jest.fn()} />);
+    const { getByText } = render(<StartDestinationPicker {...defaultStartDestProps} />);
     const startLabel = getByText('Start Building');
     const destLabel = getByText('Destination Building');
     
@@ -230,7 +240,7 @@ describe('StartDestinationPicker', () => {
 
     const mockSetInstructions = jest.fn();
     const mockConfirmRoute = jest.fn();
-    const { getByTestId } = render(<StartDestinationPicker userLocation={null} start={start} destination={destination} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={mockSetInstructions} setConfirmRoute={mockConfirmRoute} />);
+    const { getByTestId } = render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setInstructions={mockSetInstructions} setConfirmRoute={mockConfirmRoute} />);
     const confirmButton = getByTestId('confirm-button');
     fireEvent.press(confirmButton);
 
@@ -252,7 +262,7 @@ describe('StartDestinationPicker', () => {
 
     const mockSetInstructions = jest.fn();
     const mockConfirmRoute = jest.fn();
-    const { getByTestId } = render(<StartDestinationPicker userLocation={null} start={start} destination={destination} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={mockSetInstructions} setConfirmRoute={mockConfirmRoute} />);
+    const { getByTestId } = render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setStart={jest.fn()} setInstructions={mockSetInstructions} setConfirmRoute={mockConfirmRoute} />);
     const confirmButton = getByTestId('confirm-button');
     fireEvent.press(confirmButton);
 
