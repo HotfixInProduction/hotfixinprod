@@ -68,6 +68,17 @@ describe('StartDestinationPicker', () => {
     });
   };
 
+  const setupLocationMock = (coords: { latitude: number; longitude: number }) => {
+    (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValue({ coords });
+  };
+
+  const pressCurrentLocationButton = async (getByText: any) => {
+    const currentLocationButton = getByText('Use Current Location');
+    await act(async () => {
+      fireEvent.press(currentLocationButton);
+    });
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     console.log = jest.fn();
@@ -222,19 +233,10 @@ describe('StartDestinationPicker', () => {
 
   it('handles Use Current Location button press - finds nearest building', async () => {
     const userLocation = { latitude: 45.497, longitude: -73.579 };
-    (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValue({
-      coords: {
-        latitude: 45.497,
-        longitude: -73.579,
-      }
-    });
+    setupLocationMock(userLocation);
 
     const { getByText } = render(<StartDestinationPicker userLocation={userLocation} />);
-    const currentLocationButton = getByText('Use Current Location');
-
-    await act(async () => {
-      fireEvent.press(currentLocationButton);
-    });
+    await pressCurrentLocationButton(getByText);
 
     await waitFor(() => {
       expect(getByText('Selected: Hall Building')).toBeTruthy();
@@ -243,27 +245,16 @@ describe('StartDestinationPicker', () => {
 
   it('handles Use Current Location button press - uses reverse geocoding when far from buildings', async () => {
     const userLocation = { latitude: 40.7128, longitude: -74.006 };
-    (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValue({
-      coords: {
-        latitude: 40.7128,
-        longitude: -74.006,
-      }
-    });
-    (Location.reverseGeocodeAsync as jest.Mock).mockResolvedValue([
-      {
-        street: 'Broadway',
-        city: 'New York',
-        region: 'NY',
-        name: 'Times Square'
-      }
-    ]);
+    setupLocationMock(userLocation);
+    (Location.reverseGeocodeAsync as jest.Mock).mockResolvedValue([{
+      street: 'Broadway',
+      city: 'New York',
+      region: 'NY',
+      name: 'Times Square'
+    }]);
 
     const { getByText } = render(<StartDestinationPicker userLocation={userLocation} />);
-    const currentLocationButton = getByText('Use Current Location');
-
-    await act(async () => {
-      fireEvent.press(currentLocationButton);
-    });
+    await pressCurrentLocationButton(getByText);
 
     await waitFor(() => {
       expect(getByText('Selected: Broadway')).toBeTruthy();
@@ -272,20 +263,11 @@ describe('StartDestinationPicker', () => {
 
   it('handles Use Current Location button press - fallback to coordinates when reverse geocoding fails', async () => {
     const userLocation = { latitude: 40.7128, longitude: -74.006 };
-    (Location.getCurrentPositionAsync as jest.Mock).mockResolvedValue({
-      coords: {
-        latitude: 40.7128,
-        longitude: -74.006,
-      }
-    });
+    setupLocationMock(userLocation);
     (Location.reverseGeocodeAsync as jest.Mock).mockResolvedValue([]);
 
     const { getByText } = render(<StartDestinationPicker userLocation={userLocation} />);
-    const currentLocationButton = getByText('Use Current Location');
-
-    await act(async () => {
-      fireEvent.press(currentLocationButton);
-    });
+    await pressCurrentLocationButton(getByText);
 
     await waitFor(() => {
       expect(getByText('Selected: Current Location')).toBeTruthy();
@@ -298,11 +280,7 @@ describe('StartDestinationPicker', () => {
     console.error = jest.fn();
 
     const { getByText } = render(<StartDestinationPicker userLocation={userLocation} />);
-    const currentLocationButton = getByText('Use Current Location');
-
-    await act(async () => {
-      fireEvent.press(currentLocationButton);
-    });
+    await pressCurrentLocationButton(getByText);
 
     await waitFor(() => {
       expect(console.error).toHaveBeenCalledWith('Error getting location name:', expect.any(Error));
