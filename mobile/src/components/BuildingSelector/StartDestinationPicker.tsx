@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import BuildingSelector from './BuildingSelector';
 import Config from "react-native-config";
+import type { MapStep } from '../../types/map';
 
 export type Place = {
   name: string;
@@ -15,16 +16,27 @@ type StartDestinationPickerProps = {
   destination: Place | null;
   setStart: (place: Place | null) => void;
   setDestination: (place: Place | null) => void;
-  setInstructions: (val: any[]) => void;
+  setInstructions: (val: MapStep[]) => void;
 };
 
 const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions }) => {
+  const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
   useEffect(() => {
     const fetchDirections = async () => {
       if (start && destination) {
+        
+        if (!googleMapsApiKey) {
+          return;
+        }
 
-        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${start.location.lat},${start.location.lng}&destination=${destination.location.lat},${destination.location.lng}&key=${Config.GOOGLE_MAPS_ANDROID_API_KEY}`;
+        const params = new URLSearchParams({
+          origin: `${start.location.lat},${start.location.lng}`,
+          destination: `${destination.location.lat},${destination.location.lng}`,
+          key: googleMapsApiKey,
+        });
+
+        const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
 
         try {
           const response = await fetch(url);
@@ -39,7 +51,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
       }
     }
     fetchDirections();
-  }, [start, destination]);
+  }, [start, destination, googleMapsApiKey]);
 
   return (
     <View style={styles.container}>

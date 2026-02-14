@@ -21,7 +21,7 @@ jest.mock('react-native-safe-area-context', () => require('./utils/testUtils').c
 jest.mock('@expo/vector-icons', () => require('./utils/testUtils').createVectorIconsMock(), { virtual: true });
 jest.mock('../src/components/BuildingPolygon', () => require('./utils/testUtils').createBuildingPolygonMock());
 jest.mock('../src/components/BuildingSelector/StartDestinationPicker', () => require('./utils/testUtils').createStartDestinationPickerMock());
-jest.mock('react-native-config', () => ({ GOOGLE_MAPS_API_KEY: 'mock-google-maps-key', }));
+jest.mock('react-native-config', () => ({ GOOGLE_MAPS_ANDROID_API_KEY: 'mock-google-maps-key' }));
 jest.mock('react-native-maps-directions', () => require('./utils/testUtils').createMapDirectionsMock());
 jest.mock('../src/components/RouteInfo', () => require('./utils/testUtils').createRouteInfoMock());
 

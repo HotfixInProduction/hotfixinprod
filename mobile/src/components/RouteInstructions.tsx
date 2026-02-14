@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import type { MapStep } from '../types/map';
 
 interface RouteInstructionsProps {
-    instructions: any[];
+    instructions: MapStep[];
     onClose: () => void;
 }
 

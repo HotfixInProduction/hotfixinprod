@@ -14,6 +14,7 @@ import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
+import type { MapStep } from '../types/map';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -39,14 +40,6 @@ const CAMPUSES = {
   },
 };
 
-interface MapStep {
-  distance: { text: string; value: number };
-  duration: { text: string; value: number };
-  html_instructions: string;
-  polyline: { points: string };
-  travel_mode: string;
-}
-
 type CampusKey = keyof typeof CAMPUSES;
 
 export default function MapScreen() {
@@ -67,6 +60,7 @@ export default function MapScreen() {
   const [instructions, setInstructions] = useState<MapStep[]>([]);
   const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
   const centerOnUser = async () => {
     try {
@@ -281,11 +275,11 @@ export default function MapScreen() {
       >
         <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
 
-        {start && destination && (
+        {start && destination && googleMapsApiKey && (
           <MapViewDirections
             origin={getCoordinates(start)}
             destination={getCoordinates(destination)}
-            apikey={Config.GOOGLE_MAPS_ANDROID_API_KEY!}
+            apikey={googleMapsApiKey}
             strokeWidth={3}
             strokeColor="hotpink"
             mode="DRIVING"
