@@ -21,6 +21,21 @@ jest.mock('@expo/vector-icons', () => require('./utils/testUtils').createVectorI
 jest.mock('../src/components/BuildingPolygon', () => require('./utils/testUtils').createBuildingPolygonMock());
 jest.mock('react-native-config', () => ({GOOGLE_MAPS_API_KEY: 'mock-google-maps-key',}));
 
+jest.mock('../src/components/BuildingSelector/BuildingSelector', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return jest.fn((props) => {
+    return React.createElement(View, { 
+      testID: `building-selector-${props.placeholder}`,
+      onPress: () => props.onSelect({
+        name: 'Mock Building',
+        address: '123 Mock St',
+        location: { lat: 1, lng: 1 }
+      })
+    });
+  });
+});
+
 jest.spyOn(Alert, 'alert');
 
 suppressActWarnings();
@@ -440,5 +455,46 @@ describe('MapScreen', () => {
     expect(safeAreaView).toBeTruthy();
     expect(toggleButton).toBeTruthy();
     expect(downtownButton).toBeTruthy();
+  });
+
+  describe("Use State Effects", () =>{
+    let consoleSpy: jest.SpyInstance
+
+    beforeEach(()=> {
+      consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    });
+    afterEach(() => {
+      consoleSpy.mockRestore();
+    });
+
+    it('start building appears in console', async () => {
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'))
+      const startSelector = getByTestId('building-selector-Select start building');
+      fireEvent.press(startSelector);
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Start building selected:', 
+          expect.any(Object)
+        );
+      });
+    });
+
+    it('destination building appears in console', async () => {
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'))
+      const destSelector = getByTestId('building-selector-Select destination building');
+      fireEvent.press(destSelector);
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Destination building selected:', 
+          expect.any(Object)
+        );
+      });
+    });
   });
 });

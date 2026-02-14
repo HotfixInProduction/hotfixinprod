@@ -239,7 +239,28 @@ describe('StartDestinationPicker', () => {
       expect(mockSetInstructions).toHaveBeenCalledWith(instructions);
       expect(mockConfirmRoute).toHaveBeenCalledWith(true);
     });
-
   });
 
+  it('fecthes instructions but fetch fails', async () => {
+    const start = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+    const destination = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+
+    globalThis.fetch = jest.fn(() =>
+      Promise.reject(new Error("Something with the network went wrong"))
+    ) as jest.Mock;
+    console.error = jest.fn();
+
+    const mockSetInstructions = jest.fn();
+    const mockConfirmRoute = jest.fn();
+    const { getByTestId } = render(<StartDestinationPicker userLocation={null} start={start} destination={destination} setStart={jest.fn()} setDestination={jest.fn()} setInstructions={mockSetInstructions} setConfirmRoute={mockConfirmRoute} />);
+    const confirmButton = getByTestId('confirm-button');
+    fireEvent.press(confirmButton);
+
+    await waitFor(()=> {
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164,-73.57897485280246&destination=45.497285416040164,-73.57897485280246"));
+      expect(mockSetInstructions).not.toHaveBeenCalled();
+      expect(mockConfirmRoute).not.toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalledWith("Fetch failed", new Error("Something with the network went wrong"));
+    });
+  });
 });

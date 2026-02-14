@@ -34,8 +34,6 @@ const handleDirections = async (start: Place | null, destination: Place | null, 
       } catch (error) {
         console.error("Fetch failed", error);
       }
-
-      setConfirmRoute(true);
     }
 }
 
