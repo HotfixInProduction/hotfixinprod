@@ -160,6 +160,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
           <TouchableOpacity 
             style={styles.clearButton}
             onPress={() => setStart(null)}
+            testID="clear-start-button"
           >
             <MaterialIcons name="close" size={20} color="#666" />
           </TouchableOpacity>
@@ -200,6 +201,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
           <TouchableOpacity 
             style={styles.clearButton}
             onPress={() => setDestination(null)}
+            testID="clear-destination-button"
           >
             <MaterialIcons name="close" size={20} color="#666" />
           </TouchableOpacity>

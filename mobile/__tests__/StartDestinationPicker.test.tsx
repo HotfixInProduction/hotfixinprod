@@ -403,7 +403,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('clears start building when clear button is pressed', async () => {
-    const { getByText, queryByText, UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
+    const { getByText, queryByText, getByTestId } = render(<StartDestinationPicker userLocation={null} />);
     
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
       call => call[0].placeholder === 'Select start building'
@@ -424,22 +424,16 @@ describe('StartDestinationPicker', () => {
       expect(getByText('Selected: Start Building')).toBeTruthy();
     });
 
-    // Find and press the clear button
-    const TouchableOpacity = require('react-native').TouchableOpacity;
-    const clearButtons = UNSAFE_getAllByType(TouchableOpacity);
-    const clearButton = clearButtons.find(btn => 
-      btn.props.style && JSON.stringify(btn.props.style).includes('clearButton')
-    );
+    // Find and press the clear button using testID
+    const clearButton = getByTestId('clear-start-button');
+    
+    await act(async () => {
+      fireEvent.press(clearButton);
+    });
 
-    if (clearButton) {
-      await act(async () => {
-        fireEvent.press(clearButton);
-      });
-
-      await waitFor(() => {
-        expect(queryByText('Selected: Start Building')).toBeNull();
-      });
-    }
+    await waitFor(() => {
+      expect(queryByText('Selected: Start Building')).toBeNull();
+    });
   });
 
   it('shows clear button when destination building is selected', async () => {
@@ -468,7 +462,7 @@ describe('StartDestinationPicker', () => {
   });
 
   it('clears destination building when clear button is pressed', async () => {
-    const { getByText, queryByText, UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
+    const { getByText, queryByText, getByTestId } = render(<StartDestinationPicker userLocation={null} />);
     
     // First, select a start building to ensure we have multiple clear buttons
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
@@ -507,25 +501,8 @@ describe('StartDestinationPicker', () => {
       expect(getByText('Selected: Start Building')).toBeTruthy();
     });
 
-    // Find the clear buttons
-    const TouchableOpacity = require('react-native').TouchableOpacity;
-    const allButtons = UNSAFE_getAllByType(TouchableOpacity);
-    
-    // Filter to get only clear buttons by checking onPress handler
-    const clearButtons = allButtons.filter(btn => {
-      const onPress = btn.props.onPress;
-      if (!onPress) return false;
-      // Test if the button's onPress would clear either start or destination
-      const onPressStr = onPress.toString();
-      return onPressStr.includes('setStart') || onPressStr.includes('setDestination') || 
-             (btn.props.style && JSON.stringify(btn.props.style).includes('clearButton'));
-    });
-
-    // Should have at least 2 clear buttons (one for start, one for destination)
-    expect(clearButtons.length).toBeGreaterThan(0);
-
-    // Get the last clear button (destination's clear button since it's rendered after start's)
-    const destinationClearButton = clearButtons[clearButtons.length - 1];
+    // Find and press the destination clear button using testID
+    const destinationClearButton = getByTestId('clear-destination-button');
 
     await act(async () => {
       fireEvent.press(destinationClearButton);
