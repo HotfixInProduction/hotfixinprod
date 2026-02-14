@@ -1,8 +1,6 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import StartDestinationPicker from '../src/components/BuildingSelector/StartDestinationPicker';
-import BuildingSelector from '../src/components/BuildingSelector/BuildingSelector';
-import ConfirmButton from '../src/components/confirmButton';
 
 // 1. Mock BuildingSelector to trigger the onSelect prop easily
 jest.mock('../src/components/BuildingSelector/BuildingSelector', () => {

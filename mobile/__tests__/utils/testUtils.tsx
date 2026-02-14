@@ -12,6 +12,7 @@ export const mockWatchPositionAsync = jest.fn().mockResolvedValue({
 });
 export const mockOpenSettings = jest.fn();
 export const mockAnimateToRegion = jest.fn();
+export const mockFitToCoordinates = jest.fn();
 
 // Mock data
 export const mockBuilding = {
@@ -44,16 +45,20 @@ export const createMapMock = () => {
   const MockMapView = React.forwardRef((props: any, ref: any) => {
     React.useImperativeHandle(ref, () => ({
       animateToRegion: mockAnimateToRegion,
+      fitToCoordinates: mockFitToCoordinates,
     }));
     return <View testID="map-view" {...props}>{props.children}</View>;
   });
 
   const MockPolygon = (props: any) => <View {...props} />;
 
+  const MockMarker = (props: any) => <View {...props} />;
+
   return {
     __esModule: true,
     default: MockMapView,
     Polygon: MockPolygon,
+    Marker: MockMarker,
   };
 };
 
@@ -84,6 +89,42 @@ export const createBuildingPolygonMock = () => {
       </TouchableOpacity>
     </View>
   );
+};
+
+export const createStartDestinationPickerMock = () => {
+  const { View, TouchableOpacity, Text } = require('react-native');
+
+  const mockStart = {
+    id: 'start-place',
+    location: { lat: 45.501, lng: -73.57 },
+  };
+
+  const mockDestination = {
+    id: 'destination-place',
+    location: { lat: 45.492, lng: -73.585 },
+  };
+
+  return ({ setStart, setDestination }: any) => (
+    <View testID="start-destination-picker-mock">
+      <TouchableOpacity testID="set-start" onPress={() => setStart(mockStart)}>
+        <Text>Set Start</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-destination" onPress={() => setDestination(mockDestination)}>
+        <Text>Set Destination</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="clear-start" onPress={() => setStart(null)}>
+        <Text>Clear Start</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="clear-destination" onPress={() => setDestination(null)}>
+        <Text>Clear Destination</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export const createMapDirectionsMock = () => {
+  const { View } = require('react-native');
+  return (props: any) => <View testID="map-directions" {...props} />;
 };
 
 export const createNavigationMock = () => {
@@ -174,4 +215,6 @@ export const resetAllMocks = () => {
     coords: { latitude: 45.5, longitude: -73.58 },
   });
   mockOpenSettings.mockClear();
+  mockAnimateToRegion.mockClear();
+  mockFitToCoordinates.mockClear();
 };

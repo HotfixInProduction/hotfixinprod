@@ -11,6 +11,7 @@ import {
   suppressActWarnings,
   setupAppStateMock,
   resetAllMocks,
+  mockFitToCoordinates,
 } from './utils/testUtils';
 
 // Setup all mocks using factory functions
@@ -19,7 +20,9 @@ jest.mock('react-native-maps', () => require('./utils/testUtils').createMapMock(
 jest.mock('react-native-safe-area-context', () => require('./utils/testUtils').createSafeAreaMock());
 jest.mock('@expo/vector-icons', () => require('./utils/testUtils').createVectorIconsMock(), { virtual: true });
 jest.mock('../src/components/BuildingPolygon', () => require('./utils/testUtils').createBuildingPolygonMock());
+jest.mock('../src/components/BuildingSelector/StartDestinationPicker', () => require('./utils/testUtils').createStartDestinationPickerMock());
 jest.mock('react-native-config', () => ({GOOGLE_MAPS_API_KEY: 'mock-google-maps-key',}));
+jest.mock('react-native-maps-directions', () => require('./utils/testUtils').createMapDirectionsMock());
 
 jest.spyOn(Alert, 'alert');
 
@@ -440,5 +443,101 @@ describe('MapScreen', () => {
     expect(safeAreaView).toBeTruthy();
     expect(toggleButton).toBeTruthy();
     expect(downtownButton).toBeTruthy();
+  });
+});
+
+describe('Auto-zoom Map', () => {
+  beforeEach(() => {
+    resetAllMocks();
+  });
+
+  it('zooms to destination when only destination is set', async () => {
+    const { getByTestId } = render(<MapScreen />);
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: 45.5,
+          longitude: -73.58,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }),
+        600
+      );
+    });
+
+    mockAnimateToRegion.mockClear();
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: 45.492,
+          longitude: -73.585,
+          latitudeDelta: 0.002,
+          longitudeDelta: 0.002,
+        }),
+        1000
+      );
+    });
+    expect(mockFitToCoordinates).not.toHaveBeenCalled();
+  });
+
+  it('zooms to start when only start is set', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalled();
+    });
+
+    mockAnimateToRegion.mockClear();
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+
+    fireEvent.press(getByTestId('set-start'));
+
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: 45.501,
+          longitude: -73.57,
+          latitudeDelta: 0.002,
+          longitudeDelta: 0.002,
+        }),
+        1000
+      );
+    });
+    expect(mockFitToCoordinates).not.toHaveBeenCalled();
+  });
+
+  it('fits both points when start and destination are set', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalled();
+    });
+
+    mockAnimateToRegion.mockClear();
+    mockFitToCoordinates.mockClear();
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(mockFitToCoordinates).toHaveBeenCalledWith(
+        [
+          { latitude: 45.501, longitude: -73.57 },
+          { latitude: 45.492, longitude: -73.585 },
+        ],
+        {
+          edgePadding: { top: 150, right: 60, bottom: 60, left: 60 },
+          animated: true,
+        }
+      );
+    });
   });
 });
