@@ -15,11 +15,10 @@ type StartDestinationPickerProps = {
   destination: Place | null;
   setStart: (place: Place | null) => void;
   setDestination: (place: Place | null) => void;
-  setConfirmRoute: (val: boolean) => void;
   setInstructions: (val: any[]) => void;
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setConfirmRoute, setInstructions }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions }) => {
 
   useEffect(() => {
     const fetchDirections = async () => {
@@ -33,13 +32,10 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
           if (data.routes.length > 0) {
             setInstructions(data.routes[0].legs[0].steps);
             console.log(data.routes[0].legs[0].steps)
-            setConfirmRoute(true);
           }
         } catch (error) {
           console.error("Fetch failed", error);
         }
-      } else {
-        setConfirmRoute(false);
       }
     }
     fetchDirections();

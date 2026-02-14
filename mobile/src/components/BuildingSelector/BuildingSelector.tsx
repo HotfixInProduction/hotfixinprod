@@ -19,8 +19,7 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
 
   useEffect(() => {
     if (!value && ref.current) {
-      ref.current.setAddressText(''); // Clear input when value is reset
-      ref.current.clear();
+      ref.current.setAddressText('');
     }
   }, [value]);
 
@@ -39,6 +38,7 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
 
   return (
     <GooglePlacesAutocomplete
+      ref={ref}
       placeholder={placeholder}
       fetchDetails={true}
       onFail={(error) => {

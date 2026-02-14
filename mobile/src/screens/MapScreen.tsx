@@ -64,23 +64,9 @@ export default function MapScreen() {
   const appState = useRef(AppState.currentState);
   const [start, setStart] = useState<Place | null>(null);
   const [destination, setDestination] = useState<Place | null>(null);
-  const [confirmRoute, setConfirmRoute] = useState(false);
   const [instructions, setInstructions] = useState<MapStep[]>([]);
   const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
-
-  useEffect(() => {
-    if (start) {
-      console.log('Start building selected:', start);
-    }
-  }, [start]);
-
-
-  useEffect(() => {
-    if (destination) {
-      console.log('Destination building selected:', destination);
-    }
-  }, [destination]);
 
   const centerOnUser = async () => {
     try {
@@ -270,11 +256,17 @@ export default function MapScreen() {
     setStart(null);
     setDestination(null);
     setRouteInfo(null);
-    setConfirmRoute(false);
     setInstructions([]);
     setShowInstructions(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
+
+  const activeModal = (() => {
+    if (selectedBuilding) return 'buildingInfo';
+    if (showInstructions) return 'routeInstructions';
+    if (routeInfo && start && destination) return 'routeInfo';
+    return 'none';
+  })();
 
   return (
     <View style={styles.container}>
@@ -391,17 +383,7 @@ export default function MapScreen() {
           destination={destination}
           setStart={setStart}
           setDestination={setDestination}
-          setConfirmRoute={setConfirmRoute}
           setInstructions={setInstructions} />
-      </Animated.View>
-
-      <Animated.View
-        style={{
-          transform: [{ translateY: buildingInfoSlideAnim }],
-        }}
-        pointerEvents={selectedBuilding ? 'auto' : 'none'}
-      >
-        <BuildingInfo building={selectedBuilding} onClose={handleCloseBuilding} />
       </Animated.View>
 
       {showFloorPlan && (
@@ -468,19 +450,30 @@ export default function MapScreen() {
         </View>
       </Modal>
 
-      {routeInfo && start && destination && !showInstructions && (
+      {activeModal === 'buildingInfo' && (
+        <Animated.View
+          style={{
+            transform: [{ translateY: buildingInfoSlideAnim }],
+          }}
+          pointerEvents={selectedBuilding ? 'auto' : 'none'}
+        >
+          <BuildingInfo building={selectedBuilding} onClose={handleCloseBuilding} />
+        </Animated.View>
+      )}
+
+      {activeModal === 'routeInstructions' && (
+        <RouteInstructions
+          instructions={instructions}
+          onClose={() => setShowInstructions(false)}
+        />
+      )}
+
+      {activeModal === 'routeInfo' && routeInfo && (
         <RouteInfo
           duration={routeInfo.duration}
           distance={routeInfo.distance}
           onStart={() => setShowInstructions(true)}
           onClose={handleClearRoute}
-        />
-      )}
-
-      {showInstructions && (
-        <RouteInstructions
-          instructions={instructions}
-          onClose={() => setShowInstructions(false)}
         />
       )}
 

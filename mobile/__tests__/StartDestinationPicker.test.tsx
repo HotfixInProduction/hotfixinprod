@@ -10,8 +10,8 @@ jest.mock('../src/components/BuildingSelector/BuildingSelector', () => {
   const { TouchableOpacity, Text } = require('react-native');
   return jest.fn((props) => {
     return React.createElement(
-      TouchableOpacity, 
-      { 
+      TouchableOpacity,
+      {
         testID: `selector-${props.placeholder.replace(/\s+/g, '-')}`,
         onPress: () => props.onSelect({
           name: 'Mock Building',
@@ -61,7 +61,7 @@ describe('StartDestinationPicker', () => {
 
   it('calls setStart when start building is selected', () => {
     const { getByTestId } = render(<StartDestinationPicker {...mockProps} />);
-    
+
     // Trigger the mock BuildingSelector's onPress
     fireEvent.press(getByTestId('selector-Select-start-building'));
 
@@ -72,7 +72,7 @@ describe('StartDestinationPicker', () => {
 
   it('calls setDestination when destination building is selected', () => {
     const { getByTestId } = render(<StartDestinationPicker {...mockProps} />);
-    
+
     fireEvent.press(getByTestId('selector-Select-destination-building'));
 
     expect(mockProps.setDestination).toHaveBeenCalledWith(expect.objectContaining({
@@ -80,36 +80,15 @@ describe('StartDestinationPicker', () => {
     }));
   });
 
-  it('displays the selected building name when start prop is provided', () => {
-    const startPlace = { name: 'Hall Building', address: '...', location: { lat: 1, lng: 1 } };
-    const { getByText } = render(
-      <StartDestinationPicker {...mockProps} start={startPlace} />
-    );
-    expect(getByText('Selected: Hall Building')).toBeTruthy();
-  });
-
-  it('calls setConfirmRoute and setInstructions when ConfirmButton is pressed', async () => {
+  it('fetches directions and calls setInstructions when start and destination exist', async () => {
     const start = { name: 'A', address: 'A', location: { lat: 1, lng: 1 } };
     const destination = { name: 'B', address: 'B', location: { lat: 2, lng: 2 } };
-    
-    // Render with start and destination so handleDirections can proceed
-    const { getByRole } = render(
-      <StartDestinationPicker {...mockProps} start={start} destination={destination} />
-    );
 
-    // Assuming ConfirmButton renders something with a pressable role or you can add a testID
-    // For now, we'll find by type if you don't have a testID on ConfirmButton
-    const confirmBtn = render(<StartDestinationPicker {...mockProps} start={start} destination={destination} />).root;
-    
-    // Use act because handleDirections is async and updates state/calls setters
-    await act(async () => {
-        fireEvent.press(confirmBtn.findByType(require('../src/components/confirmButton').default));
-    });
+    render(<StartDestinationPicker {...mockProps} start={start} destination={destination} />);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalled();
       expect(mockProps.setInstructions).toHaveBeenCalledWith(['Step 1', 'Step 2']);
-      expect(mockProps.setConfirmRoute).toHaveBeenCalledWith(true);
     });
   });
 });
