@@ -11,17 +11,15 @@ jest.mock('react-native-google-places-autocomplete', () => {
       // Store props for testing
       (MockComponent as any).mockProps = props;
       
-      // Mock the ref methods
-      if (ref) {
-        React.useImperativeHandle(ref, () => ({
-          setAddressText: jest.fn((text: string) => {
-            // Mock implementation
-          }),
-          getAddressText: jest.fn(() => ''),
-          focus: jest.fn(),
-          blur: jest.fn(),
-        }));
-      }
+      // Mock the ref methods - useImperativeHandle must be called unconditionally
+      React.useImperativeHandle(ref, () => ({
+        setAddressText: jest.fn((text: string) => {
+          // Mock implementation
+        }),
+        getAddressText: jest.fn(() => ''),
+        focus: jest.fn(),
+        blur: jest.fn(),
+      }));
       
       return React.createElement(MockComponent, { testID: 'google-places-autocomplete' });
     }),

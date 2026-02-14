@@ -372,13 +372,13 @@ describe('StartDestinationPicker', () => {
     (Location.getCurrentPositionAsync as jest.Mock).mockRejectedValue(new Error('Location error'));
     console.error = jest.fn();
 
-    const { getByText, queryByText } = render(<StartDestinationPicker userLocation={null} />);
+    const { queryByText } = render(<StartDestinationPicker userLocation={null} />);
     // Wait for component to render - no Use Current Location button should appear
     expect(queryByText('Use Current Location')).toBeNull();
   });
 
   it('shows clear button when start building is selected', async () => {
-    const { getByTestId, UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
+    const { UNSAFE_getAllByType } = render(<StartDestinationPicker userLocation={null} />);
     
     const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
       call => call[0].placeholder === 'Select start building'
