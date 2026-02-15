@@ -2,9 +2,9 @@ import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 interface ConfirmButtonProps {
-  onPress: () => void;      // A function that returns nothing
-  disabled?: boolean;       // Optional boolean
-  title?: string;           // Optional custom text
+  onPress: () => void;
+  disabled?: boolean;
+  title?: string;
 }
 
 const ConfirmButton : React.FC<ConfirmButtonProps> = ({ 

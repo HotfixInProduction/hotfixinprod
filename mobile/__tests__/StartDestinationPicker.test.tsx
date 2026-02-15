@@ -1,92 +1,210 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, waitFor, act } from '@testing-library/react-native';
 import StartDestinationPicker from '../src/components/BuildingSelector/StartDestinationPicker';
+import BuildingSelector from '../src/components/BuildingSelector/BuildingSelector';
 
-// 1. Mock BuildingSelector to trigger the onSelect prop easily
-jest.mock('../src/components/BuildingSelector/BuildingSelector', () => {
-  const React = require('react');
-  const { TouchableOpacity, Text } = require('react-native');
-  return jest.fn((props) => {
-    return React.createElement(
-      TouchableOpacity,
-      {
-        testID: `selector-${props.placeholder.replace(/\s+/g, '-')}`,
-        onPress: () => props.onSelect({
-          name: 'Mock Building',
-          address: '123 Mock St',
-          location: { lat: 1, lng: 1 }
-        })
-      },
-      React.createElement(Text, null, props.placeholder)
-    );
-  });
-});
-
-// 2. Mock Config and Fetch
+// mock this library sice not compatible with Node.js
 jest.mock('react-native-config', () => ({
-  GOOGLE_MAPS_ANDROID_API_KEY: 'mock-key',
+  GOOGLE_MAPS_ANDROID_API_KEY: 'fake-key',
 }));
 
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    json: () => Promise.resolve({
-      routes: [{ legs: [{ steps: ['Step 1', 'Step 2'] }] }]
-    }),
-  })
-) as jest.Mock;
+// Mock BuildingSelector component
+jest.mock('../src/components/BuildingSelector/BuildingSelector', () => require('./utils/testUtils').createBuildingSelectorMock());
 
 describe('StartDestinationPicker', () => {
-  // Define mock props
-  const mockProps = {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    console.log = jest.fn();
+  });
+
+  const defaultStartDestProps = {
     userLocation: null,
     start: null,
     destination: null,
     setStart: jest.fn(),
     setDestination: jest.fn(),
-    setConfirmRoute: jest.fn(),
     setInstructions: jest.fn(),
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
+  it('passes correct placeholder for start building selector', () => {
+    render(<StartDestinationPicker {...defaultStartDestProps} />);
+    const calls = (BuildingSelector as jest.Mock).mock.calls;
+    const startCall = calls.find(call => call[0].placeholder === 'Select start building');
+    expect(startCall).toBeDefined();
+    expect(startCall[0].placeholder).toBe('Select start building');
   });
 
-  it('renders correctly with labels', () => {
-    const { getByText } = render(<StartDestinationPicker {...mockProps} />);
-    expect(getByText('Start Building')).toBeTruthy();
-    expect(getByText('Destination Building')).toBeTruthy();
+  it('passes correct placeholder for destination building selector', () => {
+    render(<StartDestinationPicker {...defaultStartDestProps} />);
+    const calls = (BuildingSelector as jest.Mock).mock.calls;
+    const destCall = calls.find(call => call[0].placeholder === 'Select destination building');
+    expect(destCall).toBeDefined();
+    expect(destCall[0].placeholder).toBe('Select destination building');
   });
 
-  it('calls setStart when start building is selected', () => {
-    const { getByTestId } = render(<StartDestinationPicker {...mockProps} />);
+  it('handles start building selection', async () => {
+    const mockSetStart = jest.fn();
+    render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart} />);
+    
+    // Get the onSelect callback from the mock
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const onSelectStart = startSelectorCall[0].onSelect;
 
-    // Trigger the mock BuildingSelector's onPress
-    fireEvent.press(getByTestId('selector-Select-start-building'));
+    const mockPlace = {
+      name: 'Start Building',
+      address: '123 Start St',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
 
-    expect(mockProps.setStart).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'Mock Building'
-    }));
+    // Simulate selection
+    await act(async () => {
+      onSelectStart(mockPlace);
+    });
+
+    expect(mockSetStart).toHaveBeenCalledWith(mockPlace);
   });
 
-  it('calls setDestination when destination building is selected', () => {
-    const { getByTestId } = render(<StartDestinationPicker {...mockProps} />);
+  it('handles destination building selection', async () => {
+    const mockSetDestination = jest.fn();
+    render(<StartDestinationPicker {...defaultStartDestProps }setDestination={mockSetDestination} />);
+    
+    // Get the onSelect callback from the mock
+    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select destination building'
+    );
+    const onSelectDest = destSelectorCall[0].onSelect;
 
-    fireEvent.press(getByTestId('selector-Select-destination-building'));
+    const mockPlace = {
+      name: 'Destination Building',
+      address: '456 Dest Ave',
+      location: { lat: 41.8781, lng: -87.6298 },
+    };
 
-    expect(mockProps.setDestination).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'Mock Building'
-    }));
+    // Simulate selection
+    await act(async () => {
+      onSelectDest(mockPlace);
+    });
+
+    expect(mockSetDestination).toHaveBeenCalledWith(mockPlace);
   });
 
-  it('fetches directions and calls setInstructions when start and destination exist', async () => {
-    const start = { name: 'A', address: 'A', location: { lat: 1, lng: 1 } };
-    const destination = { name: 'B', address: 'B', location: { lat: 2, lng: 2 } };
+  it('handles multiple selections for start building', async () => {
+    const mockSetStart = jest.fn();
+    render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart}  />);
+    
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const onSelectStart = startSelectorCall[0].onSelect;
 
-    render(<StartDestinationPicker {...mockProps} start={start} destination={destination} />);
+    // First selection
+    const mockPlace1 = {
+      name: 'First Building',
+      address: '123 First St',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
+    await act(async () => {
+      onSelectStart(mockPlace1);
+    });
 
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled();
-      expect(mockProps.setInstructions).toHaveBeenCalledWith(['Step 1', 'Step 2']);
+    expect(mockSetStart).toHaveBeenNthCalledWith(1, mockPlace1);
+
+    // Second selection
+    const mockPlace2 = {
+      name: 'Second Building',
+      address: '456 Second St',
+      location: { lat: 41.8781, lng: -87.6298 },
+    };
+    await act(async () => {
+      onSelectStart(mockPlace2);
+    });
+
+    expect(mockSetStart).toHaveBeenNthCalledWith(2, mockPlace2);
+  });
+
+  it('handles independent selections for start and destination', async () => {
+    const mockSetStart = jest.fn();
+    const mockSetDestination = jest.fn();
+    render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart} setDestination={mockSetDestination}  />);
+    
+    const startSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select start building'
+    );
+    const destSelectorCall = (BuildingSelector as jest.Mock).mock.calls.find(
+      call => call[0].placeholder === 'Select destination building'
+    );
+
+    const onSelectStart = startSelectorCall[0].onSelect;
+    const onSelectDest = destSelectorCall[0].onSelect;
+
+    const startPlace = {
+      name: 'Start Building',
+      address: '123 Start St',
+      location: { lat: 40.7128, lng: -74.006 },
+    };
+
+    const destPlace = {
+      name: 'Destination Building',
+      address: '456 Dest Ave',
+      location: { lat: 41.8781, lng: -87.6298 },
+    };
+
+    await act(async () => {
+      onSelectStart(startPlace);
+      onSelectDest(destPlace);
+    });
+
+    expect(mockSetStart).toHaveBeenCalledWith(startPlace);
+    expect(mockSetDestination).toHaveBeenCalledWith(destPlace);
+  });
+
+  it('fetches instructions from google and updates instructions', async () => {
+    const start = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+    const destination = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+
+    const instructions = [{ html_instructions: 'Turn left', distance: { text: '4km' } }];
+
+    globalThis.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () =>
+          Promise.resolve({
+            routes: [{
+                legs: [
+                  { steps: instructions, },
+                ],
+              },
+            ],
+          }),
+      }),
+    ) as jest.Mock;
+
+    const mockSetInstructions = jest.fn();
+    render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setInstructions={mockSetInstructions} />);
+
+    await waitFor(()=> {
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164%2C-73.57897485280246&destination=45.497285416040164%2C-73.57897485280246"));
+      expect(mockSetInstructions).toHaveBeenCalledWith(instructions);
+    });
+  });
+
+  it('fetches instructions but fetch fails', async () => {
+    const start = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+    const destination = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+
+    globalThis.fetch = jest.fn(() =>
+      Promise.reject(new Error("Something with the network went wrong"))
+    ) as jest.Mock;
+    console.error = jest.fn();
+
+    const mockSetInstructions = jest.fn();
+    render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setStart={jest.fn()} setInstructions={mockSetInstructions} />);
+
+    await waitFor(()=> {
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164%2C-73.57897485280246&destination=45.497285416040164%2C-73.57897485280246"));
+      expect(mockSetInstructions).not.toHaveBeenCalled();
+      expect(console.error).toHaveBeenCalledWith("Fetch failed", new Error("Something with the network went wrong"));
     });
   });
 });

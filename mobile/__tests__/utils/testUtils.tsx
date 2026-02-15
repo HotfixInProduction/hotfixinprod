@@ -235,6 +235,20 @@ export const createRouteInfoMock = () => {
   );
 };
 
+export const createBuildingSelectorMock = () => {
+  const { View } = require('react-native');
+  return jest.fn((props) => {
+    return React.createElement(View, {
+      testID: `building-selector-${props.placeholder}`,
+      onPress: () => props.onSelect({
+        name: 'Mock Building',
+        address: '123 Mock St',
+        location: { lat: 1, lng: 1 }
+      })
+    });
+  });
+};
+
 // Test data reset helper
 export const resetAllMocks = () => {
   jest.clearAllMocks();

@@ -445,6 +445,45 @@ describe('MapScreen', () => {
     expect(toggleButton).toBeTruthy();
     expect(downtownButton).toBeTruthy();
   });
+
+  describe("Use State Effects", () =>{
+    let consoleSpy: jest.SpyInstance
+
+    beforeEach(()=> {
+      consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    });
+    afterEach(() => {
+      consoleSpy.mockRestore();
+    });
+
+    it('start building appears in console', async () => {
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'))
+      fireEvent.press(getByTestId('set-start'));
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Start building selected:', 
+          expect.any(Object)
+        );
+      });
+    });
+
+    it('destination building appears in console', async () => {
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'))
+      fireEvent.press(getByTestId('set-destination'));
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Destination building selected:', 
+          expect.any(Object)
+        );
+      });
+    });
+  });
 });
 
 describe('Auto-zoom Map', () => {

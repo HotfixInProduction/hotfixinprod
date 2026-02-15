@@ -62,6 +62,19 @@ export default function MapScreen() {
   const [showInstructions, setShowInstructions] = useState(false);
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
+  useEffect(() => {
+    if (start) {
+      console.log('Start building selected:', start);
+    }
+  }, [start]);
+
+
+  useEffect(() => {
+    if (destination) {
+      console.log('Destination building selected:', destination);
+    }
+  }, [destination]);
+
   const centerOnUser = async () => {
     try {
       const { coords } = await Location.getCurrentPositionAsync({});
