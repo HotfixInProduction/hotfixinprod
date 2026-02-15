@@ -4,11 +4,14 @@ import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linki
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState} from 'react';
 import StartDestinationPicker from '../components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
+import { Place } from '../components/BuildingSelector/StartDestinationPicker';
+import MapViewDirections from 'react-native-maps-directions';
+import Config from "react-native-config";
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -34,6 +37,14 @@ const CAMPUSES = {
   },
 };
 
+interface MapStep {
+  distance: { text: string; value: number };
+  duration: { text: string; value: number };
+  html_instructions: string;
+  polyline: { points: string };
+  travel_mode: string;
+}
+
 type CampusKey = keyof typeof CAMPUSES;
 
 export default function MapScreen() {
@@ -49,6 +60,23 @@ export default function MapScreen() {
   const [buildingSelectorVisible, setBuildingSelectorVisible] = useState(false);
   const buildingSelectorSlideAnim = useRef(new Animated.Value(-400)).current;
   const appState = useRef(AppState.currentState);
+  const [start, setStart] = useState<Place | null>(null);
+  const [destination, setDestination] = useState<Place | null>(null);
+  const [confirmRoute, setConfirmRoute] = useState(false);
+  const [instructions, setInstructions] = useState<MapStep[]>([]);
+
+  useEffect(() => {
+      if (start) {
+        console.log('Start building selected:', start);
+      }
+    }, [start]);
+
+
+    useEffect(() => {
+      if (destination) {
+        console.log('Destination building selected:', destination);
+      }
+    }, [destination]);
 
   const centerOnUser = async () => {
     try {
@@ -191,6 +219,14 @@ export default function MapScreen() {
     }
   };
 
+  const getCoordinates = (place : Place | null) => {
+    if (!place) return undefined;
+    return {
+      latitude: place.location.lat,
+      longitude: place.location.lng,
+    };
+  };
+
   return (
     <View style={styles.container}>
       <MapView
@@ -203,6 +239,17 @@ export default function MapScreen() {
         initialRegion={INITIAL_REGION}
       >
       <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
+
+      {start && destination && (
+        <MapViewDirections
+          origin={getCoordinates(start)}
+          destination={getCoordinates(destination)}
+          apikey={Config.GOOGLE_MAPS_ANDROID_API_KEY!}
+          strokeWidth={3}
+          strokeColor="hotpink"
+          mode="DRIVING"
+        />
+      )}
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} testID="safe-area-view">
         <View style={styles.campusSelectorContainer}>
@@ -274,7 +321,14 @@ export default function MapScreen() {
         ]}
         pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
       >
-        <StartDestinationPicker userLocation={userLocation} />
+        <StartDestinationPicker 
+        userLocation={userLocation} 
+        start={start} 
+        destination={destination} 
+        setStart={setStart} 
+        setDestination={setDestination} 
+        setConfirmRoute={setConfirmRoute} 
+        setInstructions={setInstructions} />
       </Animated.View>
 
       <Animated.View
