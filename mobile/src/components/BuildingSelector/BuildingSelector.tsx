@@ -14,14 +14,9 @@ type BuildingSelectorProps = {
 };
 
 const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation }) => {
-  const apiKey = Constants.expoConfig?.extra?.googleApiKey;
-  
-  console.log('BuildingSelector - API Key exists:', !!apiKey);
-  
   const queryConfig: any = {
-    key: apiKey,
+    key: Constants.expoConfig?.extra?.googleApiKey,
     language: 'en',
-    types: 'establishment', // This helps get buildings/places
   };
 
   // Add location-based filtering if user location is available
@@ -36,19 +31,11 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
     <GooglePlacesAutocomplete
       placeholder={placeholder}
       fetchDetails={true}
-      requestUrl={{
-        useOnPlatform: 'all',
-        url: 'https://maps.googleapis.com/maps/api',
-      }}
       onFail={(error) => {
-          console.error('Places API error:', error);
-          console.error('API Key present:', !!apiKey);
+          console.log('Places API error:', error);
         }}
       onPress={(data, details = null) => {
-        if (!details) {
-          console.warn('No details returned from Places API');
-          return;
-        }
+        if (!details) return;
         const place = {
           name: data.structured_formatting.main_text,
           address: details.formatted_address || '',
@@ -60,11 +47,6 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
       query={queryConfig}
       styles={autocompleteStyles}
       debounce={300}
-      enablePoweredByContainer={false}
-      listViewDisplayed="auto"
-      keepResultsAfterBlur={false}
-      minLength={2}
-      suppressDefaultStyles={false}
     />
   );
 };
