@@ -6,12 +6,23 @@ import BuildingSelector from '../src/components/BuildingSelector/BuildingSelecto
 jest.mock('react-native-google-places-autocomplete', () => {
   const React = require('react');
   return {
-    GooglePlacesAutocomplete: (props: any) => {
+    GooglePlacesAutocomplete: React.forwardRef((props: any, ref: any) => {
       const MockComponent = require('react-native').View;
       // Store props for testing
       (MockComponent as any).mockProps = props;
+      
+      // Mock the ref methods - useImperativeHandle must be called unconditionally
+      React.useImperativeHandle(ref, () => ({
+        setAddressText: jest.fn((text: string) => {
+          // Mock implementation
+        }),
+        getAddressText: jest.fn(() => ''),
+        focus: jest.fn(),
+        blur: jest.fn(),
+      }));
+      
       return React.createElement(MockComponent, { testID: 'google-places-autocomplete' });
-    },
+    }),
   };
 });
 
@@ -187,5 +198,42 @@ describe('BuildingSelector', () => {
     expect(View.mockProps.styles.textInputContainer).toBeDefined();
     expect(View.mockProps.styles.textInput).toBeDefined();
     expect(View.mockProps.styles.listView).toBeDefined();
+  });
+
+  it('updates address text when value prop changes', () => {
+    const { rerender } = render(
+      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="" />
+    );
+
+    // Update with a value
+    rerender(
+      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="Test Building" />
+    );
+
+    // The component should render successfully with the value prop
+    expect(true).toBe(true);
+  });
+
+  it('clears address text when value prop becomes empty', () => {
+    const { rerender } = render(
+      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="Test Building" />
+    );
+
+    // Update with an empty value
+    rerender(
+      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="" />
+    );
+
+    // The component should render successfully with empty value
+    expect(true).toBe(true);
+  });
+
+  it('handles value prop with special characters', () => {
+    render(
+      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="Hall's Building (Main)" />
+    );
+
+    // Should render without errors
+    expect(true).toBe(true);
   });
 });

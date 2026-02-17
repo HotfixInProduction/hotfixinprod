@@ -11,17 +11,11 @@ type BuildingSelectorProps = {
     location: { lat: number; lng: number };
   }) => void;
   userLocation: { latitude: number; longitude: number } | null;
-  value: string; // Add value prop to control input text 
+  value?: string;
 };
 
 const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation, value }) => {
   const ref = useRef<GooglePlacesAutocompleteRef>(null);
-
-  useEffect(() => {
-    if (!value && ref.current) {
-      ref.current.setAddressText('');
-    }
-  }, [value]);
 
   const queryConfig: any = {
     key: Constants.expoConfig?.extra?.googleApiKey,
@@ -35,6 +29,16 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
     queryConfig.radius = 50000; // 50km in meters
     queryConfig.strictbounds = true; // Enforce strict boundary restrictions
   }
+
+  useEffect(() => {
+    if (ref.current) {
+      if (value) {
+        ref.current?.setAddressText(value);
+      } else {
+        ref.current?.setAddressText('');
+      }
+    }
+  }, [value]);
 
   return (
     <GooglePlacesAutocomplete
