@@ -12,6 +12,7 @@ export const mockWatchPositionAsync = jest.fn().mockResolvedValue({
 });
 export const mockOpenSettings = jest.fn();
 export const mockAnimateToRegion = jest.fn();
+export const mockFitToCoordinates = jest.fn();
 
 // Mock data
 export const mockBuilding = {
@@ -44,16 +45,20 @@ export const createMapMock = () => {
   const MockMapView = React.forwardRef((props: any, ref: any) => {
     React.useImperativeHandle(ref, () => ({
       animateToRegion: mockAnimateToRegion,
+      fitToCoordinates: mockFitToCoordinates,
     }));
     return <View testID="map-view" {...props}>{props.children}</View>;
   });
 
   const MockPolygon = (props: any) => <View {...props} />;
 
+  const MockMarker = (props: any) => <View {...props} />;
+
   return {
     __esModule: true,
     default: MockMapView,
     Polygon: MockPolygon,
+    Marker: MockMarker,
   };
 };
 
@@ -86,6 +91,53 @@ export const createBuildingPolygonMock = () => {
   );
 };
 
+export const createStartDestinationPickerMock = () => {
+  const { View, TouchableOpacity, Text } = require('react-native');
+
+  const mockStart = {
+    id: 'start-place',
+    location: { lat: 45.4972, lng: -73.5789 },
+  };
+
+  const mockDestination = {
+    id: 'destination-place',
+    location: { lat: 45.4582, lng: -73.6402 },
+  };
+
+  return ({ setStart, setDestination }: any) => (
+    <View testID="start-destination-picker-mock">
+      <TouchableOpacity testID="set-start" onPress={() => setStart(mockStart)}>
+        <Text>Set Start</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-destination" onPress={() => setDestination(mockDestination)}>
+        <Text>Set Destination</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="clear-start" onPress={() => setStart(null)}>
+        <Text>Clear Start</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="clear-destination" onPress={() => setDestination(null)}>
+        <Text>Clear Destination</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export const createMapDirectionsMock = () => {
+  const { View, TouchableOpacity } = require('react-native');
+  return (props: any) => (
+    <View testID="map-directions">
+      <TouchableOpacity 
+        testID="trigger-directions-ready" 
+        onPress={() => props.onReady({
+          distance: 12.5,
+          duration: 25,
+          coordinates: []
+        })} 
+      />
+    </View>
+  );
+};
+
 export const createNavigationMock = () => {
   const actualNav = jest.requireActual('@react-navigation/native');
   return {
@@ -110,7 +162,7 @@ export const createBottomTabsMock = () => {
             const options = typeof screenOptions === 'function'
               ? screenOptions({ route: { name: routeName } })
               : screenOptions;
-            
+
             // Render the tab icon
             if (options?.tabBarIcon) {
               const icon = options.tabBarIcon({ focused: false, color: '#666', size: 24 });
@@ -118,7 +170,7 @@ export const createBottomTabsMock = () => {
               const iconWithTestId = React.cloneElement(icon, {
                 testID: `icon-${routeName.toLowerCase()}`,
               });
-              
+
               return React.createElement(
                 'View',
                 { key: routeName },
@@ -132,7 +184,7 @@ export const createBottomTabsMock = () => {
         })
       );
     },
-    Screen: ({ name, component }: any) => 
+    Screen: ({ name, component }: any) =>
       React.createElement('View', { testID: `screen-${name}` }, null),
   };
 
@@ -166,6 +218,37 @@ export const setupAppStateMock = () => {
   return defaultAppStateRemove;
 };
 
+export const createRouteInfoMock = () => {
+  const { View, TouchableOpacity, Text } = require('react-native');
+  return ({ onClose, duration, distance }: any) => (
+    <View testID="route-info-mock">
+      <Text>Arrive at Destination</Text>
+      <Text>{duration}</Text>
+      <Text>{distance}</Text>
+      <TouchableOpacity
+        testID="route-info-close-button"
+        onPress={onClose}
+      >
+        <Text>Close</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export const createBuildingSelectorMock = () => {
+  const { View } = require('react-native');
+  return jest.fn((props) => {
+    return React.createElement(View, {
+      testID: `building-selector-${props.placeholder}`,
+      onPress: () => props.onSelect({
+        name: 'Mock Building',
+        address: '123 Mock St',
+        location: { lat: 1, lng: 1 }
+      })
+    });
+  });
+};
+
 // Test data reset helper
 export const resetAllMocks = () => {
   jest.clearAllMocks();
@@ -174,4 +257,6 @@ export const resetAllMocks = () => {
     coords: { latitude: 45.5, longitude: -73.58 },
   });
   mockOpenSettings.mockClear();
+  mockAnimateToRegion.mockClear();
+  mockFitToCoordinates.mockClear();
 };

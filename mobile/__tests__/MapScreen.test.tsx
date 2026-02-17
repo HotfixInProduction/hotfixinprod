@@ -11,6 +11,7 @@ import {
   suppressActWarnings,
   setupAppStateMock,
   resetAllMocks,
+  mockFitToCoordinates,
 } from './utils/testUtils';
 
 // Setup all mocks using factory functions
@@ -19,22 +20,10 @@ jest.mock('react-native-maps', () => require('./utils/testUtils').createMapMock(
 jest.mock('react-native-safe-area-context', () => require('./utils/testUtils').createSafeAreaMock());
 jest.mock('@expo/vector-icons', () => require('./utils/testUtils').createVectorIconsMock(), { virtual: true });
 jest.mock('../src/components/BuildingPolygon', () => require('./utils/testUtils').createBuildingPolygonMock());
-jest.mock('react-native-config', () => ({GOOGLE_MAPS_API_KEY: 'mock-google-maps-key',}));
-
-jest.mock('../src/components/BuildingSelector/BuildingSelector', () => {
-  const React = require('react');
-  const { View } = require('react-native');
-  return jest.fn((props) => {
-    return React.createElement(View, { 
-      testID: `building-selector-${props.placeholder}`,
-      onPress: () => props.onSelect({
-        name: 'Mock Building',
-        address: '123 Mock St',
-        location: { lat: 1, lng: 1 }
-      })
-    });
-  });
-});
+jest.mock('../src/components/BuildingSelector/StartDestinationPicker', () => require('./utils/testUtils').createStartDestinationPickerMock());
+jest.mock('react-native-config', () => ({ GOOGLE_MAPS_ANDROID_API_KEY: 'mock-google-maps-key' }));
+jest.mock('react-native-maps-directions', () => require('./utils/testUtils').createMapDirectionsMock());
+jest.mock('../src/components/RouteInfo', () => require('./utils/testUtils').createRouteInfoMock());
 
 jest.spyOn(Alert, 'alert');
 
@@ -247,7 +236,7 @@ describe('MapScreen', () => {
 
       // Get the app state listener that was registered
       const appStateListener = (require('react-native').AppState.addEventListener as jest.Mock).mock.calls[0][1];
-      
+
       // First simulate the app going to background
       await act(async () => {
         await appStateListener('background');
@@ -321,7 +310,7 @@ describe('MapScreen', () => {
 
     it('opens FloorPlanViewer when a building with floor plans is selected', async () => {
       const { getByTestId, getByText } = render(<MapScreen />);
-      
+
       fireEvent.press(getByTestId('select-building'));
 
       await waitFor(() => {
@@ -333,17 +322,17 @@ describe('MapScreen', () => {
       const { getByTestId, queryByText, getByText } = render(<MapScreen />);
       fireEvent.press(getByTestId('select-building'));
       await waitFor(() => expect(getByText('Hall Building')).toBeTruthy());
-      
+
       fireEvent.press(getByTestId('building-close'));
-      
+
       await new Promise(resolve => setTimeout(resolve, 350));
-      
+
       expect(queryByText('Hall Building')).toBeNull();
     });
 
     it('does not open FloorPlanViewer when building has no floor plans', async () => {
       const { getByTestId, queryByText } = render(<MapScreen />);
-      
+
       // Mock a building selection without floor plans
       fireEvent.press(getByTestId('select-building-no-plans'));
 
@@ -354,7 +343,7 @@ describe('MapScreen', () => {
 
     it('closes FloorPlanViewer when close button is pressed', async () => {
       const { getByTestId, getByText, queryByText } = render(<MapScreen />);
-      
+
       fireEvent.press(getByTestId('select-building'));
 
       await waitFor(() => {
@@ -471,8 +460,7 @@ describe('MapScreen', () => {
       const { getByTestId } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('building-selector-toggle'))
-      const startSelector = getByTestId('building-selector-Select start building');
-      fireEvent.press(startSelector);
+      fireEvent.press(getByTestId('set-start'));
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
@@ -486,8 +474,7 @@ describe('MapScreen', () => {
       const { getByTestId } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('building-selector-toggle'))
-      const destSelector = getByTestId('building-selector-Select destination building');
-      fireEvent.press(destSelector);
+      fireEvent.press(getByTestId('set-destination'));
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
@@ -496,5 +483,137 @@ describe('MapScreen', () => {
         );
       });
     });
+  });
+});
+
+describe('Auto-zoom Map', () => {
+  beforeEach(() => {
+    resetAllMocks();
+  });
+
+  it('zooms to destination when only destination is set', async () => {
+    const { getByTestId } = render(<MapScreen />);
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: 45.5,
+          longitude: -73.58,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }),
+        600
+      );
+    });
+
+    mockAnimateToRegion.mockClear();
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: 45.4582,
+          longitude: -73.6402,
+          latitudeDelta: 0.002,
+          longitudeDelta: 0.002,
+        }),
+        1000
+      );
+    });
+    expect(mockFitToCoordinates).not.toHaveBeenCalled();
+  });
+
+  it('zooms to start when only start is set', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalled();
+    });
+
+    mockAnimateToRegion.mockClear();
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+
+    fireEvent.press(getByTestId('set-start'));
+
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: 45.4972,
+          longitude: -73.5789,
+          latitudeDelta: 0.002,
+          longitudeDelta: 0.002,
+        }),
+        1000
+      );
+    });
+    expect(mockFitToCoordinates).not.toHaveBeenCalled();
+  });
+
+  it('fits both points when start and destination are set', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(mockAnimateToRegion).toHaveBeenCalled();
+    });
+
+    mockAnimateToRegion.mockClear();
+    mockFitToCoordinates.mockClear();
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(mockFitToCoordinates).toHaveBeenCalledWith(
+        [
+          { latitude: 45.4972, longitude: -73.5789 },
+          { latitude: 45.4582, longitude: -73.6402 },
+        ],
+        {
+          edgePadding: { top: 150, right: 60, bottom: 60, left: 60 },
+          animated: true,
+        }
+      );
+    });
+  });
+});
+
+describe('Clearing Route', () => {
+  it('clears the route and resets the map', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    // setup route
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    mockAnimateToRegion.mockClear();
+
+    // clear route
+    fireEvent.press(getByTestId('route-info-close-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('route-info-mock')).toBeNull();
+    });
+
+    // reset to initial region
+    expect(mockAnimateToRegion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        latitude: 45.497,   
+        longitude: -73.579,
+        latitudeDelta: 0.004,
+        longitudeDelta: 0.004,
+      }),
+      1000
+    );
   });
 });
