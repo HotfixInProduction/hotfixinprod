@@ -243,6 +243,32 @@ describe('StartDestinationPicker', () => {
     });
   });
 
+  it('does not fetch instructions when googleMapsApiKey is missing', async () => {
+    const start = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+    const destination = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+
+    // Temporarily set the API key to undefined
+    const Config = require('react-native-config');
+    const originalKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
+    Config.GOOGLE_MAPS_ANDROID_API_KEY = undefined;
+
+    globalThis.fetch = jest.fn();
+    const mockSetInstructions = jest.fn();
+    
+    const { rerender } = render(<StartDestinationPicker {...defaultStartDestProps} start={null} destination={null} setInstructions={mockSetInstructions} />);
+    
+    // Now set start and destination which should trigger the useEffect
+    rerender(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setInstructions={mockSetInstructions} />);
+
+    await waitFor(()=> {
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+      expect(mockSetInstructions).not.toHaveBeenCalled();
+    }, { timeout: 1000 });
+
+    // Restore original key
+    Config.GOOGLE_MAPS_ANDROID_API_KEY = originalKey;
+  });
+
   it('shows Use Current Location button when userLocation is provided', () => {
     const userLocation = { latitude: 45.5, longitude: -73.6 };
     const { getByText } = render(<StartDestinationPicker {...defaultStartDestProps} userLocation={userLocation} />);

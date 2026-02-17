@@ -24,6 +24,7 @@ jest.mock('../src/components/BuildingSelector/StartDestinationPicker', () => req
 jest.mock('react-native-config', () => ({ GOOGLE_MAPS_ANDROID_API_KEY: 'mock-google-maps-key' }));
 jest.mock('react-native-maps-directions', () => require('./utils/testUtils').createMapDirectionsMock());
 jest.mock('../src/components/RouteInfo', () => require('./utils/testUtils').createRouteInfoMock());
+jest.mock('../src/components/RouteInstructions', () => require('./utils/testUtils').createRouteInstructionsMock());
 
 jest.spyOn(Alert, 'alert');
 
@@ -615,5 +616,58 @@ describe('Clearing Route', () => {
       }),
       1000
     );
+  });
+
+  it('shows route instructions when start button is pressed in RouteInfo', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    // setup route
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    // Trigger the onStart callback which is passed to RouteInfo
+    const routeInfoMock = getByTestId('route-info-mock');
+    // The onStart callback should be available through the mock
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('route-info-mock')).toBeNull();
+      expect(getByTestId('route-instructions-mock')).toBeTruthy();
+    });
+  });
+
+  it('closes route instructions when close button is pressed', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    // setup route
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    // Show route instructions
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-instructions-mock')).toBeTruthy();
+    });
+
+    // Close route instructions
+    fireEvent.press(getByTestId('route-instructions-close-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('route-instructions-mock')).toBeNull();
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
   });
 });

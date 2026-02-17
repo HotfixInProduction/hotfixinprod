@@ -220,16 +220,37 @@ export const setupAppStateMock = () => {
 
 export const createRouteInfoMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onClose, duration, distance }: any) => (
+  return ({ onClose, onStart, duration, distance }: any) => (
     <View testID="route-info-mock">
       <Text>Arrive at Destination</Text>
       <Text>{duration}</Text>
       <Text>{distance}</Text>
       <TouchableOpacity
+        testID="route-info-start-button"
+        onPress={onStart}
+      >
+        <Text>Start</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
         testID="route-info-close-button"
         onPress={onClose}
       >
         <Text>Close</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export const createRouteInstructionsMock = () => {
+  const { View, TouchableOpacity, Text } = require('react-native');
+  return ({ instructions, onClose }: any) => (
+    <View testID="route-instructions-mock">
+      <Text>Route Instructions</Text>
+      <TouchableOpacity
+        testID="route-instructions-close-button"
+        onPress={onClose}
+      >
+        <Text>Close Instructions</Text>
       </TouchableOpacity>
     </View>
   );
