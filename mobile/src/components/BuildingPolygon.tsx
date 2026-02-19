@@ -3,6 +3,7 @@ import { Polygon, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { buildings } from '../data/buildings';
 import { View, Text, StyleSheet } from 'react-native';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 
 // Define types
 interface Coordinate {
@@ -21,6 +22,7 @@ interface Building {
 interface BuildingPolygonProps {
     readonly onSelectBuilding: (building: Building) => void;
     readonly selectedBuildingId: string | null;
+    readonly currentDelta: number;
 }
 
 interface Point {
@@ -84,8 +86,12 @@ const setupLocationWatching = async (
     return subscription;
 };
 
-export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId }: BuildingPolygonProps) {
+const LABEL_ZOOM_THRESHOLD = 0.008;
+
+export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta }: BuildingPolygonProps) {
     const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
+
+    const isZoomedIn = currentDelta <= LABEL_ZOOM_THRESHOLD;
 
     useEffect(() => {
         let locationSubscription: Location.LocationSubscription | null;
@@ -132,17 +138,24 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId }
                             onPress={() => onSelectBuilding(b)}
                             tappable
                         />
-
-                        {(isSelected || isUserInside) && (
+                        {isZoomedIn && (
                             <Marker
                                 coordinate={b.labelCoord}
                                 pointerEvents='none'
-                                anchor={{ x: 0.5, y: 0.5 }}
+                                anchor={{ x: 0.5, y: 1 }}
                             >
                                 <View style={styles.labelContainer}>
-                                    <Text style={styles.labelText}>
-                                        {b.label}
-                                    </Text>
+                                    <FontAwesome6
+                                        name="location-pin"
+                                        size={32}
+                                        color="#ffffff"
+                                        style={styles.icon}
+                                    />
+                                    <View style={styles.textOverlay}>
+                                        <Text style={styles.labelText}>
+                                            {b.label}
+                                        </Text>
+                                    </View>
                                 </View>
                             </Marker>
                         )}
@@ -155,21 +168,27 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId }
 
 const styles = StyleSheet.create({
     labelContainer: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        paddingVertical: 1,
-        paddingHorizontal: 5,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#ffffff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'visible',
+    },
+    icon: {
+        textShadowColor: 'rgba(0, 0, 0, 0.4)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 6,
     },
     labelText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: '700',
         color: '#912338',
+        textAlign: 'center',
+    },
+    textOverlay: {
+        position: 'absolute',
+        top: 8,
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
     }
 });
