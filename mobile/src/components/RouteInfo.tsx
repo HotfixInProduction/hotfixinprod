@@ -2,15 +2,28 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import ConfirmButton from './confirmButton';
+import type { TravelMode } from '../types/map';
 
 interface RouteInfoProps {
     duration: number; // in minutes
     distance: number; // in km
+    mode: TravelMode;
+    onModeChange: (mode: TravelMode) => void;
     onStart: () => void;
     onClose: () => void;
 }
 
-const RouteInfo = ({ duration, distance, onStart, onClose }: RouteInfoProps) => {
+const MODE_METADATA: Record<TravelMode, { label: string; icon: keyof typeof MaterialIcons.glyphMap }> = {
+    DRIVING: { label: 'Drive', icon: 'directions-car' },
+    WALKING: { label: 'Walk', icon: 'directions-walk' },
+    BICYCLING: { label: 'Bike', icon: 'directions-bike' },
+    TRANSIT: { label: 'Transit', icon: 'directions-transit' },
+};
+
+const MODE_OPTIONS: TravelMode[] = ['DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT'];
+
+const RouteInfo = ({ duration, distance, mode, onModeChange, onStart, onClose }: RouteInfoProps) => {
+    const modeMetadata = MODE_METADATA[mode];
 
     // Calculate Arrival Time
     const getArrivalTime = () => {
@@ -23,12 +36,36 @@ const RouteInfo = ({ duration, distance, onStart, onClose }: RouteInfoProps) => 
         <View style={styles.container}>
             <View style={styles.header}>
                 <View style={styles.modeContainer}>
-                    <MaterialIcons name="directions-car" size={20} color="#912338" />
-                    <Text style={styles.headerText}>Drive</Text>
+                    <MaterialIcons name={modeMetadata.icon} size={20} color="#912338" />
+                    <Text style={styles.headerText}>{modeMetadata.label}</Text>
                 </View>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                     <MaterialIcons name="close" size={18} color="#912338" />
                 </TouchableOpacity>
+            </View>
+
+            <View style={styles.modeSelector}>
+                {MODE_OPTIONS.map((modeOption) => {
+                    const metadata = MODE_METADATA[modeOption];
+                    const isActive = modeOption === mode;
+                    return (
+                        <TouchableOpacity
+                            key={modeOption}
+                            style={[styles.modeButton, isActive && styles.modeButtonActive]}
+                            onPress={() => onModeChange(modeOption)}
+                            testID={`route-info-mode-${modeOption.toLowerCase()}`}
+                        >
+                            <MaterialIcons
+                                name={metadata.icon}
+                                size={16}
+                                color={isActive ? '#fff' : '#912338'}
+                            />
+                            <Text style={[styles.modeButtonText, isActive && styles.modeButtonTextActive]}>
+                                {metadata.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
             </View>
 
             <View style={styles.content}>
@@ -83,6 +120,36 @@ const styles = StyleSheet.create({
         padding: 4,
         backgroundColor: '#F1F3F4',
         borderRadius: 16,
+    },
+    modeSelector: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        columnGap: 6,
+        marginBottom: 12,
+    },
+    modeButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        columnGap: 3,
+        paddingVertical: 8,
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#f0d9de',
+        backgroundColor: '#fff',
+    },
+    modeButtonActive: {
+        backgroundColor: '#912338',
+        borderColor: '#912338',
+    },
+    modeButtonText: {
+        fontSize: 12,
+        color: '#912338',
+        fontWeight: '600',
+    },
+    modeButtonTextActive: {
+        color: '#fff',
     },
     content: {
         flexDirection: 'row',

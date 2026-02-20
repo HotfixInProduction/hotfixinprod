@@ -583,6 +583,47 @@ describe('Auto-zoom Map', () => {
   });
 });
 
+describe('Transportation Modes', () => {
+  it('updates map directions mode immediately when mode is changed', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('map-directions-mode').props.children).toBe('DRIVING');
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-walking'));
+
+    await waitFor(() => {
+      expect(getByTestId('map-directions-mode').props.children).toBe('WALKING');
+    });
+  });
+
+  it('passes selected mode to route info', async () => {
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByText('Mode: DRIVING')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-transit'));
+
+    await waitFor(() => {
+      expect(getByText('Mode: TRANSIT')).toBeTruthy();
+    });
+  });
+});
+
 describe('Clearing Route', () => {
   it('clears the route and resets the map', async () => {
     const { getByTestId, queryByTestId } = render(<MapScreen />);
