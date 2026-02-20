@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   nextClassCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    marginTop: 16,
+    marginTop: 30,
     marginBottom: 8,
     padding: 12,
     borderRadius: 8,
