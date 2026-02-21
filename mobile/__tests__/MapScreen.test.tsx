@@ -395,11 +395,12 @@ describe('MapScreen', () => {
         expect(getByTestId('location-modal')).toBeTruthy();
       });
 
-      // Simulate Android back button press (onRequestClose)
       const modal = getByTestId('location-modal');
-      if (modal.props.onRequestClose) {
-        modal.props.onRequestClose();
-      }
+      act(() => {
+        if (modal.props.onRequestClose) {
+          modal.props.onRequestClose();
+        }
+      });
 
       await waitFor(() => {
         expect(queryByTestId('location-modal')).toBeNull();
