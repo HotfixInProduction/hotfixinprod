@@ -87,11 +87,21 @@ const setupLocationWatching = async (
 };
 
 const LABEL_ZOOM_THRESHOLD = 0.008;
+// Small/annex buildings need extra zoom before their labels appear to avoid overlap
+const SMALL_BUILDING_ZOOM_THRESHOLD = 0.004;
+// Buildings whose bounding-box span (in degrees) is below this are considered "small"
+const SMALL_BUILDING_SIZE_THRESHOLD = 0.0005;
+
+const getBuildingMaxSpan = (coordinates: Coordinate[]): number => {
+    const lats = coordinates.map(c => c.latitude);
+    const lons = coordinates.map(c => c.longitude);
+    const latSpan = Math.max(...lats) - Math.min(...lats);
+    const lonSpan = Math.max(...lons) - Math.min(...lons);
+    return Math.max(latSpan, lonSpan);
+};
 
 export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta }: BuildingPolygonProps) {
     const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
-
-    const isZoomedIn = currentDelta <= LABEL_ZOOM_THRESHOLD;
 
     useEffect(() => {
         let locationSubscription: Location.LocationSubscription | null;
@@ -128,6 +138,10 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                     fillColor = "rgba(0, 0, 255, 0.4)";
                 }
 
+                const isSmallBuilding = getBuildingMaxSpan(b.coordinates) < SMALL_BUILDING_SIZE_THRESHOLD;
+                const labelThreshold = isSmallBuilding ? SMALL_BUILDING_ZOOM_THRESHOLD : LABEL_ZOOM_THRESHOLD;
+                const showLabel = currentDelta <= labelThreshold;
+
                 return (
                     <React.Fragment key={b.id}>
                         <Polygon
@@ -138,7 +152,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                             onPress={() => onSelectBuilding(b)}
                             tappable
                         />
-                        {isZoomedIn && (
+                        {showLabel && (
                             <Marker
                                 coordinate={b.labelCoord}
                                 pointerEvents='none'
