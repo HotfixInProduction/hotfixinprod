@@ -17,13 +17,65 @@ type Props = Readonly<{
     building: Building | null;
     floorLevel?: string;
     onClose: () => void;
+    startRoom?: string;
+    nextRoom?: string;
 }>;
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function FloorPlanViewer({ building, floorLevel = '8', onClose }: Props) {
-    const svgContent = building?.floorPlans?.[floorLevel];
-    if (!svgContent) return null;
+function highlightRoomInSvg(
+    svgContent: string, 
+    startRoom: string | undefined, 
+    nextRoom: string | undefined
+): string {
+    let result = svgContent;
+    
+    // Highlight start room with green
+    if (startRoom) {
+        const startRegex = new RegExp(
+            `(<(?:rect|path)([^>]*?)inkscape:label=["']${startRoom}["']([^>]*?)>)`,
+            'gi'
+        );
+        
+        result = result.replace(startRegex, (match) => {
+            if (/style=["']/i.test(match)) {
+                return match.replace(
+                    /style=["']([^"']*)["']/i,
+                    'style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"'
+                );
+            } else {
+                return match.replace(/>$/, ' style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;">');
+            }
+        });
+    }
+    
+    // Highlight next room with blue
+    if (nextRoom) {
+        const nextRegex = new RegExp(
+            `(<(?:rect|path)([^>]*?)inkscape:label=["']${nextRoom}["']([^>]*?)>)`,
+            'gi'
+        );
+        
+        result = result.replace(nextRegex, (match) => {
+            if (/style=["']/i.test(match)) {
+                return match.replace(
+                    /style=["']([^"']*)["']/i,
+                    'style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"'
+                );
+            } else {
+                return match.replace(/>$/, ' style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;">');
+            }
+        });
+    }
+    
+    return result;
+}
+
+export default function FloorPlanViewer({ building, floorLevel = '9', onClose, startRoom = '937', nextRoom = '920' }: Props) {
+    const rawSvgContent = building?.floorPlans?.[floorLevel];
+    if (!rawSvgContent) return null;
+    
+    const svgContent = highlightRoomInSvg(rawSvgContent, startRoom, nextRoom);
 
     return (
         <Modal

@@ -419,7 +419,6 @@ export default function MapScreen() {
       {showFloorPlan && (
         <FloorPlanViewer
           building={selectedBuilding}
-          floorLevel='8'
           onClose={() => setShowFloorPlan(false)}
         />
       )}

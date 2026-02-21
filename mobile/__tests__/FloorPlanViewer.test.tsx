@@ -83,4 +83,197 @@ describe('FloorPlanViewer', () => {
         expect(consoleSpy).toHaveBeenCalledWith("SVG Error: ", expect.any(Error));
         consoleSpy.mockRestore();
     });
+
+    it('highlights start room with green when startRoom prop is provided', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                startRoom="803"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        expect(svgMock.props.xml).toContain('fill:#4CAF50');
+        expect(svgMock.props.xml).toContain('stroke:#2E7D32');
+    });
+
+    it('highlights next room with blue when nextRoom prop is provided', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="805" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                nextRoom="805"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        expect(svgMock.props.xml).toContain('fill:#2196F3');
+        expect(svgMock.props.xml).toContain('stroke:#1565C0');
+    });
+
+    it('highlights both startRoom and nextRoom with different colors', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /><rect inkscape:label="805" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                startRoom="803"
+                nextRoom="805"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        // Start room should be green
+        expect(svgMock.props.xml).toContain('fill:#4CAF50');
+        expect(svgMock.props.xml).toContain('stroke:#2E7D32');
+        // Next room should be blue
+        expect(svgMock.props.xml).toContain('fill:#2196F3');
+        expect(svgMock.props.xml).toContain('stroke:#1565C0');
+    });
+
+    it('highlights multiple rooms with same label (duplicates) for startRoom', () => {
+        const buildingWithDuplicateLabels = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="829" style="fill:#da3636;" /><path inkscape:label="829" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithDuplicateLabels} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                startRoom="829"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        const xmlContent = svgMock.props.xml;
+        // Count occurrences of green highlight color
+        const highlightCount = (xmlContent.match(/fill:#4CAF50/g) || []).length;
+        expect(highlightCount).toBe(2);
+    });
+
+    it('highlights multiple rooms with same label (duplicates) for nextRoom', () => {
+        const buildingWithDuplicateLabels = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="829" style="fill:#da3636;" /><path inkscape:label="829" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithDuplicateLabels} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                nextRoom="829"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        const xmlContent = svgMock.props.xml;
+        // Count occurrences of blue highlight color
+        const highlightCount = (xmlContent.match(/fill:#2196F3/g) || []).length;
+        expect(highlightCount).toBe(2);
+    });
+
+    it('does not modify SVG when startRoom and nextRoom are undefined', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose}
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        expect(svgMock.props.xml).not.toContain('fill:#4CAF50');
+        expect(svgMock.props.xml).not.toContain('fill:#2196F3');
+        expect(svgMock.props.xml).toContain('fill:#da3636');
+    });
+
+    it('does not modify SVG when startRoom label is not found', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                startRoom="999"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        expect(svgMock.props.xml).not.toContain('fill:#4CAF50');
+        expect(svgMock.props.xml).toContain('fill:#da3636');
+    });
+
+    it('does not modify SVG when nextRoom label is not found', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                nextRoom="999"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        expect(svgMock.props.xml).not.toContain('fill:#2196F3');
+        expect(svgMock.props.xml).toContain('fill:#da3636');
+    });
 });
