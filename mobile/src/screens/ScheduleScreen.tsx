@@ -7,19 +7,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-
-interface ClassEvent {
-  id: string;
-  title: string;
-  location: string;
-  building: string;
-  room: string;
-  startTime: Date;
-  endTime: Date;
-  dayOfWeek: number; // 0 = Sunday, 1 = Monday, ...
-  color: string;
-}
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ClassEvent } from '../types/ClassEvent';
+import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
+import CalendarPickerModal from '../components/CalendarPicker';
 
 // Helper function to create a date for this week
 const getDateForDay = (dayOfWeek: number, hour: number, minute: number): Date => {
@@ -152,6 +146,23 @@ const ScheduleScreen: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [nextClass, setNextClass] = useState<ClassEvent | null>(null);
 
+  const {
+    isConnected,
+    isLoading,
+    calendars,
+    selectedCalendarIds,
+    events,
+    showCalendarPicker,
+    connect,
+    disconnect,
+    toggleCalendar,
+    confirmSelection,
+    openCalendarPicker,
+    closeCalendarPicker,
+  } = useGoogleCalendar();
+
+  const activeEvents: ClassEvent[] = isConnected ? events : sampleClasses;
+
   useEffect(() => {
     // Update current time every minute
     const timer = setInterval(() => {
@@ -164,7 +175,7 @@ const ScheduleScreen: React.FC = () => {
   useEffect(() => {
     // Find the next upcoming class
     const now = new Date();
-    const upcomingClasses = sampleClasses
+    const upcomingClasses = activeEvents
       .filter((cls) => cls.startTime > now)
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 
@@ -173,7 +184,7 @@ const ScheduleScreen: React.FC = () => {
     } else {
       setNextClass(null);
     }
-  }, [currentTime]);
+  }, [currentTime, activeEvents]);
 
   const formatTime = (date: Date): string => {
     return date.toLocaleTimeString('en-US', {
@@ -226,7 +237,7 @@ const ScheduleScreen: React.FC = () => {
   };
 
   const renderDayColumn = (dayIndex: number): React.ReactElement => {
-    const dayClasses = sampleClasses.filter(
+    const dayClasses = activeEvents.filter(
       (cls) => cls.dayOfWeek === dayIndex
     );
 
@@ -263,7 +274,9 @@ const ScheduleScreen: React.FC = () => {
                   {cls.title}
                 </Text>
                 <Text style={styles.classLocation} numberOfLines={1}>
-                  {cls.building} {cls.room}
+                  {cls.building && cls.room
+                    ? `${cls.building} ${cls.room}`
+                    : cls.location || ''}
                 </Text>
                 <Text style={styles.classTime}>
                   {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
@@ -277,7 +290,39 @@ const ScheduleScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screenWrapper}>
+      <SafeAreaView style={styles.container}>
+      <View style={styles.contentArea}>
+      {/* Google Calendar header bar */}
+      <View style={styles.calendarBar}>
+        {isConnected ? (
+          <View style={styles.calendarBarConnected}>
+            <MaterialIcons name="event" size={16} color="#912338" />
+            <Text style={styles.calendarBarText}>Google Calendar</Text>
+            <TouchableOpacity style={styles.calendarBarAction} onPress={openCalendarPicker}>
+              <Text style={styles.calendarBarActionText}>Manage</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.calendarBarAction}
+              onPress={() =>
+                Alert.alert('Disconnect', 'Remove Google Calendar connection?', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Disconnect', style: 'destructive', onPress: disconnect },
+                ])
+              }
+            >
+              <MaterialIcons name="link-off" size={16} color="#666" />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.connectButton} onPress={connect}>
+            <MaterialIcons name="event" size={16} color="#912338" />
+            <Text style={styles.connectButtonText}>Connect Google Calendar</Text>
+          </TouchableOpacity>
+        )}
+        {isLoading && <ActivityIndicator size="small" color="#912338" style={styles.loadingIndicator} />}
+      </View>
+
       {/* Next Class Card */}
       {nextClass && (
         <View style={styles.nextClassCard}>
@@ -321,19 +366,84 @@ const ScheduleScreen: React.FC = () => {
           </View>
         </ScrollView>
       </ScrollView>
+
+      <CalendarPickerModal
+        visible={showCalendarPicker}
+        calendars={calendars}
+        selectedCalendarIds={selectedCalendarIds}
+        isLoading={isLoading && calendars.length === 0}
+        onToggle={toggleCalendar}
+        onConfirm={confirmSelection}
+        onCancel={closeCalendarPicker}
+      />
+</View>
+      </SafeAreaView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  screenWrapper: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
   container: {
     flex: 1,
     backgroundColor: '#F5F5F5',
+  },  contentArea: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+  },  calendarBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  connectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#912338',
+  },
+  connectButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#912338',
+  },
+  calendarBarConnected: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  calendarBarText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+  },
+  calendarBarAction: {
+    padding: 4,
+  },
+  calendarBarActionText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#912338',
+  },
+  loadingIndicator: {
+    marginLeft: 8,
   },
   nextClassCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 16,
-    marginTop: 30,
+    marginTop: 8,
     marginBottom: 8,
     padding: 12,
     borderRadius: 8,
