@@ -71,7 +71,7 @@ function highlightRoomInSvg(
     return result;
 }
 
-export default function FloorPlanViewer({ building, floorLevel = '9', onClose, startRoom = '937', nextRoom = '920' }: Props) {
+export default function FloorPlanViewer({ building, floorLevel = '8', onClose, startRoom = '829', nextRoom = '862' }: Props) {
     const rawSvgContent = building?.floorPlans?.[floorLevel];
     if (!rawSvgContent) return null;
     
