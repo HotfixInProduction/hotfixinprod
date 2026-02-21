@@ -13,7 +13,9 @@ interface RouteInfoProps {
     onClose: () => void;
 }
 
-const MODE_METADATA: Record<TravelMode, { label: string; icon: keyof typeof MaterialIcons.glyphMap }> = {
+type MaterialIconName = React.ComponentProps<typeof MaterialIcons>['name'];
+
+const MODE_METADATA: Record<TravelMode, { label: string; icon: MaterialIconName }> = {
     DRIVING: { label: 'Drive', icon: 'directions-car' },
     WALKING: { label: 'Walk', icon: 'directions-walk' },
     BICYCLING: { label: 'Bike', icon: 'directions-bike' },
