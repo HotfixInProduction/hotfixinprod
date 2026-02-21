@@ -274,7 +274,7 @@ export default function MapScreen() {
     if (routeInfo && start && destination) return 'routeInfo';
     return 'none';
   })();
-  const showCompactRouteHeader = activeModal === 'routeInfo';
+  const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
   const getPlaceName = (place: Place | null) => {
     if (!place) return '';
     return (place as any).name || (place as any).id || '';

@@ -680,6 +680,8 @@ describe('Clearing Route', () => {
     await waitFor(() => {
       expect(queryByTestId('route-info-mock')).toBeNull();
       expect(getByTestId('route-instructions-mock')).toBeTruthy();
+      expect(queryByTestId('building-selector-toggle')).toBeNull();
+      expect(getByTestId('compact-route-header')).toBeTruthy();
     });
   });
 
