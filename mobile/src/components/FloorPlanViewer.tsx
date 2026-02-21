@@ -23,52 +23,63 @@ type Props = Readonly<{
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+function escapeRegExp(str: string): string {
+    return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`); // Escapes special regex characters
+}
+
 function highlightRoomInSvg(
     svgContent: string, 
     startRoom: string | undefined, 
     nextRoom: string | undefined
 ): string {
-    let result = svgContent;
-    
-    // Highlight start room with green
-    if (startRoom) {
-        const startRegex = new RegExp(
-            `(<(?:rect|path)([^>]*?)inkscape:label=["']${startRoom}["']([^>]*?)>)`,
-            'gi'
-        );
+    try {
+        let result = svgContent;
         
-        result = result.replace(startRegex, (match) => {
-            if (/style=["']/i.test(match)) {
-                return match.replace(
-                    /style=["']([^"']*)["']/i,
-                    'style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"'
-                );
-            } else {
-                return match.replace(/\s*(\/?)>$/, ' style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"$1>');
-            }
-        });
-    }
-    
-    // Highlight next room with blue
-    if (nextRoom) {
-        const nextRegex = new RegExp(
-            `(<(?:rect|path)([^>]*?)inkscape:label=["']${nextRoom}["']([^>]*?)>)`,
-            'gi'
-        );
+        // Highlight start room with green
+        if (startRoom) {
+            const safeStartRoom = escapeRegExp(startRoom);
+            const startRegex = new RegExp(
+                `(<(?:rect|path)([^>]*?)inkscape:label=["']${safeStartRoom}["']([^>]*?)>)`,
+                'gi'
+            );
+            
+            result = result.replace(startRegex, (match) => {
+                if (/style=["']/i.test(match)) {
+                    return match.replace(
+                        /style=["']([^"']*)["']/i,
+                        'style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"'
+                    );
+                } else {
+                    return match.replace(/\s*(\/?)>$/, (m, p1) => ` style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"${p1}>`);
+                }
+            });
+        }
         
-        result = result.replace(nextRegex, (match) => {
-            if (/style=["']/i.test(match)) {
-                return match.replace(
-                    /style=["']([^"']*)["']/i,
-                    'style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"'
-                );
-            } else {
-                return match.replace(/\s*(\/?)>$/, ' style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"$1>');
-            }
-        });
+        // Highlight next room with blue
+        if (nextRoom) {
+            const safeNextRoom = escapeRegExp(nextRoom);
+            const nextRegex = new RegExp(
+                `(<(?:rect|path)([^>]*?)inkscape:label=["']${safeNextRoom}["']([^>]*?)>)`,
+                'gi'
+            );
+            
+            result = result.replace(nextRegex, (match) => {
+                if (/style=["']/i.test(match)) {
+                    return match.replace(
+                        /style=["']([^"']*)["']/i,
+                        'style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"'
+                    );
+                } else {
+                    return match.replace(/\s*(\/?)>$/, (m, p1) => ` style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"${p1}>`);
+                }
+            });
+        }
+        
+        return result;
+    } catch (e) {
+        console.error("Error highlighting SVG:", e);
+        return svgContent; // Fallback to safe, un-highlighted SVG if regex crashes
     }
-    
-    return result;
 }
 
 export default function FloorPlanViewer({ building, floorLevel = '8', onClose, startRoom = '829', nextRoom = '862' }: Props) {
