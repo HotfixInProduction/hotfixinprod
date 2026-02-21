@@ -79,8 +79,9 @@ export const createVectorIconsMock = () => {
 
 export const createBuildingPolygonMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onSelectBuilding }: any) => (
+  return ({ onSelectBuilding, currentDelta }: any) => (
     <View>
+      <Text testID="building-polygon-current-delta">{currentDelta}</Text>
       <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
         <Text>Select With Plan</Text>
       </TouchableOpacity>

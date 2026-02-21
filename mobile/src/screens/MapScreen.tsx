@@ -60,6 +60,7 @@ export default function MapScreen() {
   const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
   const [transportMode, setTransportMode] = useState<TravelMode>('DRIVING');
+  const [currentDelta, setCurrentDelta] = useState(INITIAL_REGION.latitudeDelta);
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
   useEffect(() => {
@@ -290,8 +291,9 @@ export default function MapScreen() {
         showsUserLocation
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
+        onRegionChangeComplete={(region) => setCurrentDelta(region.latitudeDelta)}
       >
-        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
+        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} currentDelta={currentDelta} />
 
         {start && destination && googleMapsApiKey && (
           <MapViewDirections

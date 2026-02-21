@@ -50,6 +50,26 @@ describe('MapScreen', () => {
     expect(mapView.props.initialRegion.longitude).toBeCloseTo(-73.579, 2);
   });
 
+  it('passes updated zoom delta to BuildingPolygon on region change', async () => {
+    const { getByTestId } = render(<MapScreen />);
+    const mapView = getByTestId('map-view');
+
+    expect(getByTestId('building-polygon-current-delta').props.children).toBe(0.004);
+
+    act(() => {
+      fireEvent(mapView, 'onRegionChangeComplete', {
+        latitude: 45.497,
+        longitude: -73.579,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    });
+
+    await waitFor(() => {
+      expect(getByTestId('building-polygon-current-delta').props.children).toBe(0.01);
+    });
+  });
+
   it('renders both campus selector buttons', () => {
     const { getByText } = render(<MapScreen />);
 
