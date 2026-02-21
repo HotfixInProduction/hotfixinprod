@@ -85,6 +85,7 @@ describe('StartDestinationPicker', () => {
     setStart: jest.fn(),
     setDestination: jest.fn(),
     setInstructions: jest.fn(),
+    transportMode: 'DRIVING' as const,
   };
 
   it('passes correct placeholder for start building selector', () => {
@@ -220,6 +221,7 @@ describe('StartDestinationPicker', () => {
 
     await waitFor(()=> {
       expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164%2C-73.57897485280246&destination=45.497285416040164%2C-73.57897485280246"));
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("mode=driving"));
       expect(mockSetInstructions).toHaveBeenCalledWith(instructions);
     });
   });
@@ -238,6 +240,7 @@ describe('StartDestinationPicker', () => {
 
     await waitFor(()=> {
       expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164%2C-73.57897485280246&destination=45.497285416040164%2C-73.57897485280246"));
+      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("mode=driving"));
       expect(mockSetInstructions).not.toHaveBeenCalled();
       expect(console.error).toHaveBeenCalledWith("Fetch failed", new Error("Something with the network went wrong"));
     });
@@ -515,4 +518,3 @@ describe('StartDestinationPicker', () => {
     expect(getByText('Destination Building')).toBeTruthy();
   });
 });
-

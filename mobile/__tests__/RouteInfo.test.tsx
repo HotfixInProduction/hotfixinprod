@@ -16,7 +16,16 @@ describe('Arrival Time', () => {
     const duration = 15; // in minutes
     const now = new Date();
 
-    render(<RouteInfo duration={duration} distance={5} onStart={() => {}} onClose={() => {}} />);
+    render(
+      <RouteInfo
+        duration={duration}
+        distance={5}
+        mode="DRIVING"
+        onModeChange={() => {}}
+        onStart={() => {}}
+        onClose={() => {}}
+      />
+    );
 
     const expectedTime = new Date(now.getTime() + duration * 60000)
       .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

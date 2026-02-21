@@ -124,9 +124,10 @@ export const createStartDestinationPickerMock = () => {
 };
 
 export const createMapDirectionsMock = () => {
-  const { View, TouchableOpacity } = require('react-native');
+  const { View, TouchableOpacity, Text } = require('react-native');
   return (props: any) => (
     <View testID="map-directions">
+      <Text testID="map-directions-mode">{props.mode}</Text>
       <TouchableOpacity 
         testID="trigger-directions-ready" 
         onPress={() => props.onReady({
@@ -221,11 +222,24 @@ export const setupAppStateMock = () => {
 
 export const createRouteInfoMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onClose, onStart, duration, distance }: any) => (
+  return ({ onClose, onStart, duration, distance, mode, onModeChange }: any) => (
     <View testID="route-info-mock">
       <Text>Arrive at Destination</Text>
       <Text>{duration}</Text>
       <Text>{distance}</Text>
+      <Text testID="route-info-mode">Mode: {mode}</Text>
+      <TouchableOpacity testID="route-info-mode-driving" onPress={() => onModeChange('DRIVING')}>
+        <Text>Drive</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="route-info-mode-walking" onPress={() => onModeChange('WALKING')}>
+        <Text>Walk</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="route-info-mode-bicycling" onPress={() => onModeChange('BICYCLING')}>
+        <Text>Bike</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="route-info-mode-transit" onPress={() => onModeChange('TRANSIT')}>
+        <Text>Transit</Text>
+      </TouchableOpacity>
       <TouchableOpacity
         testID="route-info-start-button"
         onPress={onStart}
