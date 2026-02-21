@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Dimensions } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -23,10 +23,6 @@ type Props = Readonly<{
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-function escapeRegExp(str: string) {
-    return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`); // Escapes special regex characters
-}
-
 function highlightRoomInSvg(
     svgContent: string, 
     startRoom: string | undefined, 
@@ -34,62 +30,52 @@ function highlightRoomInSvg(
 ): string {
     let result = svgContent;
     
-    try {
-        // Highlight start room with green
-        if (startRoom) {
-            const safeStartRoom = escapeRegExp(startRoom);
-            const startRegex = new RegExp(
-                `(<(?:rect|path)([^>]*?)inkscape:label=["']${safeStartRoom}["']([^>]*?)>)`,
-                'gi'
-            );
-            
-            result = result.replace(startRegex, (match) => {
-                if (/style=["']/i.test(match)) {
-                    return match.replace(
-                        /style=["']([^"']*)["']/i,
-                        'style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"'
-                    );
-                } else {
-                    return match.replace(/(\/?)>$/i, (m, p1) => ` style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"${p1}>`);
-                }
-            });
-        }
+    // Highlight start room with green
+    if (startRoom) {
+        const startRegex = new RegExp(
+            `(<(?:rect|path)([^>]*?)inkscape:label=["']${startRoom}["']([^>]*?)>)`,
+            'gi'
+        );
         
-        // Highlight next room with blue
-        if (nextRoom) {
-            const safeNextRoom = escapeRegExp(nextRoom);
-            const nextRegex = new RegExp(
-                `(<(?:rect|path)([^>]*?)inkscape:label=["']${safeNextRoom}["']([^>]*?)>)`,
-                'gi'
-            );
-            
-            result = result.replace(nextRegex, (match) => {
-                if (/style=["']/i.test(match)) {
-                    return match.replace(
-                        /style=["']([^"']*)["']/i,
-                        'style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"'
-                    );
-                } else {
-                    return match.replace(/(\/?)>$/i, (m, p1) => ` style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"${p1}>`);
-                }
-            });
-        }
-    } catch (e) {
-        console.error("Error highlighting SVG:", e);
-        return svgContent; // Fallback to safe, un-highlighted SVG if regex crashes
+        result = result.replace(startRegex, (match) => {
+            if (/style=["']/i.test(match)) {
+                return match.replace(
+                    /style=["']([^"']*)["']/i,
+                    'style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"'
+                );
+            } else {
+                return match.replace(/>$/, ' style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;">');
+            }
+        });
     }
+    
+    // Highlight next room with blue
+    if (nextRoom) {
+        const nextRegex = new RegExp(
+            `(<(?:rect|path)([^>]*?)inkscape:label=["']${nextRoom}["']([^>]*?)>)`,
+            'gi'
+        );
+        
+        result = result.replace(nextRegex, (match) => {
+            if (/style=["']/i.test(match)) {
+                return match.replace(
+                    /style=["']([^"']*)["']/i,
+                    'style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"'
+                );
+            } else {
+                return match.replace(/>$/, ' style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;">');
+            }
+        });
+    }
+    
     return result;
 }
 
 export default function FloorPlanViewer({ building, floorLevel = '8', onClose, startRoom = '829', nextRoom = '862' }: Props) {
     const rawSvgContent = building?.floorPlans?.[floorLevel];
-
-    const svgContent = useMemo(() => {
-        if (!rawSvgContent) return null;
-        return highlightRoomInSvg(rawSvgContent, startRoom, nextRoom);
-    }, [rawSvgContent, startRoom, nextRoom]);
-
-    if (!building || !svgContent) return null;
+    if (!rawSvgContent) return null;
+    
+    const svgContent = highlightRoomInSvg(rawSvgContent, startRoom, nextRoom);
 
     return (
         <Modal

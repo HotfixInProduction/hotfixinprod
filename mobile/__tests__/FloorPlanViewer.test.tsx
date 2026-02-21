@@ -222,6 +222,8 @@ describe('FloorPlanViewer', () => {
                 building={buildingWithSvg} 
                 floorLevel="8" 
                 onClose={mockOnClose}
+                startRoom={undefined}
+                nextRoom={undefined}
             />
         );
 
@@ -276,4 +278,74 @@ describe('FloorPlanViewer', () => {
         expect(svgMock.props.xml).not.toContain('fill:#2196F3');
         expect(svgMock.props.xml).toContain('fill:#da3636');
     });
+
+    it('highlights startRoom when element has NO style attribute (adds style to end)', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="803" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                startRoom="803"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        expect(svgMock.props.xml).toContain('fill:#4CAF50');
+        expect(svgMock.props.xml).toContain('stroke:#2E7D32');
+    });
+
+    it('highlights nextRoom when element has NO style attribute (adds style to end)', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><path inkscape:label="805" /></svg>',
+            },
+        };
+
+        const { getByTestId } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose} 
+                nextRoom="805"
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        expect(svgMock.props.xml).toContain('fill:#2196F3');
+        expect(svgMock.props.xml).toContain('stroke:#1565C0');
+    });
+
+    it('uses default values for startRoom (829) and nextRoom (862)', () => {
+        const buildingWithSvg = {
+            id: 'Hall Building',
+            address: '1455 De Maisonneuve Blvd. W.',
+            floorPlans: {
+                '8': '<svg><rect inkscape:label="829" style="fill:#da3636;" /><rect inkscape:label="862" style="fill:#da3636;" /></svg>',
+            },
+        };
+
+        const { getByTestId, getByText } = render(
+            <FloorPlanViewer 
+                building={buildingWithSvg} 
+                floorLevel="8" 
+                onClose={mockOnClose}
+            />
+        );
+
+        const svgMock = getByTestId('svg-xml');
+        expect(svgMock.props.xml).toContain('fill:#4CAF50');
+        expect(svgMock.props.xml).toContain('fill:#2196F3');
+        expect(getByText('Hall Building - Floor 8')).toBeTruthy();
+    });
 });
+
