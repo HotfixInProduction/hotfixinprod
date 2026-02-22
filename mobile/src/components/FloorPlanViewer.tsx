@@ -65,9 +65,9 @@ function extractRoomsFromSvg(svgContent: string): string[] {
         }
     }
     return Array.from(rooms).sort((a, b) => {
-        const numA = parseFloat(a);
-        const numB = parseFloat(b);
-        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        const numA = Number.parseFloat(a);
+        const numB = Number.parseFloat(b);
+        if (!Number.isNaN(numA) && !Number.isNaN(numB)) return numA - numB;
         return a.localeCompare(b);
     });
 }
@@ -129,9 +129,45 @@ type RoomPickerProps = {
     onClose: () => void;
 };
 
+type RoomItemProps = {
+    item: string;
+    prefix: string;
+    isSelected: boolean;
+    onSelect: (svgLabel: string) => void;
+};
+
+const RoomItem = React.memo(function RoomItem({ item, prefix, isSelected, onSelect }: RoomItemProps) {
+    const handlePress = useCallback(() => onSelect(item), [onSelect, item]);
+
+    return (
+        <TouchableOpacity
+            style={[
+                pickerStyles.roomItem,
+                isSelected && pickerStyles.roomItemSelected,
+            ]}
+            onPress={handlePress}
+            activeOpacity={0.7}
+        >
+            <Text
+                style={[
+                    pickerStyles.roomLabel,
+                    isSelected && pickerStyles.roomLabelSelected,
+                ]}
+            >
+                {prefix}{item}
+            </Text>
+            {isSelected && (
+                <MaterialCommunityIcons name="check" size={18} color="#912338" />
+            )}
+        </TouchableOpacity>
+    );
+});
+
+const ItemSeparator = () => <View style={pickerStyles.separator} />;
+
 function RoomPickerModal({
     visible, title, rooms, prefix, selectedRoom, onSelect, onClose,
-}: RoomPickerProps) {
+}: Readonly<RoomPickerProps>) {
     const [query, setQuery] = useState('');
 
     const filtered = useMemo(() => {
@@ -194,7 +230,7 @@ function RoomPickerModal({
                     {/* Legend */}
                     <View style={pickerStyles.legendRow}>
                         <Text style={pickerStyles.legendText}>
-                            Showing {filtered.length} room{filtered.length !== 1 ? 's' : ''}
+                            Showing {filtered.length} room{filtered.length === 1 ? '' : 's'}
                             {prefix ? ` · Prefix "${prefix}" = ${prefix}XXX` : ''}
                         </Text>
                     </View>
@@ -204,32 +240,15 @@ function RoomPickerModal({
                         data={filtered}
                         keyExtractor={(item) => item}
                         keyboardShouldPersistTaps="handled"
-                        renderItem={({ item }) => {
-                            const isSelected = item === selectedRoom;
-                            return (
-                                <TouchableOpacity
-                                    style={[
-                                        pickerStyles.roomItem,
-                                        isSelected && pickerStyles.roomItemSelected,
-                                    ]}
-                                    onPress={() => handleSelect(item)}
-                                    activeOpacity={0.7}
-                                >
-                                    <Text
-                                        style={[
-                                            pickerStyles.roomLabel,
-                                            isSelected && pickerStyles.roomLabelSelected,
-                                        ]}
-                                    >
-                                        {prefix}{item}
-                                    </Text>
-                                    {isSelected && (
-                                        <MaterialCommunityIcons name="check" size={18} color="#912338" />
-                                    )}
-                                </TouchableOpacity>
-                            );
-                        }}
-                        ItemSeparatorComponent={() => <View style={pickerStyles.separator} />}
+                        renderItem={({ item }) => (
+                            <RoomItem
+                                item={item}
+                                prefix={prefix}
+                                isSelected={item === selectedRoom}
+                                onSelect={handleSelect}
+                            />
+                        )}
+                        ItemSeparatorComponent={ItemSeparator}
                         contentContainerStyle={{ paddingBottom: 32 }}
                     />
                 </View>
@@ -250,7 +269,7 @@ export default function FloorPlanViewer({
     nextRoom: nextRoomProp = '862',
 }: Props) {
     const availableFloors = useMemo(
-        () => Object.keys(building?.floorPlans ?? {}).sort(),
+        () => Object.keys(building?.floorPlans ?? {}).sort((a, b) => a.localeCompare(b)),
         [building]
     );
 
