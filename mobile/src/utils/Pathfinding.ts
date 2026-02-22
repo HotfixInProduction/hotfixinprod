@@ -2,6 +2,7 @@ import path from 'ngraph.path';
 import loadFromJson, { JsonNode, JsonGraph } from 'ngraph.fromjson';
 import hall8NavMesh from '../data/navmesh/hall8.json';
 import hall9NavMesh from '../data/navmesh/hall9.json';
+import john1NavMesh from '../data/navmesh/john1.json';
 import johnS2NavMesh from '../data/navmesh/johnS2.json';
 
 type NavMesh = JsonGraph<JsonNode<{ x: number; y: number }>, { fromId: string | number; toId: string | number }>;
@@ -9,7 +10,8 @@ type NavMeshNode = NavMesh['nodes'][number];
 const navMeshes: Map<string, NavMesh> = new Map([
   ['Hall Building#8', hall8NavMesh as NavMesh],
   ['Hall Building#9', hall9NavMesh as NavMesh],
-  ['John Molson Building#S2', johnS2NavMesh as NavMesh]
+  ['John Molson Building#S2', johnS2NavMesh as NavMesh],
+  ['John Molson Building#1', john1NavMesh as NavMesh],
 ]);
 
 /**
