@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import {
   View,
@@ -33,7 +33,10 @@ const getDateForDay = (dayOfWeek: number, hour: number, minute: number): Date =>
 };
 
 // Sample class data (will be replaced with Google Calendar integration)
-const sampleClasses: ClassEvent[] = [
+// Wrapped in a function so dates are computed at call-time, not module-load time.
+// This makes the component correctly pick up jest fake timers in tests.
+function buildSampleClasses(): ClassEvent[] {
+  return [
   // Monday classes
   {
     id: '1',
@@ -138,7 +141,8 @@ const sampleClasses: ClassEvent[] = [
     dayOfWeek: 5,
     color: '#F39C12',
   },
-];
+  ];
+}
 
 const { width } = Dimensions.get('window');
 const HOUR_HEIGHT = 60;
@@ -149,6 +153,8 @@ const TOTAL_HOURS = END_HOUR - START_HOUR;
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const ScheduleScreen: React.FC = () => {
+  // Compute once per mount so fake timers in tests control the dates.
+  const sampleClasses = useMemo(buildSampleClasses, []);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [nextClass, setNextClass] = useState<ClassEvent | null>(null);
 

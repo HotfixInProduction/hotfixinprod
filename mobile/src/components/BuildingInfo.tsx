@@ -3,6 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+type FloorPlanMap = {
+    [key: string]: string;
+};
+
 type Building = {
     id: string;
     address: string;
@@ -11,18 +15,21 @@ type Building = {
     isAccessible?: boolean;
     hasParking?: boolean;
     hasBikeRacks?: boolean;
+    floorPlans?: FloorPlanMap;
 };
 
 type Props = Readonly<{
     building: Building | null;
     onClose: () => void;
+    onViewFloorPlan?: () => void;
 }>;
 
-export default function BuildingInfo({ building, onClose }: Props) {
+export default function BuildingInfo({ building, onClose, onViewFloorPlan }: Props) {
     if (!building) return null;
 
     const hasDepartments = (building.departments?.length ?? 0) > 0;
     const hasServices = (building.services?.length ?? 0) > 0;
+    const hasFloorPlans = (building.floorPlans && Object.keys(building.floorPlans).length > 0);
 
     return (
         <View style={styles.buildingModal}>
@@ -53,6 +60,18 @@ export default function BuildingInfo({ building, onClose }: Props) {
             <TouchableOpacity style={styles.closeButton} testID="building-close" onPress={onClose} activeOpacity={0.7}>
                 <MaterialCommunityIcons name="close" size={18} color="#912338"></MaterialCommunityIcons>
             </TouchableOpacity>
+
+            {hasFloorPlans && onViewFloorPlan && (
+                <TouchableOpacity
+                    style={styles.floorPlanButton}
+                    onPress={onViewFloorPlan}
+                    activeOpacity={0.8}
+                    testID="view-floor-plan-button"
+                >
+                    <MaterialCommunityIcons name="floor-plan" size={18} color="#fff" style={{ marginRight: 6 }} />
+                    <Text style={styles.floorPlanButtonText}>View Floor Plan</Text>
+                </TouchableOpacity>
+            )}
 
             {(hasDepartments || hasServices) && (
                 <View style={styles.columnWrapper}>
@@ -147,6 +166,21 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginBottom: 8,
         paddingBottom: 4,
+    },
+    floorPlanButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#912338',
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        marginBottom: 12,
+    },
+    floorPlanButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
     },
     itemText: {
         fontSize: 13,

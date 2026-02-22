@@ -329,14 +329,39 @@ describe('MapScreen', () => {
       await waitFor(() => expect(getByText('Hall Building')).toBeTruthy());
     });
 
-    it('opens FloorPlanViewer when a building with floor plans is selected', async () => {
+    it('shows View Floor Plan button when a building with floor plans is selected', async () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('select-building'));
 
       await waitFor(() => {
+        expect(getByText('Hall Building')).toBeTruthy();
+        expect(getByTestId('view-floor-plan-button')).toBeTruthy();
+      });
+    });
+
+    it('opens FloorPlanViewer when View Floor Plan button is pressed', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+
+      await waitFor(() => {
         expect(getByText('Hall Building - Floor 8')).toBeTruthy();
       });
+    });
+
+    it('does not show View Floor Plan button for buildings without floor plans', async () => {
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('select-building-no-plans'));
+
+      await waitFor(() => expect(getByTestId('building-close')).toBeTruthy());
+
+      expect(queryByTestId('view-floor-plan-button')).toBeNull();
     });
 
     it('closes building info when close button is pressed', async () => {
@@ -367,6 +392,10 @@ describe('MapScreen', () => {
 
       fireEvent.press(getByTestId('select-building'));
 
+      await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+
       await waitFor(() => {
         expect(getByText('Hall Building - Floor 8')).toBeTruthy();
       });
@@ -395,11 +424,12 @@ describe('MapScreen', () => {
         expect(getByTestId('location-modal')).toBeTruthy();
       });
 
-      // Simulate Android back button press (onRequestClose)
       const modal = getByTestId('location-modal');
-      if (modal.props.onRequestClose) {
-        modal.props.onRequestClose();
-      }
+      act(() => {
+        if (modal.props.onRequestClose) {
+          modal.props.onRequestClose();
+        }
+      });
 
       await waitFor(() => {
         expect(queryByTestId('location-modal')).toBeNull();

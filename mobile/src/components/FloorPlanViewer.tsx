@@ -20,19 +20,71 @@ type Props = Readonly<{
     onClose: () => void;
     pathStartNode?: number;
     pathEndNode?: number;
+    startRoom?: string;
+    nextRoom?: string;
 }>;
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function FloorPlanViewer({ 
-    building, 
+function highlightRoomInSvg(
+    svgContent: string,
+    startRoom: string | undefined,
+    nextRoom: string | undefined
+): string {
+    let result = svgContent;
+
+    // Highlight start room with green
+    if (startRoom) {
+        const startRegex = new RegExp(
+            `(<(?:rect|path)([^>]*?)inkscape:label=["']${startRoom}["']([^>]*?)>)`,
+            'gi'
+        );
+
+        result = result.replace(startRegex, (match) => {
+            if (/style=["']/i.test(match)) {
+                return match.replace(
+                    /style=["']([^"']*)["']/i,
+                    'style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"'
+                );
+            } else {
+                return match.replace(/>$/, ' style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;">');
+            }
+        });
+    }
+
+    // Highlight next room with blue
+    if (nextRoom) {
+        const nextRegex = new RegExp(
+            `(<(?:rect|path)([^>]*?)inkscape:label=["']${nextRoom}["']([^>]*?)>)`,
+            'gi'
+        );
+
+        result = result.replace(nextRegex, (match) => {
+            if (/style=["']/i.test(match)) {
+                return match.replace(
+                    /style=["']([^"']*)["']/i,
+                    'style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"'
+                );
+            } else {
+                return match.replace(/>$/, ' style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;">');
+            }
+        });
+    }
+
+    return result;
+}
+
+export default function FloorPlanViewer({
+    building,
     floorLevel = '8', //for testing in app
     onClose,
     pathStartNode = 0, //for testing in app
-    pathEndNode = 48  //for testing in app
+    pathEndNode = 48,  //for testing in app
+    startRoom = '829',
+    nextRoom = '862'
 }: Props) {
-    const svgContent = building?.floorPlans?.[floorLevel];
-    
+    const rawSvgContent = building?.floorPlans?.[floorLevel];
+
     const path = React.useMemo(() => {
         if (pathStartNode !== undefined && pathEndNode !== undefined && building?.id) {
             return findPath(building.id, floorLevel, pathStartNode, pathEndNode);
@@ -41,9 +93,11 @@ export default function FloorPlanViewer({
     }, [pathStartNode, pathEndNode, building?.id, floorLevel]);
 
     const svgWithPaths = React.useMemo(() => {
-        if (!svgContent || !path || path.length === 0) {
+        const highlighted = rawSvgContent ? highlightRoomInSvg(rawSvgContent, startRoom, nextRoom) : rawSvgContent;
+
+        if (!highlighted || !path || path.length === 0) {
             console.log('No path to display');
-            return svgContent;
+            return highlighted;
         }
 
         const pathString = generateSvgPath(path);
@@ -53,10 +107,11 @@ export default function FloorPlanViewer({
         const endNode = path.at(-1)!;
         const markers = `<circle cx="${startNode.data?.x}" cy="${startNode.data?.y}" r="12" fill="#34C759" stroke="#fff" stroke-width="3"/><circle cx="${endNode.data?.x}" cy="${endNode.data?.y}" r="12" fill="#FF3B30" stroke="#fff" stroke-width="3"/>`;
 
-        const result = svgContent.replace('</svg>', `${pathSvg}${markers}</svg>`);
+        const result = highlighted.replace('</svg>', `${pathSvg}${markers}</svg>`);
         return result;
-    }, [svgContent, path]);
-    if (!svgContent || !svgWithPaths) return null;
+    }, [rawSvgContent, path, startRoom, nextRoom]);
+
+    if (!rawSvgContent || !svgWithPaths) return null;
 
     return (
         <Modal
