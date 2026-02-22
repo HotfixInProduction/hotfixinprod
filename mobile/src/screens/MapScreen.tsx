@@ -244,12 +244,7 @@ export default function MapScreen() {
 
   const handleBuildingSelect = (building: any) => {
     setSelectedBuilding(building);
-
-    if (building?.floorPlans) {
-      setShowFloorPlan(true);
-    } else {
-      setShowFloorPlan(false);
-    }
+    setShowFloorPlan(false);
   };
 
   const getCoordinates = (place: Place | null) => {
@@ -487,7 +482,11 @@ export default function MapScreen() {
           }}
           pointerEvents={selectedBuilding ? 'auto' : 'none'}
         >
-          <BuildingInfo building={selectedBuilding} onClose={handleCloseBuilding} />
+          <BuildingInfo
+            building={selectedBuilding}
+            onClose={handleCloseBuilding}
+            onViewFloorPlan={selectedBuilding?.floorPlans ? () => setShowFloorPlan(true) : undefined}
+          />
         </Animated.View>
       )}
 

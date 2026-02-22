@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import ScheduleScreen from '../src/screens/ScheduleScreen';
 
 // Mock MaterialIcons
@@ -111,6 +111,38 @@ describe('ScheduleScreen', () => {
           color: '#912338',
         })
       );
+    });
+  });
+
+  describe('Timer cleanup', () => {
+    it('fires the interval callback and clears the interval timer on unmount', async () => {
+      const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+      const { unmount } = render(<ScheduleScreen />);
+
+      // Advance fake timers to trigger the setInterval callback (line 158)
+      await act(async () => {
+        jest.advanceTimersByTime(60000);
+      });
+
+      unmount();
+      expect(clearIntervalSpy).toHaveBeenCalled();
+      clearIntervalSpy.mockRestore();
+    });
+  });
+
+  describe('Time until class formatting', () => {
+    it('displays time in minutes-only format when class is less than one hour away', async () => {
+      // sampleClasses are loaded at module init with the real date (Feb 2026).
+      // Monday class starts at ~Feb 16 2026 08:45. Setting fake time to 30 min
+      // before ensures hours === 0, covering the minutes-only return (line 196).
+      jest.setSystemTime(new Date('2026-02-16T08:15:00'));
+
+      const { getByText } = render(<ScheduleScreen />);
+
+      await waitFor(() => {
+        // "in Xm" with no hours component confirms the hours === 0 branch
+        expect(getByText(/^in \d+m$/)).toBeTruthy();
+      });
     });
   });
 });

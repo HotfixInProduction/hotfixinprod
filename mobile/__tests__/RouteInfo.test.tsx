@@ -1,6 +1,15 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, fireEvent } from '@testing-library/react-native';
 import RouteInfo from '../src/components/RouteInfo';
+
+const defaultProps = {
+  duration: 15,
+  distance: 5,
+  mode: 'DRIVING' as const,
+  onModeChange: jest.fn(),
+  onStart: jest.fn(),
+  onClose: jest.fn(),
+};
 
 describe('Arrival Time', () => {
   beforeEach(() => {
@@ -31,5 +40,15 @@ describe('Arrival Time', () => {
       .toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     expect(screen.getByText(new RegExp(`Arrive at\\s*${expectedTime}`, 'i'))).toBeTruthy();
+  });
+});
+
+describe('Mode Selection', () => {
+  it('calls onModeChange with the correct mode when a mode button is pressed', () => {
+    const onModeChange = jest.fn();
+    render(<RouteInfo {...defaultProps} onModeChange={onModeChange} />);
+
+    fireEvent.press(screen.getByTestId('route-info-mode-walking'));
+    expect(onModeChange).toHaveBeenCalledWith('WALKING');
   });
 });
