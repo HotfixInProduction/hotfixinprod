@@ -188,8 +188,10 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                         {showLabel && (
                             <Marker
                                 coordinate={b.labelCoord}
-                                pointerEvents='none'
+                                pointerEvents='auto'
+                                onPress={() => onSelectBuilding(b)}
                                 anchor={{ x: 0.5, y: 1 }}
+                                testID={b.id}
                             >
                                 <View style={styles.labelContainer}>
                                     <FontAwesome6

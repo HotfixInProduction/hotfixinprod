@@ -289,6 +289,7 @@ export default function MapScreen() {
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={styles.map}
+        testID="map"
         mapPadding={{ top: 100, right: 20, bottom: 0, left: 20 }}
         showsUserLocation
         showsMyLocationButton
