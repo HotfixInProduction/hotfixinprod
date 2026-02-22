@@ -70,4 +70,41 @@ describe('BuildingInfo', () => {
     expect(queryByTestId('departments-column')).toBeNull();
     expect(queryByTestId('services-column')).toBeNull();
   });
+
+  describe('View Floor Plan button', () => {
+    const buildingWithPlans = {
+      ...mockBuilding,
+      floorPlans: { '8': '<svg>mock</svg>' },
+    };
+
+    it('renders View Floor Plan button when building has floor plans and onViewFloorPlan is provided', () => {
+      const { getByTestId } = render(
+        <BuildingInfo building={buildingWithPlans} onClose={() => {}} onViewFloorPlan={() => {}} />
+      );
+      expect(getByTestId('view-floor-plan-button')).toBeTruthy();
+    });
+
+    it('calls onViewFloorPlan when button is pressed', () => {
+      const onViewFloorPlan = jest.fn();
+      const { getByTestId } = render(
+        <BuildingInfo building={buildingWithPlans} onClose={() => {}} onViewFloorPlan={onViewFloorPlan} />
+      );
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+      expect(onViewFloorPlan).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not render View Floor Plan button when building has no floor plans', () => {
+      const { queryByTestId } = render(
+        <BuildingInfo building={mockBuilding} onClose={() => {}} onViewFloorPlan={() => {}} />
+      );
+      expect(queryByTestId('view-floor-plan-button')).toBeNull();
+    });
+
+    it('does not render View Floor Plan button when onViewFloorPlan is not provided', () => {
+      const { queryByTestId } = render(
+        <BuildingInfo building={buildingWithPlans} onClose={() => {}} />
+      );
+      expect(queryByTestId('view-floor-plan-button')).toBeNull();
+    });
+  });
 });

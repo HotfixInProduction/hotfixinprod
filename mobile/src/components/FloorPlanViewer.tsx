@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView, Dimensions } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { findPath, generateSvgPath } from '../utils/Pathfinding';
 
 type FloorPlanMap = {
     [key: string]: string;
@@ -17,13 +18,100 @@ type Props = Readonly<{
     building: Building | null;
     floorLevel?: string;
     onClose: () => void;
+    pathStartNode?: number;
+    pathEndNode?: number;
+    startRoom?: string;
+    nextRoom?: string;
 }>;
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function FloorPlanViewer({ building, floorLevel = '8', onClose }: Props) {
-    const svgContent = building?.floorPlans?.[floorLevel];
-    if (!svgContent) return null;
+function highlightRoomInSvg(
+    svgContent: string,
+    startRoom: string | undefined,
+    nextRoom: string | undefined
+): string {
+    let result = svgContent;
+
+    // Highlight start room with green
+    if (startRoom) {
+        const startRegex = new RegExp(
+            `(<(?:rect|path)([^>]*?)inkscape:label=["']${startRoom}["']([^>]*?)>)`,
+            'gi'
+        );
+
+        result = result.replace(startRegex, (match) => {
+            if (/style=["']/i.test(match)) {
+                return match.replace(
+                    /style=["']([^"']*)["']/i,
+                    'style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;"'
+                );
+            } else {
+                return match.replace(/>$/, ' style="fill:#4CAF50;fill-opacity:0.7;stroke:#2E7D32;stroke-width:3;stroke-opacity:1;">');
+            }
+        });
+    }
+
+    // Highlight next room with blue
+    if (nextRoom) {
+        const nextRegex = new RegExp(
+            `(<(?:rect|path)([^>]*?)inkscape:label=["']${nextRoom}["']([^>]*?)>)`,
+            'gi'
+        );
+
+        result = result.replace(nextRegex, (match) => {
+            if (/style=["']/i.test(match)) {
+                return match.replace(
+                    /style=["']([^"']*)["']/i,
+                    'style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;"'
+                );
+            } else {
+                return match.replace(/>$/, ' style="fill:#2196F3;fill-opacity:0.7;stroke:#1565C0;stroke-width:3;stroke-opacity:1;">');
+            }
+        });
+    }
+
+    return result;
+}
+
+export default function FloorPlanViewer({
+    building,
+    floorLevel = '8', //for testing in app
+    onClose,
+    pathStartNode = 0, //for testing in app
+    pathEndNode = 48,  //for testing in app
+    startRoom = '829',
+    nextRoom = '862'
+}: Props) {
+    const rawSvgContent = building?.floorPlans?.[floorLevel];
+
+    const path = React.useMemo(() => {
+        if (pathStartNode !== undefined && pathEndNode !== undefined && building?.id) {
+            return findPath(building.id, floorLevel, pathStartNode, pathEndNode);
+        }
+        return null;
+    }, [pathStartNode, pathEndNode, building?.id, floorLevel]);
+
+    const svgWithPaths = React.useMemo(() => {
+        const highlighted = rawSvgContent ? highlightRoomInSvg(rawSvgContent, startRoom, nextRoom) : rawSvgContent;
+
+        if (!highlighted || !path || path.length === 0) {
+            console.log('No path to display');
+            return highlighted;
+        }
+
+        const pathString = generateSvgPath(path);
+        const pathSvg = `<path d="${pathString}" stroke="#007AFF" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="1"/>`;
+
+        const startNode = path[0];
+        const endNode = path.at(-1)!;
+        const markers = `<circle cx="${startNode.data?.x}" cy="${startNode.data?.y}" r="12" fill="#34C759" stroke="#fff" stroke-width="3"/><circle cx="${endNode.data?.x}" cy="${endNode.data?.y}" r="12" fill="#FF3B30" stroke="#fff" stroke-width="3"/>`;
+
+        const result = highlighted.replace('</svg>', `${pathSvg}${markers}</svg>`);
+        return result;
+    }, [rawSvgContent, path, startRoom, nextRoom]);
+
+    if (!rawSvgContent || !svgWithPaths) return null;
 
     return (
         <Modal
@@ -57,7 +145,7 @@ export default function FloorPlanViewer({ building, floorLevel = '8', onClose }:
                     >
                         <View style={styles.svgContainer}>
                             <SvgXml
-                                xml={svgContent}
+                                xml={svgWithPaths}
                                 width={screenWidth - 40}
                                 height={screenWidth - 40}
                                 onError={(e) => console.log("SVG Error: ", e)}

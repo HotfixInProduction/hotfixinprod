@@ -50,6 +50,26 @@ describe('MapScreen', () => {
     expect(mapView.props.initialRegion.longitude).toBeCloseTo(-73.579, 2);
   });
 
+  it('passes updated zoom delta to BuildingPolygon on region change', async () => {
+    const { getByTestId } = render(<MapScreen />);
+    const mapView = getByTestId('map-view');
+
+    expect(getByTestId('building-polygon-current-delta').props.children).toBe(0.004);
+
+    act(() => {
+      fireEvent(mapView, 'onRegionChangeComplete', {
+        latitude: 45.497,
+        longitude: -73.579,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    });
+
+    await waitFor(() => {
+      expect(getByTestId('building-polygon-current-delta').props.children).toBe(0.01);
+    });
+  });
+
   it('renders both campus selector buttons', () => {
     const { getByText } = render(<MapScreen />);
 
@@ -309,14 +329,39 @@ describe('MapScreen', () => {
       await waitFor(() => expect(getByText('Hall Building')).toBeTruthy());
     });
 
-    it('opens FloorPlanViewer when a building with floor plans is selected', async () => {
+    it('shows View Floor Plan button when a building with floor plans is selected', async () => {
       const { getByTestId, getByText } = render(<MapScreen />);
 
       fireEvent.press(getByTestId('select-building'));
 
       await waitFor(() => {
+        expect(getByText('Hall Building')).toBeTruthy();
+        expect(getByTestId('view-floor-plan-button')).toBeTruthy();
+      });
+    });
+
+    it('opens FloorPlanViewer when View Floor Plan button is pressed', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+
+      await waitFor(() => {
         expect(getByText('Hall Building - Floor 8')).toBeTruthy();
       });
+    });
+
+    it('does not show View Floor Plan button for buildings without floor plans', async () => {
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('select-building-no-plans'));
+
+      await waitFor(() => expect(getByTestId('building-close')).toBeTruthy());
+
+      expect(queryByTestId('view-floor-plan-button')).toBeNull();
     });
 
     it('closes building info when close button is pressed', async () => {
@@ -347,6 +392,10 @@ describe('MapScreen', () => {
 
       fireEvent.press(getByTestId('select-building'));
 
+      await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+
       await waitFor(() => {
         expect(getByText('Hall Building - Floor 8')).toBeTruthy();
       });
@@ -375,11 +424,12 @@ describe('MapScreen', () => {
         expect(getByTestId('location-modal')).toBeTruthy();
       });
 
-      // Simulate Android back button press (onRequestClose)
       const modal = getByTestId('location-modal');
-      if (modal.props.onRequestClose) {
-        modal.props.onRequestClose();
-      }
+      act(() => {
+        if (modal.props.onRequestClose) {
+          modal.props.onRequestClose();
+        }
+      });
 
       await waitFor(() => {
         expect(queryByTestId('location-modal')).toBeNull();
@@ -583,6 +633,47 @@ describe('Auto-zoom Map', () => {
   });
 });
 
+describe('Transportation Modes', () => {
+  it('updates map directions mode immediately when mode is changed', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('map-directions-mode').props.children).toBe('DRIVING');
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-walking'));
+
+    await waitFor(() => {
+      expect(getByTestId('map-directions-mode').props.children).toBe('WALKING');
+    });
+  });
+
+  it('passes selected mode to route info', async () => {
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByText('Mode: DRIVING')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-transit'));
+
+    await waitFor(() => {
+      expect(getByText('Mode: TRANSIT')).toBeTruthy();
+    });
+  });
+});
+
 describe('Clearing Route', () => {
   it('clears the route and resets the map', async () => {
     const { getByTestId, queryByTestId } = render(<MapScreen />);
@@ -639,6 +730,8 @@ describe('Clearing Route', () => {
     await waitFor(() => {
       expect(queryByTestId('route-info-mock')).toBeNull();
       expect(getByTestId('route-instructions-mock')).toBeTruthy();
+      expect(queryByTestId('building-selector-toggle')).toBeNull();
+      expect(getByTestId('compact-route-header')).toBeTruthy();
     });
   });
 

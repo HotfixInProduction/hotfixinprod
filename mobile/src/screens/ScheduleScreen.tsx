@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿﻿import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,6 +21,7 @@ import TimeColumn from '../components/GoogleCalendar/TimeColumn';
 import DayColumn from '../components/GoogleCalendar/DayColumn';
 
 const ScheduleScreen: React.FC = () => {
+  // Compute once per mount so fake timers in tests control the dates.
   const [currentTime, setCurrentTime] = useState(new Date());
   const { state, connect, disconnect } = useGoogleCalendar();
   const { hourHeight, dayColWidth, setGridHeight, getMondayOfWeek, getEventStyle } = useWeekGrid();

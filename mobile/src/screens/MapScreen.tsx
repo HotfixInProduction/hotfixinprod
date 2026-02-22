@@ -14,7 +14,7 @@ import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
-import type { MapStep } from '../types/map';
+import type { MapStep, TravelMode } from '../types/map';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -41,7 +41,6 @@ const CAMPUSES = {
 };
 
 type CampusKey = keyof typeof CAMPUSES;
-
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
@@ -60,6 +59,8 @@ export default function MapScreen() {
   const [instructions, setInstructions] = useState<MapStep[]>([]);
   const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [transportMode, setTransportMode] = useState<TravelMode>('DRIVING');
+  const [currentDelta, setCurrentDelta] = useState(INITIAL_REGION.latitudeDelta);
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
   useEffect(() => {
@@ -243,12 +244,7 @@ export default function MapScreen() {
 
   const handleBuildingSelect = (building: any) => {
     setSelectedBuilding(building);
-
-    if (building?.floorPlans) {
-      setShowFloorPlan(true);
-    } else {
-      setShowFloorPlan(false);
-    }
+    setShowFloorPlan(false);
   };
 
   const getCoordinates = (place: Place | null) => {
@@ -274,6 +270,11 @@ export default function MapScreen() {
     if (routeInfo && start && destination) return 'routeInfo';
     return 'none';
   })();
+  const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
+  const getPlaceName = (place: Place | null) => {
+    if (!place) return '';
+    return (place as any).name || (place as any).id || '';
+  };
 
   return (
     <View style={styles.container}>
@@ -285,8 +286,9 @@ export default function MapScreen() {
         showsUserLocation
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
+        onRegionChangeComplete={(region) => setCurrentDelta(region.latitudeDelta)}
       >
-        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
+        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} currentDelta={currentDelta} />
 
         {start && destination && googleMapsApiKey && (
           <MapViewDirections
@@ -295,7 +297,7 @@ export default function MapScreen() {
             apikey={googleMapsApiKey}
             strokeWidth={3}
             strokeColor="hotpink"
-            mode="DRIVING"
+            mode={transportMode}
             onReady={result => {
               setRouteInfo({
                 distance: result.distance, // in km
@@ -361,37 +363,53 @@ export default function MapScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.buildingSelectorToggleButton}
-          onPress={toggleBuildingSelector}
-          activeOpacity={0.7}
-          testID="building-selector-toggle"
-        >
-          <MaterialIcons
-            name={buildingSelectorVisible ? 'close' : 'directions'}
-            size={24}
-            color="#fff"
-          />
-        </TouchableOpacity>
+        {!showCompactRouteHeader && (
+          <TouchableOpacity
+            style={styles.buildingSelectorToggleButton}
+            onPress={toggleBuildingSelector}
+            activeOpacity={0.7}
+            testID="building-selector-toggle"
+          >
+            <MaterialIcons
+              name={buildingSelectorVisible ? 'close' : 'directions'}
+              size={24}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        )}
       </SafeAreaView>
 
-      <Animated.View
-        style={[
-          styles.buildingSelectorPanel,
-          {
-            transform: [{ translateX: buildingSelectorSlideAnim }],
-          },
-        ]}
-        pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
-      >
-        <StartDestinationPicker
-          userLocation={userLocation}
-          start={start}
-          destination={destination}
-          setStart={setStart}
-          setDestination={setDestination}
-          setInstructions={setInstructions} />
-      </Animated.View>
+      {showCompactRouteHeader ? (
+        <View style={styles.compactRouteHeader} testID="compact-route-header">
+          <Text style={styles.compactRouteLabel} numberOfLines={1}>
+            {getPlaceName(start)}
+          </Text>
+          <MaterialIcons name="arrow-forward" size={16} color="#912338" />
+          <Text style={styles.compactRouteLabel} numberOfLines={1}>
+            {getPlaceName(destination)}
+          </Text>
+        </View>
+      ) : (
+        <Animated.View
+          style={[
+            styles.buildingSelectorPanel,
+            {
+              transform: [{ translateX: buildingSelectorSlideAnim }],
+            },
+          ]}
+          pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
+        >
+          <StartDestinationPicker
+            userLocation={userLocation}
+            start={start}
+            destination={destination}
+            setStart={setStart}
+            setDestination={setDestination}
+            setInstructions={setInstructions}
+            transportMode={transportMode}
+          />
+        </Animated.View>
+      )}
 
       {showFloorPlan && (
         <FloorPlanViewer
@@ -464,7 +482,11 @@ export default function MapScreen() {
           }}
           pointerEvents={selectedBuilding ? 'auto' : 'none'}
         >
-          <BuildingInfo building={selectedBuilding} onClose={handleCloseBuilding} />
+          <BuildingInfo
+            building={selectedBuilding}
+            onClose={handleCloseBuilding}
+            onViewFloorPlan={selectedBuilding?.floorPlans ? () => setShowFloorPlan(true) : undefined}
+          />
         </Animated.View>
       )}
 
@@ -479,6 +501,8 @@ export default function MapScreen() {
         <RouteInfo
           duration={routeInfo.duration}
           distance={routeInfo.distance}
+          mode={transportMode}
+          onModeChange={setTransportMode}
           onStart={() => setShowInstructions(true)}
           onClose={handleClearRoute}
         />
@@ -535,6 +559,31 @@ const styles = StyleSheet.create({
     width: 350,
     maxWidth: '85%',
     zIndex: 9,
+  },
+  compactRouteHeader: {
+    position: 'absolute',
+    top: 115,
+    left: 10,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    columnGap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+    zIndex: 10,
+  },
+  compactRouteLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#912338',
   },
   campusSelector: {
     flexDirection: 'row',

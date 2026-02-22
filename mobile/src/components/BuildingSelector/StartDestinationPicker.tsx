@@ -5,7 +5,7 @@ import BuildingSelector from './BuildingSelector';
 import Config from "react-native-config";
 import * as Location from 'expo-location';
 import { buildings } from '../../data/buildings';
-import type { MapStep } from '../../types/map';
+import type { MapStep, TravelMode } from '../../types/map';
 
 export type Place = {
   name: string;
@@ -20,9 +20,17 @@ type StartDestinationPickerProps = {
   setStart: (place: Place | null) => void;
   setDestination: (place: Place | null) => void;
   setInstructions: (val: MapStep[]) => void;
+  transportMode: TravelMode;
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions }) => {
+const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
+  DRIVING: 'driving',
+  WALKING: 'walking',
+  BICYCLING: 'bicycling',
+  TRANSIT: 'transit',
+};
+
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode }) => {
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
@@ -148,6 +156,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
           origin: `${start.location.lat},${start.location.lng}`,
           destination: `${destination.location.lat},${destination.location.lng}`,
           key: googleMapsApiKey,
+          mode: GOOGLE_DIRECTIONS_MODE[transportMode],
         });
 
         const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
@@ -165,7 +174,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
       }
     }
     fetchDirections();
-  }, [start, destination, googleMapsApiKey]);
+  }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
 
   return (
     <View style={styles.container}>

@@ -1,3 +1,5 @@
+export type TravelMode = 'DRIVING' | 'WALKING' | 'BICYCLING' | 'TRANSIT';
+
 export interface MapStep {
   distance: { text: string; value: number };
   duration: { text: string; value: number };
