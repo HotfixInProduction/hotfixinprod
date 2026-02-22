@@ -2,6 +2,33 @@ import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
 import ScheduleScreen from '../src/screens/ScheduleScreen';
 
+jest.mock('../src/hooks/useGoogleCalendar', () => ({
+  useGoogleCalendar: () => ({
+    state: {
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+      token: null,
+      user: { name: 'Test User', email: 'test@example.com', picture: '' },
+      events: [
+        {
+          id: 'event-1',
+          title: 'Test Class',
+          location: 'Hall 101',
+          building: 'Hall',
+          room: '101',
+          startTime: new Date('2024-02-19T11:00:00'),
+          endTime: new Date('2024-02-19T12:00:00'),
+          dayOfWeek: 1,
+          color: '#4A90E2',
+        },
+      ],
+    },
+    connect: jest.fn(),
+    disconnect: jest.fn(),
+  }),
+}));
+
 // Mock MaterialIcons
 jest.mock('@expo/vector-icons', () => ({
   MaterialIcons: 'MaterialIcons',
@@ -15,6 +42,7 @@ describe('ScheduleScreen', () => {
   });
 
   afterEach(() => {
+    jest.clearAllTimers();
     jest.useRealTimers();
   });
 
@@ -31,11 +59,13 @@ describe('ScheduleScreen', () => {
     });
 
     it('displays directions button with MaterialIcons', () => {
-      const { UNSAFE_getByType } = render(<ScheduleScreen />);
+      const { UNSAFE_getAllByType } = render(<ScheduleScreen />);
       const MaterialIcons = require('@expo/vector-icons').MaterialIcons;
       
-      const icons = UNSAFE_getByType(MaterialIcons);
-      expect(icons).toBeTruthy();
+      const icons = UNSAFE_getAllByType(MaterialIcons);
+      // Should have 3 icons: person, logout (from ConnectedUserBar), and directions (from NextClassCard)
+      expect(icons.length).toBe(3);
+      expect(icons.some((icon: any) => icon.props.name === 'directions')).toBe(true);
     });
   });
 

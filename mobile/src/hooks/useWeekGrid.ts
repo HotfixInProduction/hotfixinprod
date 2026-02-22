@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { ClassEvent } from '../types/calendar';
 
-export const START_HOUR = 8;
+export const START_HOUR = 7;
 export const END_HOUR = 21;
 export const TOTAL_HOURS = END_HOUR - START_HOUR;
 export const TIME_COL_WIDTH = 40;

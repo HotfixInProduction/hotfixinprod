@@ -13,11 +13,12 @@ export default function TimeColumn({ width, startHour, totalHours, hourHeight }:
     <View style={[styles.col, { width }]}>
       {Array.from({ length: totalHours }).map((_, i) => {
         const hour = startHour + i;
-        const label = hour > 12 ? `${hour - 12}` : `${hour}`;
-        const period = hour >= 12 ? 'pm' : 'am';
+        const displayHour = ((hour + 11) % 12) + 1;
+        const period = hour >= 12 ? 'PM' : 'AM';
+        const label = `${displayHour}:00 ${period}`;
         return (
           <View key={i} style={[styles.label, { height: hourHeight }]}>
-            <Text style={styles.text}>{label}{period}</Text>
+            <Text style={styles.text}>{label}</Text>
           </View>
         );
       })}
