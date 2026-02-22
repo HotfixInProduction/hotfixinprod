@@ -5,6 +5,10 @@ describe('US-1 View SGW and Loyola Campus Maps', () => {
 
     it('should show SGW campus by default and allow switching to Loyola', async () => {
 
+        // Ensure Map Tab is selected
+        await waitFor(element(by.id('tab-map'))).toExist().withTimeout(15000);
+        await element(by.id('tab-map')).tap();
+
         // 1. Verify default state (SGW)
         await waitFor(element(by.text('Downtown'))).toBeVisible().withTimeout(5000);
         await expect(element(by.text('Downtown'))).toBeVisible();

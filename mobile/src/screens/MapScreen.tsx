@@ -114,9 +114,16 @@ export default function MapScreen() {
   };
 
   useEffect(() => {
-    // Request foreground location permission on app load so iOS/Android show the system prompt.
+    // Check initial permission status first
     (async () => {
-      await requestLocationPermission();
+      const { status: initialStatus } = await Location.getForegroundPermissionsAsync();
+      setLocationStatus(initialStatus);
+
+      if (initialStatus === 'undetermined') {
+        await requestLocationPermission();
+      } else if (initialStatus === 'granted') {
+        await centerOnUser();
+      }
     })();
   }, []);
 
@@ -288,7 +295,7 @@ export default function MapScreen() {
         initialRegion={INITIAL_REGION}
         onRegionChangeComplete={(region) => setCurrentDelta(region.latitudeDelta)}
       >
-        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} currentDelta={currentDelta} />
+        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} currentDelta={currentDelta} locationStatus={locationStatus} />
 
         {start && destination && googleMapsApiKey && (
           <MapViewDirections
@@ -629,7 +636,7 @@ const styles = StyleSheet.create({
   locationOffButton: {
     position: 'absolute',
     right: 18,
-    bottom: 24,
+    bottom: 90,
     backgroundColor: '#912338',
     borderRadius: 24,
     width: 48,

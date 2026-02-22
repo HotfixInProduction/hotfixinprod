@@ -23,6 +23,7 @@ interface BuildingPolygonProps {
     readonly onSelectBuilding: (building: Building) => void;
     readonly selectedBuildingId: string | null;
     readonly currentDelta: number;
+    readonly locationStatus?: Location.PermissionStatus | null;
 }
 
 interface Point {
@@ -100,23 +101,46 @@ const getBuildingMaxSpan = (coordinates: Coordinate[]): number => {
     return Math.max(latSpan, lonSpan);
 };
 
-export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta }: BuildingPolygonProps) {
+export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta, locationStatus }: BuildingPolygonProps) {
     const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 
     useEffect(() => {
-        let locationSubscription: Location.LocationSubscription | null;
+        let locationSubscription: Location.LocationSubscription | null = null;
+        let isMounted = true;
 
-        setupLocationWatching(setCurrentBuildingId)
-            .then(subscription => {
-                locationSubscription = subscription;
-            });
+        const startWatching = async () => {
+            const { status } = await Location.getForegroundPermissionsAsync();
+            if (status === 'granted' && isMounted) {
+                const subscription = await Location.watchPositionAsync(
+                    {
+                        accuracy: Location.Accuracy.BestForNavigation,
+                        distanceInterval: 0, // Update immediately on any move
+                    },
+                    (location) => {
+                        if (isMounted) {
+                            handleLocationUpdate(location, setCurrentBuildingId);
+                        }
+                    }
+                );
+                if (isMounted) {
+                    locationSubscription = subscription;
+                } else {
+                    subscription.remove();
+                }
+            }
+        };
+
+        if (locationStatus === 'granted') {
+            startWatching();
+        }
 
         return () => {
+            isMounted = false;
             if (locationSubscription) {
                 locationSubscription.remove();
             }
         };
-    }, []);
+    }, [locationStatus]);
 
     return (
         <>
@@ -145,6 +169,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                 return (
                     <React.Fragment key={b.id}>
                         <Polygon
+                            testID={`building-polygon-${b.id}-polygon`}
                             coordinates={b.coordinates}
                             strokeColor={strokeColor}
                             fillColor={fillColor}
@@ -152,6 +177,14 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                             onPress={() => onSelectBuilding(b)}
                             tappable
                         />
+                        {isUserInside && (
+                            <Marker
+                                coordinate={b.labelCoord}
+                                opacity={0.0}
+                                pointerEvents='none'
+                                testID={`building-polygon-${b.id}-highlighted`}
+                            />
+                        )}
                         {showLabel && (
                             <Marker
                                 coordinate={b.labelCoord}

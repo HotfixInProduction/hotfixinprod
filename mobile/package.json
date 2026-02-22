@@ -9,7 +9,7 @@
     "web": "expo start --web",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "test:e2e": "detox test -c ios.sim.debug"
+    "test:e2e": "detox test -c ios.sim.release"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
