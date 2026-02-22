@@ -44,9 +44,7 @@ module.exports = {
     plugins: [
       "@config-plugins/detox",
       "expo-font",
-      "expo-asset",
-      "@react-native-google-signin/google-signin",
-      "@react-native-firebase/app"
+      "expo-asset"
     ],
     extra: {
       googleApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY,
