@@ -29,14 +29,15 @@ export default function TimeColumn({ width, startHour, totalHours, hourHeight }:
 const styles = StyleSheet.create({
   col: {
     alignItems: 'flex-end',
-    paddingRight: 4,
+    paddingRight: 1,
   },
   label: {
     justifyContent: 'flex-start',
-    paddingTop: 2,
+    paddingTop: 0,
   },
   text: {
     fontSize: 10,
     color: '#aaa',
+    paddingLeft: 10,
   },
 });

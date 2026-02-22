@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
@@ -69,34 +69,30 @@ const ScheduleScreen: React.FC = () => {
           dayColWidth={dayColWidth}
           monday={monday}
         />
-        <ScrollView style={styles.verticalScroll}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View
-              style={styles.timeGrid}
-              onLayout={(e) => setGridHeight(e.nativeEvent.layout.height)}
-            >
-              <TimeColumn
-                width={TIME_COL_WIDTH}
-                startHour={START_HOUR}
-                totalHours={TOTAL_HOURS}
-                hourHeight={hourHeight}
-              />
-              {WEEK_DAY_INDICES.map((dayIdx) => (
-                <DayColumn
-                  key={dayIdx}
-                  width={dayColWidth}
-                  hourHeight={hourHeight}
-                  totalHours={TOTAL_HOURS}
-                  events={displayClasses.filter(cls => cls.dayOfWeek === dayIdx)}
-                  isToday={isToday(dayIdx)}
-                  showNowLine={showNowLine}
-                  nowTop={nowTop}
-                  getEventStyle={getEventStyle}
-                />
-              ))}
-            </View>
-          </ScrollView>
-        </ScrollView>
+        <View
+          style={styles.timeGrid}
+          onLayout={(e) => setGridHeight(e.nativeEvent.layout.height)}
+        >
+          <TimeColumn
+            width={TIME_COL_WIDTH}
+            startHour={START_HOUR}
+            totalHours={TOTAL_HOURS}
+            hourHeight={hourHeight}
+          />
+          {WEEK_DAY_INDICES.map((dayIdx) => (
+            <DayColumn
+              key={dayIdx}
+              width={dayColWidth}
+              hourHeight={hourHeight}
+              totalHours={TOTAL_HOURS}
+              events={displayClasses.filter(cls => cls.dayOfWeek === dayIdx)}
+              isToday={isToday(dayIdx)}
+              showNowLine={showNowLine}
+              nowTop={nowTop}
+              getEventStyle={getEventStyle}
+            />
+          ))}
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -113,9 +109,6 @@ const styles = StyleSheet.create({
   timeGrid: {
     flex: 1,
     flexDirection: 'row',
-  },
-  verticalScroll: {
-    flex: 1,
   },
 });
 

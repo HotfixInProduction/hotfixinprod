@@ -99,28 +99,6 @@ describe('ScheduleScreen', () => {
     });
   });
 
-  describe('Scrolling Behavior', () => {
-    it('calendar is vertically scrollable', () => {
-      const { UNSAFE_getAllByType } = render(<ScheduleScreen />);
-      const ScrollView = require('react-native').ScrollView;
-      
-      const scrollViews = UNSAFE_getAllByType(ScrollView);
-      expect(scrollViews.length).toBeGreaterThan(0);
-    });
-
-    it('calendar is horizontally scrollable', () => {
-      const { UNSAFE_getAllByType } = render(<ScheduleScreen />);
-      const ScrollView = require('react-native').ScrollView;
-      
-      const scrollViews = UNSAFE_getAllByType(ScrollView);
-      const horizontalScrollView = scrollViews.find(
-        (sv: any) => sv.props.horizontal === true
-      );
-      
-      expect(horizontalScrollView).toBeTruthy();
-    });
-  });
-
   describe('Time Formatting', () => {
     it('displays times in the calendar', () => {
       const { getAllByText } = render(<ScheduleScreen />);
