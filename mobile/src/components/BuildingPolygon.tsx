@@ -24,6 +24,8 @@ interface BuildingPolygonProps {
     readonly selectedBuildingId: string | null;
     readonly currentDelta: number;
     readonly locationStatus?: Location.PermissionStatus | null;
+    readonly startBuildingId?: string | null;
+    readonly destinationBuildingId?: string | null;
 }
 
 interface Point {
@@ -101,7 +103,7 @@ const getBuildingMaxSpan = (coordinates: Coordinate[]): number => {
     return Math.max(latSpan, lonSpan);
 };
 
-export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta, locationStatus }: BuildingPolygonProps) {
+export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta, locationStatus, startBuildingId, destinationBuildingId }: BuildingPolygonProps) {
     const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -130,9 +132,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
             }
         };
 
-        if (locationStatus === 'granted') {
-            startWatching();
-        }
+        startWatching();
 
         return () => {
             isMounted = false;
@@ -140,23 +140,33 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                 locationSubscription.remove();
             }
         };
-    }, [locationStatus]);
+    }, []);
 
     return (
         <>
             {buildings.map(b => {
                 const isUserInside = currentBuildingId === b.id;
                 const isSelected = selectedBuildingId === b.id;
+                const isStart = startBuildingId === b.id;
+                const isDestination = destinationBuildingId === b.id;
 
                 let strokeColor = "#FF0000";
-                if (isSelected) {
+                if (isStart) {
+                    strokeColor = "#34A853";
+                } else if (isDestination) {
+                    strokeColor = "#EA4335";
+                } else if (isSelected) {
                     strokeColor = "#FBBC05";
                 } else if (isUserInside) {
                     strokeColor = "#0000FF";
                 }
 
                 let fillColor = "rgba(255, 0, 0, 0.4)";
-                if (isSelected) {
+                if (isStart) {
+                    fillColor = "rgba(52, 168, 83, 0.4)";
+                } else if (isDestination) {
+                    fillColor = "rgba(234, 67, 53, 0.4)";
+                } else if (isSelected) {
                     fillColor = "rgba(251, 188, 5, 0.4)";
                 } else if (isUserInside) {
                     fillColor = "rgba(0, 0, 255, 0.4)";

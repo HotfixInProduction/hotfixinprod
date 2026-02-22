@@ -497,10 +497,10 @@ describe('MapScreen', () => {
     expect(downtownButton).toBeTruthy();
   });
 
-  describe("Use State Effects", () =>{
+  describe("Use State Effects", () => {
     let consoleSpy: jest.SpyInstance
 
-    beforeEach(()=> {
+    beforeEach(() => {
       consoleSpy = jest.spyOn(console, 'log').mockImplementation();
     });
     afterEach(() => {
@@ -515,7 +515,7 @@ describe('MapScreen', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
-          'Start building selected:', 
+          'Start building selected:',
           expect.any(Object)
         );
       });
@@ -529,9 +529,110 @@ describe('MapScreen', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith(
-          'Destination building selected:', 
+          'Destination building selected:',
           expect.any(Object)
         );
+      });
+    });
+  });
+
+  describe('Map Building Selection', () => {
+    it('populates start when building is tapped after selecting "Select Start on Map"', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('select-start-on-map'));
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Start building selected:',
+          expect.objectContaining({
+            name: 'Hall Building',
+          })
+        );
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('populates destination when building is tapped after selecting "Select Destination on Map"', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('select-destination-on-map'));
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Destination building selected:',
+          expect.objectContaining({
+            name: 'Hall Building',
+          })
+        );
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('still opens BuildingInfo when no map selection target is active', async () => {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(getByText('Hall Building')).toBeTruthy();
+      });
+    });
+
+    it('shows map selection banner when selection target is active', async () => {
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('select-start-on-map'));
+
+      await waitFor(() => {
+        expect(getByTestId('map-selection-banner')).toBeTruthy();
+      });
+    });
+
+    it('hides map selection banner when cancelled', async () => {
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('select-start-on-map'));
+
+      await waitFor(() => {
+        expect(getByTestId('map-selection-banner')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('cancel-map-selection'));
+
+      await waitFor(() => {
+        expect(queryByTestId('map-selection-banner')).toBeNull();
+      });
+    });
+
+    it('passes start building id to BuildingPolygon for highlighting', async () => {
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('set-start'));
+
+      await waitFor(() => {
+        expect(getByTestId('building-polygon-start')).toBeTruthy();
+      });
+    });
+
+    it('passes destination building id to BuildingPolygon for highlighting', async () => {
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('set-destination'));
+
+      await waitFor(() => {
+        expect(getByTestId('building-polygon-destination')).toBeTruthy();
       });
     });
   });
@@ -700,7 +801,7 @@ describe('Clearing Route', () => {
     // reset to initial region
     expect(mockAnimateToRegion).toHaveBeenCalledWith(
       expect.objectContaining({
-        latitude: 45.497,   
+        latitude: 45.497,
         longitude: -73.579,
         latitudeDelta: 0.004,
         longitudeDelta: 0.004,

@@ -107,7 +107,7 @@ describe('StartDestinationPicker', () => {
   it('handles start building selection', async () => {
     const mockSetStart = jest.fn();
     render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart} />);
-    
+
     const onSelectStart = getStartSelector();
     const mockPlace = createMockPlace('Start Building', '123 Start St');
 
@@ -119,7 +119,7 @@ describe('StartDestinationPicker', () => {
   it('handles destination building selection', async () => {
     const mockSetDestination = jest.fn();
     render(<StartDestinationPicker {...defaultStartDestProps} setDestination={mockSetDestination} />);
-    
+
     const onSelectDest = getDestinationSelector();
     const mockPlace = createMockPlace('Destination Building', '456 Dest Ave', 41.8781, -87.6298);
 
@@ -162,7 +162,7 @@ describe('StartDestinationPicker', () => {
   it('handles multiple selections for start building', async () => {
     const mockSetStart = jest.fn();
     render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart} />);
-    
+
     const onSelectStart = getStartSelector();
 
     const mockPlace1 = createMockPlace('First Building', '123 First St');
@@ -180,7 +180,7 @@ describe('StartDestinationPicker', () => {
     const mockSetStart = jest.fn();
     const mockSetDestination = jest.fn();
     render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart} setDestination={mockSetDestination} />);
-    
+
     const onSelectStart = getStartSelector();
     const onSelectDest = getDestinationSelector();
 
@@ -197,8 +197,8 @@ describe('StartDestinationPicker', () => {
   });
 
   it('fetches instructions from google and updates instructions', async () => {
-    const start = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
-    const destination = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+    const start = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
+    const destination = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
 
     const instructions = [{ html_instructions: 'Turn left', distance: { text: '4km' } }];
 
@@ -207,10 +207,10 @@ describe('StartDestinationPicker', () => {
         json: () =>
           Promise.resolve({
             routes: [{
-                legs: [
-                  { steps: instructions, },
-                ],
-              },
+              legs: [
+                { steps: instructions, },
+              ],
+            },
             ],
           }),
       }),
@@ -219,7 +219,7 @@ describe('StartDestinationPicker', () => {
     const mockSetInstructions = jest.fn();
     render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setInstructions={mockSetInstructions} />);
 
-    await waitFor(()=> {
+    await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164%2C-73.57897485280246&destination=45.497285416040164%2C-73.57897485280246"));
       expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("mode=driving"));
       expect(mockSetInstructions).toHaveBeenCalledWith(instructions);
@@ -227,8 +227,8 @@ describe('StartDestinationPicker', () => {
   });
 
   it('fetches instructions but fetch fails', async () => {
-    const start = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
-    const destination = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+    const start = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
+    const destination = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
 
     globalThis.fetch = jest.fn(() =>
       Promise.reject(new Error("Something with the network went wrong"))
@@ -238,7 +238,7 @@ describe('StartDestinationPicker', () => {
     const mockSetInstructions = jest.fn();
     render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setStart={jest.fn()} setInstructions={mockSetInstructions} />);
 
-    await waitFor(()=> {
+    await waitFor(() => {
       expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164%2C-73.57897485280246&destination=45.497285416040164%2C-73.57897485280246"));
       expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("mode=driving"));
       expect(mockSetInstructions).not.toHaveBeenCalled();
@@ -247,8 +247,8 @@ describe('StartDestinationPicker', () => {
   });
 
   it('does not fetch instructions when googleMapsApiKey is missing', async () => {
-    const start = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
-    const destination = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+    const start = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
+    const destination = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
 
     // Temporarily set the API key to undefined
     const Config = require('react-native-config');
@@ -257,13 +257,13 @@ describe('StartDestinationPicker', () => {
 
     globalThis.fetch = jest.fn();
     const mockSetInstructions = jest.fn();
-    
+
     const { rerender } = render(<StartDestinationPicker {...defaultStartDestProps} start={null} destination={null} setInstructions={mockSetInstructions} />);
-    
+
     // Now set start and destination which should trigger the useEffect
     rerender(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setInstructions={mockSetInstructions} />);
 
-    await waitFor(()=> {
+    await waitFor(() => {
       expect(globalThis.fetch).not.toHaveBeenCalled();
       expect(mockSetInstructions).not.toHaveBeenCalled();
     }, { timeout: 1000 });
@@ -377,7 +377,7 @@ describe('StartDestinationPicker', () => {
     const { getByTestId } = render(<StartDestinationPicker {...defaultStartDestProps} setStart={mockSetStart} start={createMockPlace('Start Building', '123 Start St')} />);
 
     const clearButton = getByTestId('clear-start-button');
-    
+
     await act(async () => {
       fireEvent.press(clearButton);
     });
@@ -416,7 +416,7 @@ describe('StartDestinationPicker', () => {
   it('passes userLocation prop to BuildingSelector components', () => {
     const userLocation = { latitude: 45.5, longitude: -73.6 };
     render(<StartDestinationPicker {...defaultStartDestProps} userLocation={userLocation} />);
-    
+
     const calls = (BuildingSelector as jest.Mock).mock.calls;
     calls.forEach(call => {
       expect(call[0].userLocation).toEqual(userLocation);
@@ -492,7 +492,7 @@ describe('StartDestinationPicker', () => {
   it('renders MaterialIcons for current location button', () => {
     const userLocation = { latitude: 45.5, longitude: -73.6 };
     const { UNSAFE_getAllByType } = render(<StartDestinationPicker {...defaultStartDestProps} userLocation={userLocation} />);
-    
+
     const MaterialIcons = require('@expo/vector-icons').MaterialIcons;
     const icons = UNSAFE_getAllByType(MaterialIcons);
     // Check that my-location icon is present
@@ -513,8 +513,84 @@ describe('StartDestinationPicker', () => {
 
   it('renders all label texts', () => {
     const { getByText } = render(<StartDestinationPicker {...defaultStartDestProps} />);
-    
+
     expect(getByText('Start Building')).toBeTruthy();
     expect(getByText('Destination Building')).toBeTruthy();
+  });
+
+  describe('Select on Map buttons', () => {
+    const mapSelectionProps = {
+      ...defaultStartDestProps,
+      mapSelectionTarget: null as 'start' | 'destination' | null,
+      setMapSelectionTarget: jest.fn(),
+    };
+
+    beforeEach(() => {
+      mapSelectionProps.setMapSelectionTarget = jest.fn();
+    });
+
+    it('renders Select on Map button for start when setMapSelectionTarget is provided', () => {
+      const { getByTestId } = render(<StartDestinationPicker {...mapSelectionProps} />);
+      expect(getByTestId('select-start-on-map')).toBeTruthy();
+    });
+
+    it('renders Select on Map button for destination when setMapSelectionTarget is provided', () => {
+      const { getByTestId } = render(<StartDestinationPicker {...mapSelectionProps} />);
+      expect(getByTestId('select-destination-on-map')).toBeTruthy();
+    });
+
+    it('does not render Select on Map buttons when setMapSelectionTarget is not provided', () => {
+      const { queryByTestId } = render(<StartDestinationPicker {...defaultStartDestProps} />);
+      expect(queryByTestId('select-start-on-map')).toBeNull();
+      expect(queryByTestId('select-destination-on-map')).toBeNull();
+    });
+
+    it('calls setMapSelectionTarget with "start" when start Select on Map is pressed', async () => {
+      const { getByTestId } = render(<StartDestinationPicker {...mapSelectionProps} />);
+
+      await act(async () => {
+        fireEvent.press(getByTestId('select-start-on-map'));
+      });
+
+      expect(mapSelectionProps.setMapSelectionTarget).toHaveBeenCalledWith('start');
+    });
+
+    it('calls setMapSelectionTarget with "destination" when destination Select on Map is pressed', async () => {
+      const { getByTestId } = render(<StartDestinationPicker {...mapSelectionProps} />);
+
+      await act(async () => {
+        fireEvent.press(getByTestId('select-destination-on-map'));
+      });
+
+      expect(mapSelectionProps.setMapSelectionTarget).toHaveBeenCalledWith('destination');
+    });
+
+    it('shows active state for start when mapSelectionTarget is "start"', () => {
+      const { getByText } = render(
+        <StartDestinationPicker {...mapSelectionProps} mapSelectionTarget="start" />
+      );
+      expect(getByText('Selecting on map...')).toBeTruthy();
+    });
+
+    it('shows active state for destination when mapSelectionTarget is "destination"', () => {
+      const { getAllByText } = render(
+        <StartDestinationPicker {...mapSelectionProps} mapSelectionTarget="destination" />
+      );
+      // One "Select on Map" for start, one "Selecting on map..." for destination
+      expect(getAllByText('Select on Map').length).toBe(1);
+      expect(getAllByText('Selecting on map...').length).toBe(1);
+    });
+
+    it('toggles off when pressing active Select on Map button', async () => {
+      const { getByTestId } = render(
+        <StartDestinationPicker {...mapSelectionProps} mapSelectionTarget="start" />
+      );
+
+      await act(async () => {
+        fireEvent.press(getByTestId('select-start-on-map'));
+      });
+
+      expect(mapSelectionProps.setMapSelectionTarget).toHaveBeenCalledWith(null);
+    });
   });
 });
