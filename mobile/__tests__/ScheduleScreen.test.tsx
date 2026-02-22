@@ -132,9 +132,10 @@ describe('ScheduleScreen', () => {
 
   describe('Time until class formatting', () => {
     it('displays time in minutes-only format when class is less than one hour away', async () => {
-      // sampleClasses are loaded at module init with the real date (Feb 2026).
-      // Monday class starts at ~Feb 16 2026 08:45. Setting fake time to 30 min
-      // before ensures hours === 0, covering the minutes-only return (line 196).
+      // Set fake time to Monday 08:15, 30 min before the 08:45 class.
+      // Because sampleClasses is now computed inside the component via useMemo,
+      // it uses new Date() at render time, so the fake timer applies correctly
+      // regardless of what day the test suite is run.
       jest.setSystemTime(new Date('2026-02-16T08:15:00'));
 
       const { getByText } = render(<ScheduleScreen />);
