@@ -32,11 +32,24 @@ module.exports = {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+      usesCleartextTraffic: true,
       config: {
         googleMaps: {
           apiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY
         }
-      }
+      },
+      intentFilters: [
+        {
+          action: "VIEW",
+          data: [
+            {
+              scheme: "com.concordia.hotfixinprod",
+              path: "/oauth2redirect"
+            }
+          ],
+          category: ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     web: {
       favicon: "./assets/favicon.png"
@@ -44,10 +57,13 @@ module.exports = {
     plugins: [
       "@config-plugins/detox",
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      "expo-web-browser"
     ],
     extra: {
       googleApiKey: process.env.GOOGLE_MAPS_ANDROID_API_KEY,
+      androidClientId: process.env.GOOGLE_OAUTH_CLIENT_ID_ANDROID,
+      iosClientId: process.env.GOOGLE_OAUTH_CLIENT_ID_IOS,
       eas: {
         // EAS project ID for this app.
         // See README.md ("EAS Project configuration") for details about this ID and how to update it.
