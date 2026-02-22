@@ -16,6 +16,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.12.0",
     "@react-navigation/native": "^7.1.28",
+    "@testing-library/react": "^16.3.2",
     "expo": "~54.0.33",
     "expo-asset": "~12.0.7",
     "expo-auth-session": "~7.0.10",
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@config-plugins/detox": "^11.0.0",
     "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "29.5.14",
     "@types/react": "~19.1.0",

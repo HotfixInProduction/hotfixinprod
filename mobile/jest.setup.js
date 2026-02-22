@@ -22,3 +22,15 @@ jest.mock('expo-auth-session', () => ({
 jest.mock('expo-auth-session/providers/google', () => ({
   useAuthRequest: jest.fn(() => [null, null, jest.fn()]),
 }));
+
+jest.mock('@expo/vector-icons', () => {
+  const { View } = require('react-native');
+  return {
+    MaterialIcons: View,
+    MaterialCommunityIcons: View,
+    FontAwesome6: View,
+  };
+});
+jest.mock('@expo/vector-icons/MaterialIcons', () => 'MaterialIcons');
+jest.mock('@expo/vector-icons/MaterialCommunityIcons', () => 'MaterialCommunityIcons');
+jest.mock('@expo/vector-icons/FontAwesome6', () => 'FontAwesome6');
