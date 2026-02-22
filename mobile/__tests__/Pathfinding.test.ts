@@ -1,5 +1,6 @@
 import { findPath, generateSvgPath } from '../src/utils/Pathfinding';
 import { JsonNode } from 'ngraph.fromjson';
+import path from 'ngraph.path';
 
 describe('Pathfinding', () => {
   describe('findPath', () => {
@@ -81,6 +82,50 @@ describe('Pathfinding', () => {
       const path: JsonNode<{ x: number; y: number }>[] = [{ id: '0', data: { x: 50, y: 50 } }];
       const svgPath = generateSvgPath(path);
       expect(svgPath).toBe('M 50 50');
+    });
+  });
+
+  describe('pathfinder edge cases', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should return null when pathfinder finds no path (empty result)', () => {
+      jest.spyOn(path, 'aStar').mockReturnValue({ find: () => [] } as any);
+      const result = findPath('Hall Building', '8', 19, 20);
+      expect(result).toBeNull();
+    });
+
+    it('should use fallback distance of 1 when nodes lack position data', () => {
+      let capturedOptions: any;
+      jest.spyOn(path, 'aStar').mockImplementation((_graph: any, options: any) => {
+        capturedOptions = options;
+        return { find: () => [] } as any;
+      });
+
+      findPath('Hall Building', '8', 19, 20);
+
+      const nodeWithData = { id: '1', data: { x: 0, y: 0 }, links: null };
+      const nodeWithoutData = { id: '2', data: null, links: null };
+
+      expect(capturedOptions.distance(nodeWithoutData, nodeWithData)).toBe(1);
+      expect(capturedOptions.distance(nodeWithData, nodeWithoutData)).toBe(1);
+    });
+
+    it('should use fallback heuristic of 0 when nodes lack position data', () => {
+      let capturedOptions: any;
+      jest.spyOn(path, 'aStar').mockImplementation((_graph: any, options: any) => {
+        capturedOptions = options;
+        return { find: () => [] } as any;
+      });
+
+      findPath('Hall Building', '8', 19, 20);
+
+      const nodeWithData = { id: '1', data: { x: 0, y: 0 }, links: null };
+      const nodeWithoutData = { id: '2', data: null, links: null };
+
+      expect(capturedOptions.heuristic(nodeWithoutData, nodeWithData)).toBe(0);
+      expect(capturedOptions.heuristic(nodeWithData, nodeWithoutData)).toBe(0);
     });
   });
 });
