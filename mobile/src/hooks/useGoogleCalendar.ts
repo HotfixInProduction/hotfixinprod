@@ -57,8 +57,6 @@ export function useGoogleCalendar() {
     native: 'com.concordia.hotfixinprod:/oauth2redirect',
   });
 
-  // console.log('[OAuth] redirectUri:', redirectUri);
-
   const [, response, promptAsync] = Google.useAuthRequest({
     androidClientId: Constants.expoConfig?.extra?.androidClientId,
     iosClientId: Constants.expoConfig?.extra?.iosClientId,

@@ -3,7 +3,7 @@ import { ClassEvent } from '../types/calendar';
 
 export function useNextClass(events: ClassEvent[], currentTime: Date): ClassEvent | null {
   return useMemo(() => {
-    const now = new Date();
+    const now = currentTime;
     const upcoming = events
       .filter(cls => cls.startTime > now)
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
