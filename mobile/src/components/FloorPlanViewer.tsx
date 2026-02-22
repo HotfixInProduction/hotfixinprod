@@ -244,8 +244,8 @@ export default function FloorPlanViewer({
     building,
     floorLevel,
     onClose,
-    pathStartNode = 0,
-    pathEndNode = 48,
+    pathStartNode = 6,
+    pathEndNode = 60,
     startRoom: startRoomProp = '829',
     nextRoom: nextRoomProp = '862',
 }: Props) {
