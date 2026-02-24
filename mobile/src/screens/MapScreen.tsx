@@ -332,11 +332,11 @@ export default function MapScreen() {
         )}
 
         {start && (
-          <Marker coordinate={getCoordinates(start)!} title="Start" pinColor="blue" />
+          <Marker coordinate={getCoordinates(start)!} title="Start" pinColor="blue" testID="start-marker" />
         )}
 
         {destination && (
-          <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" />
+          <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" testID="destination-marker" />
         )}
 
       </MapView>

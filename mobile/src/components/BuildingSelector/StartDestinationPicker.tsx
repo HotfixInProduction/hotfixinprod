@@ -188,6 +188,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
             onSelect={data => setStart(data)}
             userLocation={userLocation}
             value={start?.name}
+            testID="start-building-selector"
           />
         </View>
         {start && (
@@ -247,6 +248,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
             onSelect={data => setDestination(data)}
             userLocation={userLocation}
             value={destination?.name}
+            testID="destination-building-selector"
           />
         </View>
         {destination && (

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { GooglePlacesAutocomplete, GooglePlacesAutocompleteRef } from 'react-native-google-places-autocomplete';
 import Constants from 'expo-constants';
 
@@ -12,9 +12,10 @@ type BuildingSelectorProps = {
   }) => void;
   userLocation: { latitude: number; longitude: number } | null;
   value?: string;
+  testID?: string;
 };
 
-const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation, value }) => {
+const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSelect, userLocation, value, testID }) => {
   const ref = useRef<GooglePlacesAutocompleteRef>(null);
 
   const queryConfig: any = {
@@ -39,29 +40,30 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
       }
     }
   }, [value]);
-
   return (
-    <GooglePlacesAutocomplete
-      ref={ref}
-      placeholder={placeholder}
-      fetchDetails={true}
-      onFail={(error) => {
-        console.log('Places API error:', error);
-      }}
-      onPress={(data, details = null) => {
-        if (!details) return;
-        const place = {
-          name: data.structured_formatting.main_text,
-          address: details.formatted_address || '',
-          location: details.geometry?.location || { lat: 0, lng: 0 },
-        };
-        console.log('Creating place object:', place);
-        onSelect(place);
-      }}
-      query={queryConfig}
-      styles={autocompleteStyles}
-      debounce={300}
-    />
+    <View testID={testID}>
+      <GooglePlacesAutocomplete
+        ref={ref}
+        placeholder={placeholder}
+        fetchDetails={true}
+        onFail={(error) => {
+          console.log('Places API error:', error);
+        }}
+        onPress={(data, details = null) => {
+          if (!details) return;
+          const place = {
+            name: data.structured_formatting.main_text,
+            address: details.formatted_address || '',
+            location: details.geometry?.location || { lat: 0, lng: 0 },
+          };
+          console.log('Creating place object:', place);
+          onSelect(place);
+        }}
+        query={queryConfig}
+        styles={autocompleteStyles}
+        debounce={300}
+      />
+    </View>
   );
 };
 
