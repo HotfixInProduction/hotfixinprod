@@ -1,14 +1,19 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus } from 'react-native';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
-import StartDestinationPicker from '../components/BuildingSelector/StartDestinationPicker';
+import StartDestinationPicker, { Place } from '../components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
+import MapViewDirections from 'react-native-maps-directions';
+import Config from "react-native-config";
+import RouteInfo from '../components/RouteInfo';
+import RouteInstructions from '../components/RouteInstructions';
+import type { MapStep, TravelMode } from '../types/map';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -35,7 +40,6 @@ const CAMPUSES = {
 };
 
 type CampusKey = keyof typeof CAMPUSES;
-
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
@@ -49,6 +53,27 @@ export default function MapScreen() {
   const [buildingSelectorVisible, setBuildingSelectorVisible] = useState(false);
   const buildingSelectorSlideAnim = useRef(new Animated.Value(-400)).current;
   const appState = useRef(AppState.currentState);
+  const [start, setStart] = useState<Place | null>(null);
+  const [destination, setDestination] = useState<Place | null>(null);
+  const [instructions, setInstructions] = useState<MapStep[]>([]);
+  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [transportMode, setTransportMode] = useState<TravelMode>('DRIVING');
+  const [currentDelta, setCurrentDelta] = useState(INITIAL_REGION.latitudeDelta);
+  const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
+
+  useEffect(() => {
+    if (start) {
+      console.log('Start building selected:', start);
+    }
+  }, [start]);
+
+
+  useEffect(() => {
+    if (destination) {
+      console.log('Destination building selected:', destination);
+    }
+  }, [destination]);
 
   const centerOnUser = async () => {
     try {
@@ -146,6 +171,41 @@ export default function MapScreen() {
     }
   }, [buildingSelectorVisible]);
 
+  // auto-fit map to show both start and destination
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const startCoords = getCoordinates(start);
+    const destCoords = getCoordinates(destination);
+
+    // both start and destination are selected -> fit both
+    if (startCoords && destCoords) {
+      mapRef.current.fitToCoordinates(
+        [startCoords, destCoords],
+        {
+          edgePadding: { top: 150, right: 60, bottom: 60, left: 60 },
+          animated: true,
+        }
+      );
+    }
+    // only start is selected -> zoom to start
+    else if (startCoords) {
+      mapRef.current.animateToRegion({
+        ...startCoords,
+        latitudeDelta: 0.002,
+        longitudeDelta: 0.002,
+      }, 1000);
+    }
+    // only destination is selected -> zoom to destination
+    else if (destCoords) {
+      mapRef.current.animateToRegion({
+        ...destCoords,
+        latitudeDelta: 0.002,
+        longitudeDelta: 0.002,
+      }, 1000);
+    }
+  }, [start, destination]);
+
   const handleCloseBuilding = () => {
     Animated.timing(buildingInfoSlideAnim, {
       toValue: 300,
@@ -183,12 +243,36 @@ export default function MapScreen() {
 
   const handleBuildingSelect = (building: any) => {
     setSelectedBuilding(building);
+    setShowFloorPlan(false);
+  };
 
-    if (building?.floorPlans) {
-      setShowFloorPlan(true);
-    } else {
-      setShowFloorPlan(false);
-    }
+  const getCoordinates = (place: Place | null) => {
+    if (!place) return undefined;
+    return {
+      latitude: place.location.lat,
+      longitude: place.location.lng,
+    };
+  };
+
+  const handleClearRoute = () => {
+    setStart(null);
+    setDestination(null);
+    setRouteInfo(null);
+    setInstructions([]);
+    setShowInstructions(false);
+    mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
+  }
+
+  const activeModal = (() => {
+    if (selectedBuilding) return 'buildingInfo';
+    if (showInstructions) return 'routeInstructions';
+    if (routeInfo && start && destination) return 'routeInfo';
+    return 'none';
+  })();
+  const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
+  const getPlaceName = (place: Place | null) => {
+    if (!place) return '';
+    return (place as any).name || (place as any).id || '';
   };
 
   return (
@@ -201,8 +285,35 @@ export default function MapScreen() {
         showsUserLocation
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
+        onRegionChangeComplete={(region) => setCurrentDelta(region.latitudeDelta)}
       >
-      <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} />
+        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} currentDelta={currentDelta} />
+
+        {start && destination && googleMapsApiKey && (
+          <MapViewDirections
+            origin={getCoordinates(start)}
+            destination={getCoordinates(destination)}
+            apikey={googleMapsApiKey}
+            strokeWidth={3}
+            strokeColor="hotpink"
+            mode={transportMode}
+            onReady={result => {
+              setRouteInfo({
+                distance: result.distance, // in km
+                duration: result.duration, // in mins
+              })
+            }}
+          />
+        )}
+
+        {start && (
+          <Marker coordinate={getCoordinates(start)!} title="Start" pinColor="blue" />
+        )}
+
+        {destination && (
+          <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" />
+        )}
+
       </MapView>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} testID="safe-area-view">
         <View style={styles.campusSelectorContainer}>
@@ -251,45 +362,57 @@ export default function MapScreen() {
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.buildingSelectorToggleButton}
-          onPress={toggleBuildingSelector}
-          activeOpacity={0.7}
-          testID="building-selector-toggle"
-        >
-          <MaterialIcons
-            name={buildingSelectorVisible ? 'close' : 'directions'}
-            size={24}
-            color="#fff"
-          />
-        </TouchableOpacity>
+        {!showCompactRouteHeader && (
+          <TouchableOpacity
+            style={styles.buildingSelectorToggleButton}
+            onPress={toggleBuildingSelector}
+            activeOpacity={0.7}
+            testID="building-selector-toggle"
+          >
+            <MaterialIcons
+              name={buildingSelectorVisible ? 'close' : 'directions'}
+              size={24}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        )}
       </SafeAreaView>
 
-      <Animated.View
-        style={[
-          styles.buildingSelectorPanel,
-          {
-            transform: [{ translateX: buildingSelectorSlideAnim }],
-          },
-        ]}
-        pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
-      >
-        <StartDestinationPicker userLocation={userLocation} />
-      </Animated.View>
-
-      <Animated.View
-        style={{
-          transform: [{ translateY: buildingInfoSlideAnim }],
-        }}
-        pointerEvents={selectedBuilding ? 'auto' : 'none'}
-      >
-        <BuildingInfo building={selectedBuilding} onClose={handleCloseBuilding} />
-      </Animated.View>
+      {showCompactRouteHeader ? (
+        <View style={styles.compactRouteHeader} testID="compact-route-header">
+          <Text style={styles.compactRouteLabel} numberOfLines={1}>
+            {getPlaceName(start)}
+          </Text>
+          <MaterialIcons name="arrow-forward" size={16} color="#912338" />
+          <Text style={styles.compactRouteLabel} numberOfLines={1}>
+            {getPlaceName(destination)}
+          </Text>
+        </View>
+      ) : (
+        <Animated.View
+          style={[
+            styles.buildingSelectorPanel,
+            {
+              transform: [{ translateX: buildingSelectorSlideAnim }],
+            },
+          ]}
+          pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
+        >
+          <StartDestinationPicker
+            userLocation={userLocation}
+            start={start}
+            destination={destination}
+            setStart={setStart}
+            setDestination={setDestination}
+            setInstructions={setInstructions}
+            transportMode={transportMode}
+          />
+        </Animated.View>
+      )}
 
       {showFloorPlan && (
         <FloorPlanViewer
           building={selectedBuilding}
-          floorLevel='8'
           onClose={() => setShowFloorPlan(false)}
         />
       )}
@@ -304,6 +427,7 @@ export default function MapScreen() {
           <MaterialIcons name="location-off" size={26} color="#fff" />
         </TouchableOpacity>
       )}
+
       <Modal
         visible={showLocationModal}
         transparent
@@ -348,6 +472,40 @@ export default function MapScreen() {
           </View>
         </View>
       </Modal>
+
+      {activeModal === 'buildingInfo' && (
+        <Animated.View
+          style={{
+            transform: [{ translateY: buildingInfoSlideAnim }],
+          }}
+          pointerEvents={selectedBuilding ? 'auto' : 'none'}
+        >
+          <BuildingInfo
+            building={selectedBuilding}
+            onClose={handleCloseBuilding}
+            onViewFloorPlan={selectedBuilding?.floorPlans ? () => setShowFloorPlan(true) : undefined}
+          />
+        </Animated.View>
+      )}
+
+      {activeModal === 'routeInstructions' && (
+        <RouteInstructions
+          instructions={instructions}
+          onClose={() => setShowInstructions(false)}
+        />
+      )}
+
+      {activeModal === 'routeInfo' && routeInfo && (
+        <RouteInfo
+          duration={routeInfo.duration}
+          distance={routeInfo.distance}
+          mode={transportMode}
+          onModeChange={setTransportMode}
+          onStart={() => setShowInstructions(true)}
+          onClose={handleClearRoute}
+        />
+      )}
+
       <StatusBar style="auto" />
     </View>
   );
@@ -368,7 +526,7 @@ const styles = StyleSheet.create({
   },
   campusSelectorContainer: {
     position: 'absolute',
-    top: 40,
+    top: 55,
     left: 70, // Adjusted to align horizontally with the toggle button
     alignItems: 'center',
     paddingTop: 0,
@@ -377,7 +535,7 @@ const styles = StyleSheet.create({
   buildingSelectorToggleButton: {
     position: 'absolute',
     left: 10, // Adjusted to align horizontally with the campus selector
-    top: 40, // Same vertical alignment as campus selector
+    top: 55, // Same vertical alignment as campus selector
     backgroundColor: '#912338',
     borderRadius: 24,
     width: 48,
@@ -399,6 +557,31 @@ const styles = StyleSheet.create({
     width: 350,
     maxWidth: '85%',
     zIndex: 9,
+  },
+  compactRouteHeader: {
+    position: 'absolute',
+    top: 115,
+    left: 10,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    columnGap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
+    zIndex: 10,
+  },
+  compactRouteLabel: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#912338',
   },
   campusSelector: {
     flexDirection: 'row',

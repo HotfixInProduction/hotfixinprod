@@ -54,3 +54,12 @@ jobs:
         with:
           files: mobile/junit.xml
           token: ${{ secrets.CODECOV_TOKEN }}
+      # SonarCloud Scan is disabled, Free Plan removes PR Analysis.
+      # # SonarCloud Scan
+      # - name: SonarCloud Scan
+      #   uses: SonarSource/sonarqube-scan-action@v6 # v6.0.0
+      #   with:
+      #     projectBaseDir: mobile
+      #   env:
+      #     SONAR_HOST_URL: https://sonarcloud.io
+      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
