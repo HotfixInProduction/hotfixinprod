@@ -1,5 +1,6 @@
 import { hall8Svg } from './svgs/hall8';
 import { hall9Svg } from './svgs/hall9';
+import { john1Svg } from './svgs/john1';
 import { johnS2Svg } from './svgs/johnS2';
 
 export const buildings = [
@@ -503,7 +504,8 @@ export const buildings = [
         ],
         isAccessible: true,
         floorPlans: {
-            'S2': johnS2Svg
+            'S2': johnS2Svg,
+            '1': john1Svg
         }
     },
     {

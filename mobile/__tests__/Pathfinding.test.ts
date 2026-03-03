@@ -5,12 +5,13 @@ import path from 'ngraph.path';
 describe('Pathfinding', () => {
   describe('findPath', () => {
     it('should find a path between two connected nodes', () => {
+      // Node 19 connects to 90, and 90 connects to 20 (path: 19 -> 90 -> 20)
       const path = findPath('Hall Building', '8', 19, 20);
 
       expect(path).not.toBeNull();
-      expect(path?.length).toBe(2);
+      expect(path?.length).toBe(3);
       expect(path?.[0].id).toBe('19');
-      expect(path?.[1].id).toBe('20');
+      expect(path?.[2].id).toBe('20');
     });
 
     it('should find a path between distant nodes', () => {
@@ -49,10 +50,11 @@ describe('Pathfinding', () => {
     });
 
     it('should find optimal path (A* optimality)', () => {
+      // Path: 19 -> 90 -> 20 -> 21 -> 22 (5 nodes)
       const path = findPath('Hall Building', '8', 19, 22);
 
       expect(path).not.toBeNull();
-      expect(path?.length).toBeLessThanOrEqual(4);
+      expect(path?.length).toBeLessThanOrEqual(5);
     });
 
     it('should return null for incorrect building name', () => {

@@ -5,7 +5,7 @@ import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
-import StartDestinationPicker from '../components/BuildingSelector/StartDestinationPicker';
+import StartDestinationPicker, { Place } from '../components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
@@ -452,7 +452,6 @@ export default function MapScreen() {
       {showFloorPlan && (
         <FloorPlanViewer
           building={selectedBuilding}
-          floorLevel='8'
           onClose={() => setShowFloorPlan(false)}
         />
       )}
