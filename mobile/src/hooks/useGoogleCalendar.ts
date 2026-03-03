@@ -57,12 +57,16 @@ export function useGoogleCalendar() {
     native: 'com.concordia.hotfixinprod:/oauth2redirect',
   });
 
-  const [, response, promptAsync] = Google.useAuthRequest({
+  const googleConfig = {
     androidClientId: Constants.expoConfig?.extra?.androidClientId,
     iosClientId: Constants.expoConfig?.extra?.iosClientId,
     redirectUri,
     scopes: GOOGLE_CALENDAR_SCOPES,
-  });
+  };
+
+  const [, response, promptAsync] = (googleConfig.androidClientId && googleConfig.iosClientId)
+    ? Google.useAuthRequest(googleConfig)
+    : [null, null, async () => { console.warn('Google Auth Client IDs are not configured.'); }];
 
   useEffect(() => {
     (async () => {
@@ -74,7 +78,7 @@ export function useGoogleCalendar() {
         setState(prev => ({ ...prev, isLoading: false }));
       }
     })();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -96,7 +100,7 @@ export function useGoogleCalendar() {
     } else if (response?.type === 'dismiss' || response?.type === 'cancel') {
       setState(prev => ({ ...prev, isLoading: false, error: null }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
   async function loadEvents(token: GoogleAuthToken, existingUser: GoogleUser | null) {
