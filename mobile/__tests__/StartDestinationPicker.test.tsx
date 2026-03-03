@@ -592,5 +592,52 @@ describe('StartDestinationPicker', () => {
 
       expect(mapSelectionProps.setMapSelectionTarget).toHaveBeenCalledWith(null);
     });
+
+    it('shows active state for start with special styling', () => {
+      const { getByTestId } = render(
+        <StartDestinationPicker {...mapSelectionProps} mapSelectionTarget="start" />
+      );
+      const startButton = getByTestId('select-start-on-map');
+      // Verify it has the active style (backgroundColor: #912338)
+      expect(startButton.props.style).toMatchObject(expect.objectContaining({ backgroundColor: '#912338' }));
+    });
+  });
+
+  it('handles reverse geocoding with only street name', async () => {
+    const userLocation = { latitude: 40.7128, longitude: -74.006 };
+    setupLocationMock(userLocation);
+    (Location.reverseGeocodeAsync as jest.Mock).mockResolvedValue([{
+      street: 'Only Street',
+      city: 'New York',
+    }]);
+    const mockSetStart = jest.fn();
+
+    const { getByText } = render(<StartDestinationPicker {...defaultStartDestProps} userLocation={userLocation} setStart={mockSetStart} />);
+    await pressCurrentLocationButton(getByText);
+
+    await waitFor(() => {
+      expect(mockSetStart).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'Only Street',
+      }));
+    });
+  });
+
+  it('handles empty routes from directions fetch', async () => {
+    const start = { name: "Start", address: "Start", location: { lat: 1, lng: 1 } };
+    const destination = { name: "Dest", address: "Dest", location: { lat: 2, lng: 2 } };
+
+    globalThis.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ routes: [] }),
+      }),
+    ) as jest.Mock;
+
+    const mockSetInstructions = jest.fn();
+    render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setInstructions={mockSetInstructions} />);
+
+    await waitFor(() => {
+      expect(globalThis.fetch).toHaveBeenCalled();
+      expect(mockSetInstructions).not.toHaveBeenCalled();
+    });
   });
 });

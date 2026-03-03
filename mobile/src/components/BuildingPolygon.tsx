@@ -69,26 +69,6 @@ const handleLocationUpdate = (
 };
 
 // Extract permission check and subscription setup
-const setupLocationWatching = async (
-    setCurrentBuildingId: React.Dispatch<React.SetStateAction<string | null>>
-): Promise<Location.LocationSubscription | null> => {
-    const { status } = await Location.getForegroundPermissionsAsync();
-
-    if (status !== 'granted') {
-        return null;
-    }
-
-    const subscription = await Location.watchPositionAsync(
-        {
-            accuracy: Location.Accuracy.High,
-            distanceInterval: 5,
-        },
-        (location) => handleLocationUpdate(location, setCurrentBuildingId)
-    );
-
-    return subscription;
-};
-
 const LABEL_ZOOM_THRESHOLD = 0.008;
 // Small/annex buildings need extra zoom before their labels appear to avoid overlap
 const SMALL_BUILDING_ZOOM_THRESHOLD = 0.004;

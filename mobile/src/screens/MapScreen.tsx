@@ -513,6 +513,7 @@ export default function MapScreen() {
 
       {activeModal === 'buildingInfo' && (
         <Animated.View
+          testID="building-info-container"
           style={{
             transform: [{ translateY: buildingInfoSlideAnim }],
           }}

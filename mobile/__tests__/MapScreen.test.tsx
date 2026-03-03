@@ -865,3 +865,28 @@ describe('Clearing Route', () => {
     });
   });
 });
+
+describe('MapScreen Edge Cases', () => {
+  it('handles getPlaceName with fallback to id', async () => {
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('select-building-only-id'));
+
+    await waitFor(() => {
+      expect(getByText('Only-ID-Building')).toBeTruthy();
+    });
+  });
+
+  it('updates pointerEvents based on selectedBuilding', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    const buildingSelectorToggle = getByTestId('building-selector-toggle');
+    fireEvent.press(buildingSelectorToggle);
+    fireEvent.press(getByTestId('select-building'));
+
+    await waitFor(() => {
+      const buildingInfoContainer = getByTestId('building-info-container');
+      expect(buildingInfoContainer.props.pointerEvents).toBe('auto');
+    });
+  });
+});

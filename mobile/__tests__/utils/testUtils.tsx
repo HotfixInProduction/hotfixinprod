@@ -92,6 +92,9 @@ export const createBuildingPolygonMock = () => {
       <TouchableOpacity testID="select-building-no-plans" onPress={() => onSelectBuilding(mockBuildingNoPlans)}>
         <Text>Select No Plans</Text>
       </TouchableOpacity>
+      <TouchableOpacity testID="select-building-only-id" onPress={() => onSelectBuilding({ id: 'Only-ID-Building', name: '', location: { lat: 45.497, lng: -73.579 } } as any)}>
+        <Text>Select Only ID</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -195,6 +198,10 @@ export const createBottomTabsMock = () => {
                 { key: routeName },
                 iconWithTestId,
                 React.createElement('Text', {}, routeName),
+                // Render tabBarButton if provided
+                child.props.options?.tabBarButton
+                  ? child.props.options.tabBarButton({ children: React.createElement('View') })
+                  : null,
                 child.props.component ? React.createElement(child.props.component) : null
               );
             }
