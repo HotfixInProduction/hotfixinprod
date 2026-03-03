@@ -179,7 +179,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
   }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="building-selector-container">
       <Text style={styles.label}>Start Building</Text>
       <View style={styles.selectorRow}>
         <View style={styles.selectorWrapper}>
