@@ -9,7 +9,6 @@ import StartDestinationPicker, { Place } from '../components/BuildingSelector/St
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
-import { Place } from '../components/BuildingSelector/StartDestinationPicker';
 import { buildings } from '../data/buildings';
 import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
