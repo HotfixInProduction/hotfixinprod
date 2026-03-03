@@ -49,7 +49,7 @@ export const createMapMock = () => {
       animateToRegion: mockAnimateToRegion,
       fitToCoordinates: mockFitToCoordinates,
     }));
-    return <View testID="map-view" {...props}>{props.children}</View>;
+    return <View testID="map" {...props}>{props.children}</View>;
   });
 
   const MockPolygon = (props: any) => <View {...props} />;

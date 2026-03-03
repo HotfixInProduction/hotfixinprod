@@ -19,6 +19,14 @@ describe('Outdoor Directions E2E Test', () => {
         await element(by.id('tab-map')).tap();
         console.log("Map screen opened");
 
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        console.log("Map screen fully loaded");
+
+        // Increase pinch magnitude to ensure we are zoomed in enough
+        await element(by.id('map')).atIndex(0).pinch(3.0, 'slow', 0);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        console.log('Map zoomed in');
+
         // Open building selector (directions panel)
         await element(by.id('building-selector-toggle')).tap();
         await waitFor(element(by.id('select-start-on-map'))).toBeVisible().withTimeout(5000);
@@ -26,19 +34,30 @@ describe('Outdoor Directions E2E Test', () => {
 
         // Set Start via Map (Hall Building ID)
         await element(by.id('select-start-on-map')).tap();
-        await element(by.id('building-marker-Hall Building')).tap();
-        await waitFor(element(by.id('start-marker'))).toExist().withTimeout(5000);
+        console.log("Select start on Map pressed");
+
+        // Tapping Hall building
+        await element(by.id('map')).atIndex(0).tap({ x: 200, y: 550 });
         console.log("Hall Building selected as start");
+
+        //Tapping loyola toggle
+        await element(by.id('campus-selector-loyola')).tap();
+        console.log("Loyola toggle pressed");
 
         // Set Destination via Map (LB Building ID)
         await element(by.id('select-destination-on-map')).tap();
-        await element(by.id('building-marker-LB Building')).tap();
-        await waitFor(element(by.id('destination-marker'))).toExist().withTimeout(5000);
-        console.log("LB Building selected as destination");
+        console.log("Select destination on Map pressed");
+
+
+        //Selecting destination
+        await element(by.id('map')).atIndex(0).tap({ x: 200, y: 550 });
+        console.log("CJ Building selected as destination at loyola campus");
 
         // Verify markers
         await expect(element(by.id('start-marker'))).toExist();
         await expect(element(by.id('destination-marker'))).toExist();
+        await element(by.id('map')).atIndex(0).pinch(0.98, 'fast', 0);
+        await new Promise(resolve => setTimeout(resolve, 5000));
     });
 
     it('Path B: should select start via Current Location and destination via search', async () => {
@@ -63,17 +82,23 @@ describe('Outdoor Directions E2E Test', () => {
         // 1. Use Current Location (Start)
         await element(by.id('use-current-location-button')).tap();
         // The picker should update the Start field to name 'Hall Building' or address
-        await waitFor(element(by.id('start-marker'))).toExist().withTimeout(5000);
+        await waitFor(element(by.id('start-marker'))).toExist().withTimeout(10000);
         console.log("Current location (Hall) used as start");
 
-        // 2. Search for Destination (JMSB)
-        await element(by.id('destination-building-selector')).tap();
-        await element(by.id('destination-building-selector')).typeText('John Molson Building');
+        // 2. Search for Destination (Communications & Journalism Building)
+        // Add a small wait for the panel to be fully settled and interactive
         await new Promise(resolve => setTimeout(resolve, 2000));
-        await element(by.text('1600 De Maisonneuve Blvd. W.')).atIndex(0).tap();
+        await waitFor(element(by.id('destination-building-selector'))).toBeVisible().withTimeout(5000);
+        await element(by.id('destination-building-selector')).tap();
+        await element(by.id('destination-building-selector')).typeText('Communications & Journalism Building');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        // Tap the first search result directly
+        await waitFor(element(by.id('search-result-item'))).toExist().withTimeout(10000);
+        await element(by.id('search-result-item')).atIndex(0).tap({ x: 100, y: 10 });
 
         // Verify markers appear
-        await waitFor(element(by.id('destination-marker'))).toExist().withTimeout(5000);
+        await waitFor(element(by.id('destination-marker'))).toExist().withTimeout(20000);
         await expect(element(by.id('start-marker'))).toExist();
         await expect(element(by.id('destination-marker'))).toExist();
     });

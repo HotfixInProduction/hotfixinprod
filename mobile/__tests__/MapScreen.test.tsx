@@ -39,12 +39,12 @@ describe('MapScreen', () => {
 
   it('renders without crashing', () => {
     const { getByTestId } = render(<MapScreen />);
-    expect(getByTestId('map-view')).toBeTruthy();
+    expect(getByTestId('map')).toBeTruthy();
   });
 
   it('renders MapView with correct initial region', () => {
     const { getByTestId } = render(<MapScreen />);
-    const mapView = getByTestId('map-view');
+    const mapView = getByTestId('map');
 
     expect(mapView.props.initialRegion.latitude).toBeCloseTo(45.497, 2);
     expect(mapView.props.initialRegion.longitude).toBeCloseTo(-73.579, 2);
@@ -52,7 +52,7 @@ describe('MapScreen', () => {
 
   it('passes updated zoom delta to BuildingPolygon on region change', async () => {
     const { getByTestId } = render(<MapScreen />);
-    const mapView = getByTestId('map-view');
+    const mapView = getByTestId('map');
 
     expect(getByTestId('building-polygon-current-delta').props.children).toBe(0.004);
 

@@ -179,7 +179,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                 return (
                     <React.Fragment key={b.id}>
                         <Polygon
-                            testID={`building-polygon-${b.id}-polygon`}
+                            testID={`building-polygon-${b.id}-visual`}
                             coordinates={b.coordinates}
                             strokeColor={strokeColor}
                             fillColor={fillColor}
@@ -187,6 +187,14 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                             onPress={() => onSelectBuilding(b)}
                             tappable
                         />
+                        <Marker
+                            coordinate={b.labelCoord}
+                            opacity={0.01}
+                            onPress={() => onSelectBuilding(b)}
+                            testID={`building-polygon-${b.id}-polygon`}
+                        >
+                            <View style={{ width: 60, height: 60, backgroundColor: 'rgba(0,0,0,0.01)' }} />
+                        </Marker>
                         {isUserInside && (
                             <Marker
                                 coordinate={b.labelCoord}
@@ -201,9 +209,12 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                                 pointerEvents='auto'
                                 onPress={() => onSelectBuilding(b)}
                                 anchor={{ x: 0.5, y: 1 }}
-                                testID={b.id}
+                                testID={"building-marker-" + b.id}
                             >
-                                <View style={styles.labelContainer}>
+                                <View
+                                    style={styles.labelContainer}
+                                    testID={"building-marker-content-" + b.id}
+                                >
                                     <FontAwesome6
                                         name="location-pin"
                                         size={32}

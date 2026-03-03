@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { GooglePlacesAutocomplete, GooglePlacesAutocompleteRef } from 'react-native-google-places-autocomplete';
 import Constants from 'expo-constants';
 
@@ -41,7 +41,7 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
     }
   }, [value]);
   return (
-    <View testID={testID}>
+    <View testID={testID ? `${testID}-container` : undefined}>
       <GooglePlacesAutocomplete
         ref={ref}
         placeholder={placeholder}
@@ -59,9 +59,18 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
           console.log('Creating place object:', place);
           onSelect(place);
         }}
+        renderRow={(data) => (
+          <Text testID="search-result-item" style={{ fontSize: 15, color: '#333', paddingVertical: 10, paddingHorizontal: 15 }}>
+            {data.description}
+          </Text>
+        )}
         query={queryConfig}
+        keepResultsAfterBlur={true}
         styles={autocompleteStyles}
         debounce={300}
+        textInputProps={{
+          testID: testID,
+        }}
       />
     </View>
   );

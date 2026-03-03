@@ -228,6 +228,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
           style={styles.currentLocationButton}
           onPress={handleUseCurrentLocation}
           disabled={loadingCurrentLocation}
+          testID="use-current-location-button"
         >
           {loadingCurrentLocation ? (
             <ActivityIndicator size="small" color="#007AFF" />
