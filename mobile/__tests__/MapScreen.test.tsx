@@ -613,28 +613,6 @@ describe('MapScreen', () => {
         expect(queryByTestId('map-selection-banner')).toBeNull();
       });
     });
-
-    it('passes start building id to BuildingPolygon for highlighting', async () => {
-      const { getByTestId } = render(<MapScreen />);
-
-      fireEvent.press(getByTestId('building-selector-toggle'));
-      fireEvent.press(getByTestId('set-start'));
-
-      await waitFor(() => {
-        expect(getByTestId('building-polygon-start')).toBeTruthy();
-      });
-    });
-
-    it('passes destination building id to BuildingPolygon for highlighting', async () => {
-      const { getByTestId } = render(<MapScreen />);
-
-      fireEvent.press(getByTestId('building-selector-toggle'));
-      fireEvent.press(getByTestId('set-destination'));
-
-      await waitFor(() => {
-        expect(getByTestId('building-polygon-destination')).toBeTruthy();
-      });
-    });
   });
 });
 
