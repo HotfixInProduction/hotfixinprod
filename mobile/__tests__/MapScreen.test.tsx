@@ -37,11 +37,6 @@ describe('MapScreen', () => {
     (Linking as any).openSettings = mockOpenSettings;
   });
 
-  it('renders without crashing', () => {
-    const { getByTestId } = render(<MapScreen />);
-    expect(getByTestId('map')).toBeTruthy();
-  });
-
   it('renders MapView with correct initial region', () => {
     const { getByTestId } = render(<MapScreen />);
     const mapView = getByTestId('map');
