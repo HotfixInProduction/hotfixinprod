@@ -64,9 +64,15 @@ export function useGoogleCalendar() {
     scopes: GOOGLE_CALENDAR_SCOPES,
   };
 
-  const [, response, promptAsync] = (googleConfig.androidClientId && googleConfig.iosClientId)
-    ? Google.useAuthRequest(googleConfig)
-    : [null, null, async () => { console.warn('Google Auth Client IDs are not configured.'); }];
+  // Always call the hook (required by React Hook Rules)
+  const [, authResponse, authPromptAsync] = Google.useAuthRequest(googleConfig);
+
+  // Use actual response only if client IDs are configured, otherwise use fallback
+  const hasClientIds = googleConfig.androidClientId && googleConfig.iosClientId;
+  const response = hasClientIds ? authResponse : null;
+  const promptAsync = hasClientIds
+    ? authPromptAsync
+    : async () => { console.warn('Google Auth Client IDs are not configured.'); };
 
   useEffect(() => {
     (async () => {
