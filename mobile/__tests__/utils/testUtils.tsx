@@ -53,12 +53,14 @@ export const createMapMock = () => {
   const MockPolygon = (props: any) => <View {...props} />;
 
   const MockMarker = (props: any) => <View {...props} />;
+  const MockPolyline = (props: any) => <View {...props} />;
 
   return {
     __esModule: true,
     default: MockMapView,
     Polygon: MockPolygon,
     Marker: MockMarker,
+    Polyline: MockPolyline,
   };
 };
 

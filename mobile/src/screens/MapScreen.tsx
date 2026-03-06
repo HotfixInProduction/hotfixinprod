@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
-import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus, ScrollView } from 'react-native';
+import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import StartDestinationPicker, { Place } from '../components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
@@ -40,6 +40,114 @@ const CAMPUSES = {
 };
 
 type CampusKey = keyof typeof CAMPUSES;
+
+const SHUTTLE_INTERVAL_MINUTES = 20;
+const SHUTTLE_SERVICE_START_HOUR = 7;
+const SHUTTLE_SERVICE_END_HOUR = 23;
+const SHUTTLE_RIDE_MINUTES = 22;
+const SHUTTLE_DISTANCE_KM = 6.8;
+const CAMPUS_MATCH_THRESHOLD_METERS = 2200;
+const WALK_SEGMENT_VISIBILITY_THRESHOLD_METERS = 40;
+
+const SHUTTLE_TERMINALS: Record<CampusKey, { latitude: number; longitude: number }> = {
+  downtown: {
+    // Hall Building shuttle stop
+    latitude: 45.497285416040164,
+    longitude: -73.57897485280246,
+  },
+  loyola: {
+    // Loyola campus shuttle stop
+    latitude: CAMPUSES.loyola.latitude,
+    longitude: CAMPUSES.loyola.longitude,
+  },
+};
+
+const getDistanceInMeters = (
+  latitude1: number,
+  longitude1: number,
+  latitude2: number,
+  longitude2: number
+) => {
+  const R = 6371e3;
+  const latitude1InRadians = latitude1 * Math.PI / 180;
+  const latitude2InRadians = latitude2 * Math.PI / 180;
+  const deltaLatitude = (latitude2 - latitude1) * Math.PI / 180;
+  const deltaLongitude = (longitude2 - longitude1) * Math.PI / 180;
+  const a = Math.sin(deltaLatitude / 2) * Math.sin(deltaLatitude / 2) +
+    Math.cos(latitude1InRadians) * Math.cos(latitude2InRadians) *
+    Math.sin(deltaLongitude / 2) * Math.sin(deltaLongitude / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const resolveCampusForPlace = (place: Place | null): CampusKey | null => {
+  if (!place) return null;
+
+  const entries = Object.entries(CAMPUSES) as [CampusKey, typeof CAMPUSES[CampusKey]][];
+  let bestMatch: CampusKey | null = null;
+  let minDistance = Number.MAX_SAFE_INTEGER;
+
+  entries.forEach(([campusKey, campus]) => {
+    const distance = getDistanceInMeters(
+      place.location.lat,
+      place.location.lng,
+      campus.latitude,
+      campus.longitude
+    );
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      bestMatch = campusKey;
+    }
+  });
+
+  if (minDistance > CAMPUS_MATCH_THRESHOLD_METERS) {
+    return null;
+  }
+
+  return bestMatch;
+};
+
+const createShuttleDeparturesForDate = (date: Date) => {
+  const departures: Date[] = [];
+  const startMinutes = SHUTTLE_SERVICE_START_HOUR * 60;
+  const endMinutes = SHUTTLE_SERVICE_END_HOUR * 60;
+
+  for (let minutes = startMinutes; minutes <= endMinutes; minutes += SHUTTLE_INTERVAL_MINUTES) {
+    const departure = new Date(date);
+    departure.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
+    departures.push(departure);
+  }
+
+  return departures;
+};
+
+const getNextShuttleDeparture = (now: Date) => {
+  const todayDepartures = createShuttleDeparturesForDate(now);
+  const nextToday = todayDepartures.find((departure) => departure.getTime() >= now.getTime());
+
+  if (nextToday) {
+    return {
+      nextDeparture: nextToday,
+      todayDepartures,
+      serviceResumesTomorrow: false,
+    };
+  }
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  const tomorrowDepartures = createShuttleDeparturesForDate(tomorrow);
+
+  return {
+    nextDeparture: tomorrowDepartures[0],
+    todayDepartures,
+    serviceResumesTomorrow: true,
+  };
+};
+
+const formatTimeLabel = (value: Date) =>
+  value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
@@ -60,7 +168,60 @@ export default function MapScreen() {
   const [showInstructions, setShowInstructions] = useState(false);
   const [transportMode, setTransportMode] = useState<TravelMode>('DRIVING');
   const [currentDelta, setCurrentDelta] = useState(INITIAL_REGION.latitudeDelta);
+  const [showShuttleSchedule, setShowShuttleSchedule] = useState(false);
+  const [shuttleNow, setShuttleNow] = useState(new Date());
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
+
+  const startCampus = useMemo(() => resolveCampusForPlace(start), [start]);
+  const destinationCampus = useMemo(() => resolveCampusForPlace(destination), [destination]);
+  const isShuttleRoute = Boolean(startCampus && destinationCampus && startCampus !== destinationCampus);
+
+  const shuttleData = useMemo(() => {
+    if (!isShuttleRoute || !startCampus || !destinationCampus) return null;
+
+    const { nextDeparture, todayDepartures, serviceResumesTomorrow } = getNextShuttleDeparture(shuttleNow);
+    const nextDepartureInMinutes = Math.max(
+      0,
+      Math.ceil((nextDeparture.getTime() - shuttleNow.getTime()) / 60000)
+    );
+
+    return {
+      directionLabel: `${CAMPUSES[startCampus].name} -> ${CAMPUSES[destinationCampus].name}`,
+      reverseDirectionLabel: `${CAMPUSES[destinationCampus].name} -> ${CAMPUSES[startCampus].name}`,
+      todayScheduleLabels: todayDepartures.map(formatTimeLabel),
+      nextDepartureInMinutes,
+      nextDepartureTimeLabel: formatTimeLabel(nextDeparture),
+      totalDurationMinutes: SHUTTLE_RIDE_MINUTES + nextDepartureInMinutes,
+      serviceResumesTomorrow,
+    };
+  }, [destinationCampus, isShuttleRoute, shuttleNow, startCampus]);
+
+  useEffect(() => {
+    if (transportMode !== 'SHUTTLE' || !isShuttleRoute) return;
+    const intervalId = setInterval(() => setShuttleNow(new Date()), 30000);
+    return () => clearInterval(intervalId);
+  }, [isShuttleRoute, transportMode]);
+
+  useEffect(() => {
+    if (transportMode === 'SHUTTLE' && !isShuttleRoute) {
+      setTransportMode('TRANSIT');
+    }
+  }, [isShuttleRoute, transportMode]);
+
+  useEffect(() => {
+    if (transportMode === 'SHUTTLE' && shuttleData && start && destination) {
+      setRouteInfo({
+        distance: SHUTTLE_DISTANCE_KM,
+        duration: shuttleData.totalDurationMinutes,
+      });
+    }
+  }, [destination, shuttleData, start, transportMode]);
+
+  useEffect(() => {
+    if (!isShuttleRoute) {
+      setShowShuttleSchedule(false);
+    }
+  }, [isShuttleRoute]);
 
   useEffect(() => {
     if (start) {
@@ -260,6 +421,7 @@ export default function MapScreen() {
     setRouteInfo(null);
     setInstructions([]);
     setShowInstructions(false);
+    setShowShuttleSchedule(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
 
@@ -274,6 +436,48 @@ export default function MapScreen() {
     if (!place) return '';
     return (place as any).name || (place as any).id || '';
   };
+  const directionsMode: Exclude<TravelMode, 'SHUTTLE'> =
+    transportMode === 'SHUTTLE' ? 'TRANSIT' : transportMode;
+
+  const shuttleRouteSegments = useMemo(() => {
+    if (
+      transportMode !== 'SHUTTLE' ||
+      !isShuttleRoute ||
+      !start ||
+      !destination ||
+      !startCampus ||
+      !destinationCampus
+    ) {
+      return null;
+    }
+
+    const startCoordinates = getCoordinates(start)!;
+    const destinationCoordinates = getCoordinates(destination)!;
+    const originTerminal = SHUTTLE_TERMINALS[startCampus];
+    const destinationTerminal = SHUTTLE_TERMINALS[destinationCampus];
+
+    const shouldDrawStartWalkingSegment =
+      getDistanceInMeters(
+        startCoordinates.latitude,
+        startCoordinates.longitude,
+        originTerminal.latitude,
+        originTerminal.longitude
+      ) > WALK_SEGMENT_VISIBILITY_THRESHOLD_METERS;
+
+    const shouldDrawDestinationWalkingSegment =
+      getDistanceInMeters(
+        destinationTerminal.latitude,
+        destinationTerminal.longitude,
+        destinationCoordinates.latitude,
+        destinationCoordinates.longitude
+      ) > WALK_SEGMENT_VISIBILITY_THRESHOLD_METERS;
+
+    return {
+      shuttle: [originTerminal, destinationTerminal],
+      startWalking: shouldDrawStartWalkingSegment ? [startCoordinates, originTerminal] : null,
+      destinationWalking: shouldDrawDestinationWalkingSegment ? [destinationTerminal, destinationCoordinates] : null,
+    };
+  }, [destination, destinationCampus, isShuttleRoute, start, startCampus, transportMode]);
 
   return (
     <View style={styles.container}>
@@ -289,14 +493,14 @@ export default function MapScreen() {
       >
         <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} currentDelta={currentDelta} />
 
-        {start && destination && googleMapsApiKey && (
+        {start && destination && googleMapsApiKey && transportMode !== 'SHUTTLE' && (
           <MapViewDirections
             origin={getCoordinates(start)}
             destination={getCoordinates(destination)}
             apikey={googleMapsApiKey}
             strokeWidth={3}
             strokeColor="hotpink"
-            mode={transportMode}
+            mode={directionsMode}
             onReady={result => {
               setRouteInfo({
                 distance: result.distance, // in km
@@ -304,6 +508,34 @@ export default function MapScreen() {
               })
             }}
           />
+        )}
+
+        {shuttleRouteSegments && (
+          <>
+            {shuttleRouteSegments.startWalking && (
+              <Polyline
+                coordinates={shuttleRouteSegments.startWalking}
+                strokeWidth={3}
+                strokeColor="#555"
+                lineDashPattern={[8, 8]}
+              />
+            )}
+
+            <Polyline
+              coordinates={shuttleRouteSegments.shuttle}
+              strokeWidth={4}
+              strokeColor="#912338"
+            />
+
+            {shuttleRouteSegments.destinationWalking && (
+              <Polyline
+                coordinates={shuttleRouteSegments.destinationWalking}
+                strokeWidth={3}
+                strokeColor="#555"
+                lineDashPattern={[8, 8]}
+              />
+            )}
+          </>
         )}
 
         {start && (
@@ -501,10 +733,80 @@ export default function MapScreen() {
           distance={routeInfo.distance}
           mode={transportMode}
           onModeChange={setTransportMode}
-          onStart={() => setShowInstructions(true)}
+          allowShuttleMode={isShuttleRoute}
+          shuttleInfo={transportMode === 'SHUTTLE' && shuttleData ? {
+            nextDepartureInMinutes: shuttleData.nextDepartureInMinutes,
+            nextDepartureTimeLabel: shuttleData.nextDepartureTimeLabel,
+            intervalMinutes: SHUTTLE_INTERVAL_MINUTES,
+          } : null}
+          onOpenShuttleSchedule={() => setShowShuttleSchedule(true)}
+          onStart={() => {
+            if (transportMode === 'SHUTTLE') {
+              setShowShuttleSchedule(true);
+              return;
+            }
+            setShowInstructions(true);
+          }}
           onClose={handleClearRoute}
         />
       )}
+
+      <Modal
+        visible={showShuttleSchedule && Boolean(shuttleData)}
+        transparent
+        animationType="fade"
+        testID="shuttle-schedule-modal"
+        onRequestClose={() => setShowShuttleSchedule(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.shuttleCard}>
+            <View style={styles.modalHeader}>
+              <MaterialIcons name="airport-shuttle" size={24} color="#912338" />
+              <Text style={styles.modalTitle}>Shuttle Schedule</Text>
+            </View>
+            {shuttleData && (
+              <>
+                <Text style={styles.shuttleDirectionText}>{shuttleData.directionLabel}</Text>
+                <Text style={styles.shuttleNextText}>
+                  Next shuttle in {shuttleData.nextDepartureInMinutes} min ({shuttleData.nextDepartureTimeLabel})
+                </Text>
+                <Text style={styles.shuttleServiceText}>
+                  Shuttle runs every {SHUTTLE_INTERVAL_MINUTES} minutes.
+                </Text>
+                {shuttleData.serviceResumesTomorrow && (
+                  <Text style={styles.shuttleServiceResumeText}>
+                    Service has ended for today. First shuttle resumes tomorrow at {shuttleData.nextDepartureTimeLabel}.
+                  </Text>
+                )}
+
+                <Text style={styles.shuttleSectionTitle}>{shuttleData.directionLabel}</Text>
+                <ScrollView style={styles.scheduleList} contentContainerStyle={styles.scheduleListContent}>
+                  {shuttleData.todayScheduleLabels.map((timeLabel) => (
+                    <Text key={`${shuttleData.directionLabel}-${timeLabel}`} style={styles.scheduleTimeText}>
+                      {timeLabel}
+                    </Text>
+                  ))}
+                </ScrollView>
+
+                <Text style={styles.shuttleSectionTitle}>{shuttleData.reverseDirectionLabel}</Text>
+                <View style={styles.scheduleRowWrap}>
+                  {shuttleData.todayScheduleLabels.map((timeLabel) => (
+                    <Text key={`${shuttleData.reverseDirectionLabel}-${timeLabel}`} style={styles.scheduleTimeChip}>
+                      {timeLabel}
+                    </Text>
+                  ))}
+                </View>
+              </>
+            )}
+            <TouchableOpacity
+              style={[styles.modalButton, styles.primaryButton]}
+              onPress={() => setShowShuttleSchedule(false)}
+            >
+              <Text style={styles.primaryButtonText}>Close schedule</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <StatusBar style="auto" />
     </View>
@@ -658,6 +960,18 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
+  shuttleCard: {
+    width: '100%',
+    maxHeight: '85%',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -697,5 +1011,68 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: '#3d3d3d',
     fontWeight: '600',
+  },
+  shuttleDirectionText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1f1f1f',
+    marginBottom: 6,
+  },
+  shuttleNextText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#912338',
+    marginBottom: 4,
+  },
+  shuttleServiceText: {
+    fontSize: 14,
+    color: '#444',
+    marginBottom: 8,
+  },
+  shuttleServiceResumeText: {
+    fontSize: 13,
+    color: '#6a3f45',
+    marginBottom: 8,
+  },
+  shuttleSectionTitle: {
+    marginTop: 8,
+    marginBottom: 6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#912338',
+  },
+  scheduleList: {
+    maxHeight: 150,
+    borderWidth: 1,
+    borderColor: '#f0d9de',
+    borderRadius: 10,
+    backgroundColor: '#fff9fa',
+  },
+  scheduleListContent: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    rowGap: 6,
+  },
+  scheduleTimeText: {
+    fontSize: 14,
+    color: '#1f1f1f',
+    fontWeight: '600',
+  },
+  scheduleRowWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 16,
+  },
+  scheduleTimeChip: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f0d9de',
+    backgroundColor: '#fff9fa',
+    color: '#912338',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    fontSize: 12,
+    fontWeight: '700',
   },
 });
