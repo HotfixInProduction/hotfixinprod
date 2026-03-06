@@ -907,3 +907,118 @@ describe('MapScreen Edge Cases', () => {
     });
   });
 });
+
+describe('MapScreen Shuttle Coverage', () => {
+  it('opens shuttle schedule, renders timetable rows, and closes via button and onRequestClose', async () => {
+    const OriginalDate = Date;
+    const fixedNow = new OriginalDate('2026-03-02T10:00:00');
+    class MockDate extends OriginalDate {
+      constructor(...args: any[]) {
+        if (args.length === 0) {
+          super(fixedNow.getTime());
+          return;
+        }
+        super(args[0]);
+      }
+      static now() {
+        return fixedNow.getTime();
+      }
+    }
+    (global as any).Date = MockDate as any;
+    try {
+      const { getByTestId, getByText, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('set-start'));
+      fireEvent.press(getByTestId('set-destination'));
+      fireEvent.press(getByTestId('trigger-directions-ready'));
+
+      await waitFor(() => {
+        expect(getByTestId('route-info-mock')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('route-info-mode-shuttle'));
+      fireEvent.press(getByTestId('route-info-open-shuttle-schedule'));
+
+      await waitFor(() => {
+        expect(getByTestId('shuttle-schedule-modal')).toBeTruthy();
+        expect(getByText('* Last bus / Dernier départ')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Close schedule'));
+      await waitFor(() => {
+        expect(queryByTestId('shuttle-schedule-modal')).toBeNull();
+      });
+
+      fireEvent.press(getByTestId('route-info-open-shuttle-schedule'));
+      await waitFor(() => {
+        expect(getByTestId('shuttle-schedule-modal')).toBeTruthy();
+      });
+
+      const shuttleModal = getByTestId('shuttle-schedule-modal');
+      act(() => {
+        shuttleModal.props.onRequestClose();
+      });
+
+      await waitFor(() => {
+        expect(queryByTestId('shuttle-schedule-modal')).toBeNull();
+      });
+    } finally {
+      (global as any).Date = OriginalDate;
+    }
+  });
+
+  it('opens shuttle schedule when Start is pressed in shuttle mode', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-shuttle'));
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('shuttle-schedule-modal')).toBeTruthy();
+    });
+  });
+
+  it('switches back to transit when shuttle mode is forced on a non-shuttle route', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination-downtown'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(getByTestId('route-info-mode').props.children).toContain('DRIVING');
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-force-shuttle'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mode').props.children).toContain('TRANSIT');
+    });
+  });
+
+  it('disables shuttle mode when start is outside both campus thresholds', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start-far'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(queryByTestId('route-info-mode-shuttle')).toBeNull();
+    });
+  });
+});

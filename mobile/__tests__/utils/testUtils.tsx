@@ -115,6 +115,16 @@ export const createStartDestinationPickerMock = () => {
     name: 'destination-place',
     location: { lat: 45.4582, lng: -73.6402 },
   };
+  const mockDestinationDowntown = {
+    id: 'destination-downtown',
+    name: 'destination-downtown',
+    location: { lat: 45.4972, lng: -73.5789 },
+  };
+  const mockStartFar = {
+    id: 'start-place-far',
+    name: 'start-place-far',
+    location: { lat: 45.55, lng: -73.9 },
+  };
 
   const mockStartWithWalking = {
     id: 'start-place-walk',
@@ -133,6 +143,12 @@ export const createStartDestinationPickerMock = () => {
       </TouchableOpacity>
       <TouchableOpacity testID="set-destination" onPress={() => setDestination(mockDestination)}>
         <Text>Set Destination</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-destination-downtown" onPress={() => setDestination(mockDestinationDowntown)}>
+        <Text>Set Destination Downtown</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-start-far" onPress={() => setStart(mockStartFar)}>
+        <Text>Set Start Far</Text>
       </TouchableOpacity>
       <TouchableOpacity testID="set-start-walk" onPress={() => setStart(mockStartWithWalking)}>
         <Text>Set Start Walk</Text>
@@ -264,7 +280,7 @@ export const setupAppStateMock = () => {
 
 export const createRouteInfoMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onClose, onStart, duration, distance, mode, onModeChange, allowShuttleMode }: any) => (
+  return ({ onClose, onStart, duration, distance, mode, onModeChange, allowShuttleMode, onOpenShuttleSchedule }: any) => (
     <View testID="route-info-mock">
       <Text>Arrive at Destination</Text>
       <Text>{duration}</Text>
@@ -282,9 +298,17 @@ export const createRouteInfoMock = () => {
       <TouchableOpacity testID="route-info-mode-transit" onPress={() => onModeChange('TRANSIT')}>
         <Text>Transit</Text>
       </TouchableOpacity>
+      <TouchableOpacity testID="route-info-mode-force-shuttle" onPress={() => onModeChange('SHUTTLE')}>
+        <Text>Force Shuttle</Text>
+      </TouchableOpacity>
       {allowShuttleMode && (
         <TouchableOpacity testID="route-info-mode-shuttle" onPress={() => onModeChange('SHUTTLE')}>
           <Text>Shuttle</Text>
+        </TouchableOpacity>
+      )}
+      {mode === 'SHUTTLE' && (
+        <TouchableOpacity testID="route-info-open-shuttle-schedule" onPress={onOpenShuttleSchedule}>
+          <Text>Schedule</Text>
         </TouchableOpacity>
       )}
       <TouchableOpacity
