@@ -4,20 +4,7 @@ import * as Location from 'expo-location';
 import { buildings } from '../data/buildings';
 import { View, Text, StyleSheet } from 'react-native';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-
-// Define types
-interface Coordinate {
-    latitude: number;
-    longitude: number;
-}
-
-interface Building {
-    id: string;
-    label: string;
-    coordinates: Coordinate[];
-    labelCoord: Coordinate;
-    // Add other building properties if needed
-}
+import { Building, Coordinate } from '../types/indoor';
 
 interface BuildingPolygonProps {
     readonly onSelectBuilding: (building: Building) => void;
@@ -53,7 +40,7 @@ const isPointInPolygon = (point: Point, polygon: Coordinate[]): boolean => {
 // Extract building detection logic
 const findBuildingAtLocation = (latitude: number, longitude: number): Building | undefined => {
     return buildings.find(building =>
-        isPointInPolygon({ latitude, longitude }, building.coordinates)
+        building.coordinates && isPointInPolygon({ latitude, longitude }, building.coordinates)
     );
 };
 
@@ -152,7 +139,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                     fillColor = "rgba(0, 0, 255, 0.4)";
                 }
 
-                const isSmallBuilding = getBuildingMaxSpan(b.coordinates) < SMALL_BUILDING_SIZE_THRESHOLD;
+                const isSmallBuilding = b.coordinates ? getBuildingMaxSpan(b.coordinates) < SMALL_BUILDING_SIZE_THRESHOLD : false;
                 const labelThreshold = isSmallBuilding ? SMALL_BUILDING_ZOOM_THRESHOLD : LABEL_ZOOM_THRESHOLD;
                 const showLabel = currentDelta <= labelThreshold;
 

@@ -2,21 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-
-type FloorPlanMap = {
-    [key: string]: string;
-};
-
-type Building = {
-    id: string;
-    address: string;
-    departments?: string[];
-    services?: string[];
-    isAccessible?: boolean;
-    hasParking?: boolean;
-    hasBikeRacks?: boolean;
-    floorPlans?: FloorPlanMap;
-};
+import { Building } from '../types/indoor';
 
 type Props = Readonly<{
     building: Building | null;
