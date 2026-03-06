@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { TouchableOpacity } from 'react-native';
 import FloorPlanViewer from '../src/components/FloorPlanViewer';
 import { suppressActWarnings } from './utils/testUtils';
 
