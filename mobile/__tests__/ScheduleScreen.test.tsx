@@ -30,9 +30,13 @@ jest.mock('../src/hooks/useGoogleCalendar', () => ({
 }));
 
 // Mock MaterialIcons
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: 'MaterialIcons',
-}));
+jest.mock('@expo/vector-icons', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return {
+    MaterialIcons: (props: any) => <Text {...props}>{props.name}</Text>,
+  };
+});
 
 describe('ScheduleScreen', () => {
   beforeEach(() => {
@@ -59,6 +63,7 @@ describe('ScheduleScreen', () => {
     });
 
     it('displays directions button with MaterialIcons', () => {
+<<<<<<< HEAD
       const { UNSAFE_getAllByType } = render(<ScheduleScreen />);
       const MaterialIcons = require('@expo/vector-icons').MaterialIcons;
 
@@ -66,6 +71,10 @@ describe('ScheduleScreen', () => {
       // Should have 3 icons: person, logout (from ConnectedUserBar), and directions (from NextClassCard)
       expect(icons.length).toBe(3);
       expect(icons.some((icon: any) => icon.props.name === 'directions')).toBe(true);
+=======
+      const { getByText } = render(<ScheduleScreen />);
+      expect(getByText('directions')).toBeTruthy();
+>>>>>>> 24b7b6f (added code coverage)
     });
   });
 

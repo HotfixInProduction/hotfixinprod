@@ -746,6 +746,50 @@ describe('Transportation Modes', () => {
       expect(getByText('Mode: TRANSIT')).toBeTruthy();
     });
   });
+
+  it('renders only shuttle segment when both points are at shuttle terminals', async () => {
+    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(getByTestId('map-directions')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-shuttle'));
+
+    await waitFor(() => {
+      expect(queryByTestId('map-directions')).toBeNull();
+      expect(getAllByTestId('map-polyline')).toHaveLength(1);
+      expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
+    });
+  });
+
+  it('renders shuttle plus dotted walking segments when start and destination are away from terminals', async () => {
+    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start-walk'));
+    fireEvent.press(getByTestId('set-destination-walk'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(getByTestId('map-directions')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-shuttle'));
+
+    await waitFor(() => {
+      expect(queryByTestId('map-directions')).toBeNull();
+      expect(getAllByTestId('map-polyline')).toHaveLength(3);
+      expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
+    });
+  });
 });
 
 describe('Clearing Route', () => {

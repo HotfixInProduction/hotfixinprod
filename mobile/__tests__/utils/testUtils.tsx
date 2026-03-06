@@ -55,7 +55,7 @@ export const createMapMock = () => {
   const MockPolygon = (props: any) => <View {...props} />;
 
   const MockMarker = (props: any) => <View {...props} />;
-  const MockPolyline = (props: any) => <View {...props} />;
+  const MockPolyline = (props: any) => <View testID="map-polyline" {...props} />;
 
   return {
     __esModule: true,
@@ -116,13 +116,33 @@ export const createStartDestinationPickerMock = () => {
     location: { lat: 45.4582, lng: -73.6402 },
   };
 
+<<<<<<< HEAD
   return ({ setStart, setDestination, setMapSelectionTarget, mapSelectionTarget }: any) => (
+=======
+  const mockStartWithWalking = {
+    id: 'start-place-walk',
+    location: { lat: 45.505, lng: -73.5789 },
+  };
+
+  const mockDestinationWithWalking = {
+    id: 'destination-place-walk',
+    location: { lat: 45.4662, lng: -73.6402 },
+  };
+
+  return ({ setStart, setDestination }: any) => (
+>>>>>>> 24b7b6f (added code coverage)
     <View testID="start-destination-picker-mock">
       <TouchableOpacity testID="set-start" onPress={() => setStart(mockStart)}>
         <Text>Set Start</Text>
       </TouchableOpacity>
       <TouchableOpacity testID="set-destination" onPress={() => setDestination(mockDestination)}>
         <Text>Set Destination</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-start-walk" onPress={() => setStart(mockStartWithWalking)}>
+        <Text>Set Start Walk</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-destination-walk" onPress={() => setDestination(mockDestinationWithWalking)}>
+        <Text>Set Destination Walk</Text>
       </TouchableOpacity>
       <TouchableOpacity testID="clear-start" onPress={() => setStart(null)}>
         <Text>Clear Start</Text>
@@ -248,7 +268,7 @@ export const setupAppStateMock = () => {
 
 export const createRouteInfoMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onClose, onStart, duration, distance, mode, onModeChange }: any) => (
+  return ({ onClose, onStart, duration, distance, mode, onModeChange, allowShuttleMode }: any) => (
     <View testID="route-info-mock">
       <Text>Arrive at Destination</Text>
       <Text>{duration}</Text>
@@ -266,6 +286,11 @@ export const createRouteInfoMock = () => {
       <TouchableOpacity testID="route-info-mode-transit" onPress={() => onModeChange('TRANSIT')}>
         <Text>Transit</Text>
       </TouchableOpacity>
+      {allowShuttleMode && (
+        <TouchableOpacity testID="route-info-mode-shuttle" onPress={() => onModeChange('SHUTTLE')}>
+          <Text>Shuttle</Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
         testID="route-info-start-button"
         onPress={onStart}
