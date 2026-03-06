@@ -119,6 +119,16 @@ export function useGoogleCalendar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
+    useEffect(() => {
+      if (!state.isAuthenticated || !state.token) return;
+
+      const interval = setInterval(() => {
+        loadEvents(state.token!, state.user);
+      }, 300000);
+
+      return () => clearInterval(interval);
+    }, [state.isAuthenticated, state.token, state.user]);
+
   async function loadEvents(token: GoogleAuthToken, existingUser: GoogleUser | null) {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
