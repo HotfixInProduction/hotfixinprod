@@ -36,16 +36,16 @@ const BUILDING_PREFIX_MAP: Record<string, string> = {
 
 export function useFloorPlanState(
   building: Building | null,
-  initialFloor?: string,
-  initialStartRoom: string = '829',
-  initialNextRoom: string = '862'
+  initialStartRoom: string,
+  initialNextRoom: string,
+  initialFloor?: string
 ) {
   const availableFloors = useMemo(
     () => Object.keys(building?.floorPlans ?? {}).sort((a, b) => a.localeCompare(b)),
     [building]
   );
 
-  const defaultFloor = initialFloor ?? availableFloors[0] ?? '8';
+  const defaultFloor = initialFloor ?? availableFloors[0];
 
   const [currentFloor, setCurrentFloor] = useState<string>(defaultFloor);
   const [startRoom, setStartRoom] = useState<string>(initialStartRoom);

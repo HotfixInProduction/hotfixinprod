@@ -45,7 +45,7 @@ export default function FloorPlanViewer({
         setStartRoom,
         setNextRoom,
         setRoomPickerOpen,
-    } = useFloorPlanState(building, floorLevel, startRoomProp, nextRoomProp);
+    } = useFloorPlanState(building, startRoomProp, nextRoomProp, floorLevel);
 
     const roomList = useRoomList(rawSvgContent);
 

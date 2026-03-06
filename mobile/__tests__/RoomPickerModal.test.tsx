@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { TouchableOpacity } from 'react-native';
 import RoomPickerModal from '../src/components/RoomPickerModal';
 import { suppressActWarnings } from './utils/testUtils';
 
@@ -205,6 +206,30 @@ describe('RoomPickerModal', () => {
             await waitFor(() => {
                 expect(getByText('H801')).toBeTruthy();
                 expect(getByText('H803')).toBeTruthy();
+            });
+        });
+
+        it('calls onClose when backdrop is pressed', () => {
+            const { UNSAFE_getAllByType } = render(<RoomPickerModal {...defaultProps} />);
+
+            const touchables = UNSAFE_getAllByType(TouchableOpacity);
+            fireEvent.press(touchables[0]);
+
+            expect(mockOnClose).toHaveBeenCalled();
+        });
+
+        it('clears search query when backdrop is pressed', async () => {
+            const { getByTestId, UNSAFE_getAllByType, rerender } = render(
+                <RoomPickerModal {...defaultProps} />
+            );
+
+            const searchInput = getByTestId('room-search-input');
+            fireEvent.changeText(searchInput, '801');
+            const touchables = UNSAFE_getAllByType(TouchableOpacity);
+            fireEvent.press(touchables[0]);
+            rerender(<RoomPickerModal {...defaultProps} visible={true} />);
+            await waitFor(() => {
+                expect(getByTestId('room-search-input')).toHaveProp('value', '');
             });
         });
     });

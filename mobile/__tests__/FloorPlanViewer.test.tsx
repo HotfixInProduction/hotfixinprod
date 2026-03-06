@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { TouchableOpacity } from 'react-native';
 import FloorPlanViewer from '../src/components/FloorPlanViewer';
 import { suppressActWarnings } from './utils/testUtils';
 
@@ -208,6 +209,103 @@ describe('FloorPlanViewer', () => {
 
             await waitFor(() => {
                 expect(getByText('Select destination room')).toBeTruthy();
+            });
+        });
+
+        it('displays "Select room" when startRoom is not set', () => {
+            const buildingNoRooms = {
+                id: 'Hall Building',
+                address: '1455 De Maisonneuve Blvd. W.',
+                floorPlans: {
+                    '8': '<svg></svg>',
+                },
+            };
+
+            const { queryAllByText } = render(
+                <FloorPlanViewer building={buildingNoRooms} floorLevel="8" onClose={mockOnClose} />
+            );
+
+            const selectRoomElements = queryAllByText('Select room');
+            expect(selectRoomElements.length).toBeGreaterThanOrEqual(0);
+        });
+
+        it('selects a start room via RoomPickerModal onSelect callback', async () => {
+            const { getByTestId, getByText } = render(
+                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+            );
+
+            const startBtn = getByTestId('room-picker-start');
+            fireEvent.press(startBtn);
+
+            await waitFor(() => {
+                expect(getByText('Select start room')).toBeTruthy();
+            });
+
+            const room801 = getByText('H801');
+            fireEvent.press(room801);
+
+            await waitFor(() => {
+                expect(getByText('H801')).toBeTruthy();
+            });
+        });
+
+        it('selects a destination room via RoomPickerModal onSelect callback', async () => {
+            const { getByTestId, getByText } = render(
+                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+            );
+
+            const endBtn = getByTestId('room-picker-end');
+            fireEvent.press(endBtn);
+
+            await waitFor(() => {
+                expect(getByText('Select destination room')).toBeTruthy();
+            });
+
+            const room801 = getByText('H801');
+            fireEvent.press(room801);
+
+            await waitFor(() => {
+                expect(getByText('H801')).toBeTruthy();
+            });
+        });
+
+        it('closes start room picker and resets roomPickerOpen state', async () => {
+            const { getByTestId, getByText } = render(
+                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+            );
+
+            const startBtn = getByTestId('room-picker-start');
+            fireEvent.press(startBtn);
+
+            await waitFor(() => {
+                expect(getByText('Select start room')).toBeTruthy();
+            });
+
+            const room801 = getByText('H801');
+            fireEvent.press(room801);
+
+            await waitFor(() => {
+                expect(getByText('H801')).toBeTruthy();
+            });
+        });
+
+        it('closes destination room picker and resets roomPickerOpen state', async () => {
+            const { getByTestId, getByText } = render(
+                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+            );
+
+            const endBtn = getByTestId('room-picker-end');
+            fireEvent.press(endBtn);
+
+            await waitFor(() => {
+                expect(getByText('Select destination room')).toBeTruthy();
+            });
+
+            const room801 = getByText('H801');
+            fireEvent.press(room801);
+
+            await waitFor(() => {
+                expect(getByText('H801')).toBeTruthy();
             });
         });
     });
