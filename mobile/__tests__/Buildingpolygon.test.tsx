@@ -1,5 +1,6 @@
 import { render, act } from '@testing-library/react-native';
 import BuildingPolygon from '../src/components/BuildingPolygon';
+import React from 'react';
 
 // Mock expo-location
 const mockWatchPositionAsync = jest.fn();
@@ -8,7 +9,10 @@ const mockGetForegroundPermissionsAsync = jest.fn();
 jest.mock('expo-location', () => ({
   watchPositionAsync: (...args: any[]) => mockWatchPositionAsync(...args),
   getForegroundPermissionsAsync: (...args: any[]) => mockGetForegroundPermissionsAsync(...args),
-  Accuracy: { High: 4 },
+  Accuracy: {
+    High: 4,
+    BestForNavigation: 5
+  },
 }));
 
 // Mock react-native-maps
@@ -41,8 +45,8 @@ describe('BuildingPolygon', () => {
     const polygons = UNSAFE_getAllByType(require('react-native-maps').Polygon);
     const hallBuilding = polygons.find((p: any) => p.props.strokeColor === '#FBBC05');
     expect(hallBuilding).toBeDefined();
-    expect(hallBuilding.props.strokeColor).toBe('#FBBC05');
-    expect(hallBuilding.props.fillColor).toBe('rgba(251, 188, 5, 0.4)');
+    expect(hallBuilding!.props.strokeColor).toBe('#FBBC05');
+    expect(hallBuilding!.props.fillColor).toBe('rgba(251, 188, 5, 0.4)');
   });
 
   it('changes building color when user is inside', async () => {
@@ -52,9 +56,7 @@ describe('BuildingPolygon', () => {
       return Promise.resolve({ remove: jest.fn() });
     });
 
-
-
-    const { UNSAFE_getAllByType } = render(<BuildingPolygon onSelectBuilding={() => { } } selectedBuildingId={null} currentDelta={0} />);
+    const { UNSAFE_getAllByType } = render(<BuildingPolygon onSelectBuilding={() => { }} selectedBuildingId={null} currentDelta={0} />);
     await new Promise(resolve => setTimeout(resolve, 10));
 
     // Simulate user inside Hall Building (center point)
@@ -72,7 +74,7 @@ describe('BuildingPolygon', () => {
       p.props.coordinates[0].latitude > 45.496 && p.props.coordinates[0].latitude < 45.498
     );
 
-    expect(hallBuilding.props.strokeColor).toBe('#0000FF');
+    expect(hallBuilding!.props.strokeColor).toBe('#0000FF');
   });
 
   it('calls onSelectBuilding when polygon is pressed', () => {
@@ -92,7 +94,7 @@ describe('BuildingPolygon', () => {
   it('does not watch location when permission is denied', async () => {
     mockGetForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
 
-    render(<BuildingPolygon onSelectBuilding={() => { } } selectedBuildingId={null} currentDelta={0} />);
+    render(<BuildingPolygon onSelectBuilding={() => { }} selectedBuildingId={null} currentDelta={0} />);
     await new Promise(resolve => setTimeout(resolve, 10));
 
     // watchPositionAsync should not be called when permission is denied
@@ -103,7 +105,7 @@ describe('BuildingPolygon', () => {
     const mockRemove = jest.fn();
     mockWatchPositionAsync.mockResolvedValue({ remove: mockRemove });
 
-    const { unmount } = render(<BuildingPolygon onSelectBuilding={() => { } } selectedBuildingId={null} currentDelta={0} />);
+    const { unmount } = render(<BuildingPolygon onSelectBuilding={() => { }} selectedBuildingId={null} currentDelta={0} />);
     await new Promise(resolve => setTimeout(resolve, 50));
 
     unmount();
@@ -114,11 +116,62 @@ describe('BuildingPolygon', () => {
   it('handles unmount safely when no location subscription exists', async () => {
     mockGetForegroundPermissionsAsync.mockResolvedValue({ status: 'denied' });
 
-    const { unmount } = render(<BuildingPolygon onSelectBuilding={() => { } } selectedBuildingId={null} currentDelta={0} />);
+    const { unmount } = render(<BuildingPolygon onSelectBuilding={() => { }} selectedBuildingId={null} currentDelta={0} />);
     await new Promise(resolve => setTimeout(resolve, 50));
 
     // Should not throw error when unmounting with null subscription
     expect(() => unmount()).not.toThrow();
     expect(mockWatchPositionAsync).not.toHaveBeenCalled();
+  });
+
+  it('highlights start and destination buildings', () => {
+    const { UNSAFE_getAllByType } = render(
+      <BuildingPolygon
+        onSelectBuilding={() => { }}
+        selectedBuildingId={null}
+        currentDelta={0}
+        startBuildingId="Hall Building"
+        destinationBuildingId="Q Annex"
+      />
+    );
+    const polygons = UNSAFE_getAllByType(require('react-native-maps').Polygon);
+
+    const startPolygon = polygons.find((p: any) => p.props.strokeColor === '#34A853');
+    const destPolygon = polygons.find((p: any) => p.props.strokeColor === '#EA4335');
+
+    expect(startPolygon).toBeDefined();
+    expect(destPolygon).toBeDefined();
+    expect(startPolygon!.props.fillColor).toBe('rgba(52, 168, 83, 0.4)');
+    expect(destPolygon!.props.fillColor).toBe('rgba(234, 67, 53, 0.4)');
+  });
+
+  it('shows and hides labels based on zoom level (delta)', () => {
+    const { queryByTestId, rerender } = render(
+      <BuildingPolygon onSelectBuilding={() => { }} selectedBuildingId={null} currentDelta={0.1} />
+    );
+
+    // At delta 0.1, labels should be hidden (threshold is < 0.008)
+    expect(queryByTestId('building-marker-Hall Building')).toBeNull();
+
+    // Rerender with low delta (zoomed in)
+    rerender(<BuildingPolygon onSelectBuilding={() => { }} selectedBuildingId={null} currentDelta={0.001} />);
+    expect(queryByTestId('building-marker-Hall Building')).toBeTruthy();
+  });
+
+  it('triggers onSelectBuilding when tapping labels or shadow markers', () => {
+    const mockSelect = jest.fn();
+    const { getByTestId } = render(
+      <BuildingPolygon onSelectBuilding={mockSelect} selectedBuildingId={null} currentDelta={0.001} />
+    );
+
+    const { fireEvent } = require('@testing-library/react-native');
+
+    // Tap shadow marker
+    fireEvent(getByTestId('building-polygon-Hall Building-polygon'), 'onPress');
+    expect(mockSelect).toHaveBeenCalledTimes(1);
+
+    // Tap label
+    fireEvent(getByTestId('building-marker-Hall Building'), 'onPress');
+    expect(mockSelect).toHaveBeenCalledTimes(2);
   });
 });

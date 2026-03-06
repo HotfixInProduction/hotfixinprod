@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, waitFor } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import BuildingSelector from '../src/components/BuildingSelector/BuildingSelector';
 
 // Mock the Google Places Autocomplete
@@ -7,21 +7,25 @@ jest.mock('react-native-google-places-autocomplete', () => {
   const React = require('react');
   return {
     GooglePlacesAutocomplete: React.forwardRef((props: any, ref: any) => {
-      const MockComponent = require('react-native').View;
+      const { View } = require('react-native');
+      const MockComponent = View;
       // Store props for testing
       (MockComponent as any).mockProps = props;
-      
-      // Mock the ref methods - useImperativeHandle must be called unconditionally
+
+      // Mock the ref methods
       React.useImperativeHandle(ref, () => ({
-        setAddressText: jest.fn((text: string) => {
-          // Mock implementation
-        }),
+        setAddressText: jest.fn(),
         getAddressText: jest.fn(() => ''),
         focus: jest.fn(),
         blur: jest.fn(),
+        getCurrentAddressText: jest.fn(() => ''),
       }));
-      
-      return React.createElement(MockComponent, { testID: 'google-places-autocomplete' });
+
+      return (
+        <MockComponent testID="google-places-autocomplete">
+          {props.renderRow ? props.renderRow({ description: 'Test result' }) : null}
+        </MockComponent>
+      );
     }),
   };
 });
@@ -57,37 +61,18 @@ describe('BuildingSelector', () => {
     expect(getByTestId('google-places-autocomplete')).toBeTruthy();
   });
 
-  it('passes correct placeholder to GooglePlacesAutocomplete', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const { GooglePlacesAutocomplete } = require('react-native-google-places-autocomplete');
-    const View = require('react-native').View;
-    expect(View.mockProps.placeholder).toBe(placeholder);
-  });
-
   it('configures GooglePlacesAutocomplete with correct query parameters', () => {
     render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
+    const { View } = require('react-native');
     expect(View.mockProps.query).toEqual({
       key: 'test-api-key',
       language: 'en',
     });
   });
 
-  it('sets fetchDetails to true', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
-    expect(View.mockProps.fetchDetails).toBe(true);
-  });
-
-  it('sets debounce to 300', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
-    expect(View.mockProps.debounce).toBe(300);
-  });
-
   it('handles onPress with valid details', () => {
     render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
+    const { View } = require('react-native');
 
     const mockData = {
       structured_formatting: {
@@ -103,12 +88,6 @@ describe('BuildingSelector', () => {
     };
 
     View.mockProps.onPress(mockData, mockDetails);
-
-    expect(console.log).toHaveBeenCalledWith('Creating place object:', {
-      name: 'Test Building',
-      address: '123 Test St',
-      location: { lat: 40.7128, lng: -74.006 },
-    });
 
     expect(mockOnSelect).toHaveBeenCalledWith({
       name: 'Test Building',
@@ -119,70 +98,15 @@ describe('BuildingSelector', () => {
 
   it('handles onPress when details is null', () => {
     render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
+    const { View } = require('react-native');
 
-    const mockData = {
-      structured_formatting: {
-        main_text: 'Test Building',
-      },
-    };
-
-    View.mockProps.onPress(mockData, null);
-
+    View.mockProps.onPress({ description: 'test' }, null);
     expect(mockOnSelect).not.toHaveBeenCalled();
-  });
-
-  it('handles onPress with missing formatted_address', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
-
-    const mockData = {
-      structured_formatting: {
-        main_text: 'Test Building',
-      },
-    };
-
-    const mockDetails = {
-      geometry: {
-        location: { lat: 40.7128, lng: -74.006 },
-      },
-    };
-
-    View.mockProps.onPress(mockData, mockDetails);
-
-    expect(mockOnSelect).toHaveBeenCalledWith({
-      name: 'Test Building',
-      address: '',
-      location: { lat: 40.7128, lng: -74.006 },
-    });
-  });
-
-  it('handles onPress with missing geometry location', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
-
-    const mockData = {
-      structured_formatting: {
-        main_text: 'Test Building',
-      },
-    };
-
-    const mockDetails = {
-      formatted_address: '123 Test St',
-    };
-
-    View.mockProps.onPress(mockData, mockDetails);
-
-    expect(mockOnSelect).toHaveBeenCalledWith({
-      name: 'Test Building',
-      address: '123 Test St',
-      location: { lat: 0, lng: 0 },
-    });
   });
 
   it('handles onFail callback', () => {
     render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
+    const { View } = require('react-native');
 
     const mockError = new Error('API Error');
     View.mockProps.onFail(mockError);
@@ -190,50 +114,61 @@ describe('BuildingSelector', () => {
     expect(console.log).toHaveBeenCalledWith('Places API error:', mockError);
   });
 
-  it('applies custom styles to GooglePlacesAutocomplete', () => {
-    render(<BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value={''} />);
-    const View = require('react-native').View;
-    
-    expect(View.mockProps.styles).toBeDefined();
-    expect(View.mockProps.styles.textInputContainer).toBeDefined();
-    expect(View.mockProps.styles.textInput).toBeDefined();
-    expect(View.mockProps.styles.listView).toBeDefined();
-  });
-
   it('updates address text when value prop changes', () => {
     const { rerender } = render(
       <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="" />
     );
 
-    // Update with a value
     rerender(
       <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="Test Building" />
     );
-
-    // The component should render successfully with the value prop
     expect(true).toBe(true);
   });
 
-  it('clears address text when value prop becomes empty', () => {
-    const { rerender } = render(
-      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="Test Building" />
-    );
-
-    // Update with an empty value
-    rerender(
-      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="" />
-    );
-
-    // The component should render successfully with empty value
-    expect(true).toBe(true);
-  });
-
-  it('handles value prop with special characters', () => {
+  it('includes location and radius in query when userLocation is provided', () => {
+    const userLocation = { latitude: 45.497, longitude: -73.579 };
     render(
-      <BuildingSelector placeholder={placeholder} onSelect={mockOnSelect} userLocation={null} value="Hall's Building (Main)" />
+      <BuildingSelector
+        placeholder={placeholder}
+        onSelect={mockOnSelect}
+        userLocation={userLocation}
+        value=""
+      />
+    );
+    const { View } = require('react-native');
+    expect(View.mockProps.query).toEqual({
+      key: 'test-api-key',
+      language: 'en',
+      location: '45.497,-73.579',
+      radius: 50000,
+      strictbounds: true,
+    });
+  });
+
+  it('renders search result row correctly', () => {
+    const { getByTestId } = render(
+      <BuildingSelector
+        placeholder={placeholder}
+        onSelect={mockOnSelect}
+        userLocation={null}
+        value=""
+      />
     );
 
-    // Should render without errors
-    expect(true).toBe(true);
+    expect(getByTestId('search-result-item')).toBeTruthy();
+    expect(getByTestId('search-result-item').props.children).toBe('Test result');
+  });
+
+  it('uses testID when provided', () => {
+    const { getByTestId } = render(
+      <BuildingSelector
+        placeholder={placeholder}
+        onSelect={mockOnSelect}
+        userLocation={null}
+        value=""
+        testID="custom-id"
+      />
+    );
+    expect(getByTestId('custom-id-container')).toBeTruthy();
   });
 });

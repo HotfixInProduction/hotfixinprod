@@ -21,6 +21,8 @@ type StartDestinationPickerProps = {
   setDestination: (place: Place | null) => void;
   setInstructions: (val: MapStep[]) => void;
   transportMode: TravelMode;
+  mapSelectionTarget?: 'start' | 'destination' | null;
+  setMapSelectionTarget?: (target: 'start' | 'destination' | null) => void;
 };
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -31,7 +33,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   SHUTTLE: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget }) => {
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
@@ -44,8 +46,8 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
     const deltaLongitude = (longitude2 - longitude1) * Math.PI / 180;
 
     const a = Math.sin(deltaLatitude / 2) * Math.sin(deltaLatitude / 2) +
-              Math.cos(latitude1InRadians) * Math.cos(latitude2InRadians) *
-              Math.sin(deltaLongitude / 2) * Math.sin(deltaLongitude / 2);
+      Math.cos(latitude1InRadians) * Math.cos(latitude2InRadians) *
+      Math.sin(deltaLongitude / 2) * Math.sin(deltaLongitude / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c; // Distance in meters
@@ -182,19 +184,20 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
   }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} testID="building-selector-container">
       <Text style={styles.label}>Start Building</Text>
       <View style={styles.selectorRow}>
         <View style={styles.selectorWrapper}>
-          <BuildingSelector 
-            placeholder="Select start building" 
-            onSelect={data => setStart(data)} 
+          <BuildingSelector
+            placeholder="Select start building"
+            onSelect={data => setStart(data)}
             userLocation={userLocation}
             value={start?.name}
+            testID="start-building-selector"
           />
         </View>
         {start && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.clearButton}
             onPress={() => setStart(null)}
             testID="clear-start-button"
@@ -206,12 +209,31 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
       {start && (
         <Text style={styles.selectedText}>Selected: {start.name}</Text>
       )}
-      
+      {setMapSelectionTarget && (
+        <TouchableOpacity
+          style={[
+            styles.selectOnMapButton,
+            mapSelectionTarget === 'start' && styles.selectOnMapButtonActive,
+          ]}
+          onPress={() => setMapSelectionTarget(mapSelectionTarget === 'start' ? null : 'start')}
+          testID="select-start-on-map"
+        >
+          <MaterialIcons name="map" size={18} color={mapSelectionTarget === 'start' ? '#fff' : '#912338'} />
+          <Text style={[
+            styles.selectOnMapText,
+            mapSelectionTarget === 'start' && styles.selectOnMapTextActive,
+          ]}>
+            {mapSelectionTarget === 'start' ? 'Selecting on map...' : 'Select on Map'}
+          </Text>
+        </TouchableOpacity>
+      )}
+
       {userLocation && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.currentLocationButton}
           onPress={handleUseCurrentLocation}
           disabled={loadingCurrentLocation}
+          testID="use-current-location-button"
         >
           {loadingCurrentLocation ? (
             <ActivityIndicator size="small" color="#007AFF" />
@@ -227,15 +249,16 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
       <Text style={styles.label}>Destination Building</Text>
       <View style={styles.selectorRow}>
         <View style={styles.selectorWrapper}>
-          <BuildingSelector 
-            placeholder="Select destination building" 
-            onSelect={data => setDestination(data)} 
+          <BuildingSelector
+            placeholder="Select destination building"
+            onSelect={data => setDestination(data)}
             userLocation={userLocation}
             value={destination?.name}
+            testID="destination-building-selector"
           />
         </View>
         {destination && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.clearButton}
             onPress={() => setDestination(null)}
             testID="clear-destination-button"
@@ -246,6 +269,24 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
       </View>
       {destination && (
         <Text style={styles.selectedText}>Selected: {destination.name}</Text>
+      )}
+      {setMapSelectionTarget && (
+        <TouchableOpacity
+          style={[
+            styles.selectOnMapButton,
+            mapSelectionTarget === 'destination' && styles.selectOnMapButtonActive,
+          ]}
+          onPress={() => setMapSelectionTarget(mapSelectionTarget === 'destination' ? null : 'destination')}
+          testID="select-destination-on-map"
+        >
+          <MaterialIcons name="map" size={18} color={mapSelectionTarget === 'destination' ? '#fff' : '#912338'} />
+          <Text style={[
+            styles.selectOnMapText,
+            mapSelectionTarget === 'destination' && styles.selectOnMapTextActive,
+          ]}>
+            {mapSelectionTarget === 'destination' ? 'Selecting on map...' : 'Select on Map'}
+          </Text>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -312,6 +353,31 @@ const styles = StyleSheet.create({
     borderColor: '#e3e3e3',
     borderRadius: 10,
     height: 44,
+  },
+  selectOnMapButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#912338',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginTop: 8,
+    gap: 6,
+  },
+  selectOnMapButtonActive: {
+    backgroundColor: '#912338',
+    borderColor: '#912338',
+  },
+  selectOnMapText: {
+    color: '#912338',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  selectOnMapTextActive: {
+    color: '#fff',
   },
 });
 

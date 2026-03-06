@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
+import { TouchableOpacity, View } from 'react-native';
 import ScheduleScreen from './src/screens/ScheduleScreen';
 import MapScreen from './src/screens/MapScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
@@ -39,9 +40,9 @@ export default function App() {
           },
         })}
       >
-        <Tab.Screen name="Schedule" component={ScheduleScreen} />
-        <Tab.Screen name="Map" component={MapScreen} />
-        <Tab.Screen name="Settings" component={SettingsScreen} />
+        <Tab.Screen name="Schedule" component={ScheduleScreen} options={{ tabBarButton: (props) => <View testID="tab-schedule"><TouchableOpacity {...props as any} /></View> }} />
+        <Tab.Screen name="Map" component={MapScreen} options={{ tabBarButton: (props) => <View testID="tab-map"><TouchableOpacity {...props as any} /></View> }} />
+        <Tab.Screen name="Settings" component={SettingsScreen} options={{ tabBarButton: (props) => <View testID="tab-settings"><TouchableOpacity {...props as any} /></View> }} />
       </Tab.Navigator>
     </NavigationContainer>
   );
