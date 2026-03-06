@@ -308,7 +308,6 @@ export default function MapScreen() {
           onSelectBuilding={handleBuildingSelect}
           selectedBuildingId={selectedBuilding?.id || null}
           currentDelta={currentDelta}
-          locationStatus={locationStatus}
           startBuildingId={start?.name || null}
           destinationBuildingId={destination?.name || null}
         />
