@@ -1,9 +1,11 @@
-import { device, element, by, expect, waitFor } from 'detox';
+import { element, by, expect, waitFor } from 'detox';
+import { setupApp, navigateToMap, selectCampus, wait } from './helpers';
 
 describe('US-1 View SGW and Loyola Campus Maps', () => {
 
-
     it('should show SGW campus by default and allow switching to Loyola', async () => {
+        await setupApp();
+        await navigateToMap();
 
         // 1. Verify default state (SGW)
         await waitFor(element(by.text('Downtown'))).toBeVisible().withTimeout(5000);
@@ -11,14 +13,14 @@ describe('US-1 View SGW and Loyola Campus Maps', () => {
         await expect(element(by.text('Loyola'))).toBeVisible();
 
         // 2. Switch to Loyola
-        await new Promise(r => setTimeout(r, 3000));
+        await wait(3000);
         console.log('Tapping Loyola button...');
-        await element(by.id('campus-selector-loyola')).tap();
+        await selectCampus('loyola');
 
         // 3. Switch back to Downtown
-        await new Promise(r => setTimeout(r, 3000));
+        await wait(3000);
         console.log('Tapping Downtown button...');
-        await element(by.id('campus-selector-downtown')).tap();
+        await selectCampus('downtown');
         await expect(element(by.id('campus-selector-downtown'))).toBeVisible();
     });
 });

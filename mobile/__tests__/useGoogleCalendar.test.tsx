@@ -26,7 +26,14 @@ jest.mock('expo-auth-session/providers/google', () => ({
 }));
 jest.mock('expo-auth-session', () => ({ makeRedirectUri: () => 'redirect' }));
 jest.mock('expo-web-browser', () => ({ maybeCompleteAuthSession: jest.fn() }));
-jest.mock('expo-constants', () => ({ expoConfig: { extra: {} } }));
+jest.mock('expo-constants', () => ({
+  expoConfig: {
+    extra: {
+      androidClientId: 'test-android-client-id',
+      iosClientId: 'test-ios-client-id',
+    },
+  },
+}));
 
 describe('useGoogleCalendar', () => {
   beforeEach(() => {

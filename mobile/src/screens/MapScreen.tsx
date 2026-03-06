@@ -9,6 +9,7 @@ import StartDestinationPicker, { Place } from '../components/BuildingSelector/St
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
+import { buildings } from '../data/buildings';
 import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
 import RouteInfo from '../components/RouteInfo';
@@ -60,6 +61,7 @@ export default function MapScreen() {
   const [showInstructions, setShowInstructions] = useState(false);
   const [transportMode, setTransportMode] = useState<TravelMode>('DRIVING');
   const [currentDelta, setCurrentDelta] = useState(INITIAL_REGION.latitudeDelta);
+  const [mapSelectionTarget, setMapSelectionTarget] = useState<'start' | 'destination' | null>(null);
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
   useEffect(() => {
@@ -113,10 +115,7 @@ export default function MapScreen() {
   };
 
   useEffect(() => {
-    // Request foreground location permission on app load so iOS/Android show the system prompt.
-    (async () => {
-      await requestLocationPermission();
-    })();
+    requestLocationPermission();
   }, []);
 
   useEffect(() => {
@@ -242,6 +241,23 @@ export default function MapScreen() {
   };
 
   const handleBuildingSelect = (building: any) => {
+    if (mapSelectionTarget && buildingSelectorVisible) {
+      const place: Place = {
+        name: building.id,
+        address: building.address || building.id,
+        location: {
+          lat: building.labelCoord.latitude,
+          lng: building.labelCoord.longitude,
+        },
+      };
+      if (mapSelectionTarget === 'start') {
+        setStart(place);
+      } else {
+        setDestination(place);
+      }
+      setMapSelectionTarget(null);
+      return;
+    }
     setSelectedBuilding(building);
     setShowFloorPlan(false);
   };
@@ -281,13 +297,21 @@ export default function MapScreen() {
         ref={mapRef}
         provider={PROVIDER_GOOGLE}
         style={styles.map}
+        testID="map"
         mapPadding={{ top: 100, right: 20, bottom: 0, left: 20 }}
         showsUserLocation
         showsMyLocationButton
         initialRegion={INITIAL_REGION}
         onRegionChangeComplete={(region) => setCurrentDelta(region.latitudeDelta)}
       >
-        <BuildingPolygon onSelectBuilding={handleBuildingSelect} selectedBuildingId={selectedBuilding?.id || null} currentDelta={currentDelta} />
+        <BuildingPolygon
+          onSelectBuilding={handleBuildingSelect}
+          selectedBuildingId={selectedBuilding?.id || null}
+          currentDelta={currentDelta}
+          locationStatus={locationStatus}
+          startBuildingId={start?.name || null}
+          destinationBuildingId={destination?.name || null}
+        />
 
         {start && destination && googleMapsApiKey && (
           <MapViewDirections
@@ -307,11 +331,11 @@ export default function MapScreen() {
         )}
 
         {start && (
-          <Marker coordinate={getCoordinates(start)!} title="Start" pinColor="blue" />
+          <Marker coordinate={getCoordinates(start)!} title="Start" pinColor="blue" testID="start-marker" />
         )}
 
         {destination && (
-          <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" />
+          <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" testID="destination-marker" />
         )}
 
       </MapView>
@@ -406,8 +430,22 @@ export default function MapScreen() {
             setDestination={setDestination}
             setInstructions={setInstructions}
             transportMode={transportMode}
+            mapSelectionTarget={mapSelectionTarget}
+            setMapSelectionTarget={setMapSelectionTarget}
           />
         </Animated.View>
+      )}
+
+      {mapSelectionTarget && buildingSelectorVisible && (
+        <View style={styles.mapSelectionBanner} testID="map-selection-banner">
+          <MaterialIcons name="touch-app" size={20} color="#fff" />
+          <Text style={styles.mapSelectionBannerText}>
+            Tap a building to set as {mapSelectionTarget === 'start' ? 'Start' : 'Destination'}
+          </Text>
+          <TouchableOpacity onPress={() => setMapSelectionTarget(null)} testID="cancel-map-selection">
+            <MaterialIcons name="close" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
       )}
 
       {showFloorPlan && (
@@ -475,6 +513,7 @@ export default function MapScreen() {
 
       {activeModal === 'buildingInfo' && (
         <Animated.View
+          testID="building-info-container"
           style={{
             transform: [{ translateY: buildingInfoSlideAnim }],
           }}
@@ -548,6 +587,31 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
     zIndex: 10,
+  },
+  mapSelectionBanner: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+    backgroundColor: '#912338',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 6,
+    zIndex: 20,
+  },
+  mapSelectionBannerText: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
   },
   buildingSelectorPanel: {
     position: 'absolute',
@@ -627,7 +691,7 @@ const styles = StyleSheet.create({
   locationOffButton: {
     position: 'absolute',
     right: 18,
-    bottom: 24,
+    bottom: 90,
     backgroundColor: '#912338',
     borderRadius: 24,
     width: 48,

@@ -23,6 +23,9 @@ interface BuildingPolygonProps {
     readonly onSelectBuilding: (building: Building) => void;
     readonly selectedBuildingId: string | null;
     readonly currentDelta: number;
+    readonly locationStatus?: Location.PermissionStatus | null;
+    readonly startBuildingId?: string | null;
+    readonly destinationBuildingId?: string | null;
 }
 
 interface Point {
@@ -66,26 +69,6 @@ const handleLocationUpdate = (
 };
 
 // Extract permission check and subscription setup
-const setupLocationWatching = async (
-    setCurrentBuildingId: React.Dispatch<React.SetStateAction<string | null>>
-): Promise<Location.LocationSubscription | null> => {
-    const { status } = await Location.getForegroundPermissionsAsync();
-
-    if (status !== 'granted') {
-        return null;
-    }
-
-    const subscription = await Location.watchPositionAsync(
-        {
-            accuracy: Location.Accuracy.High,
-            distanceInterval: 5,
-        },
-        (location) => handleLocationUpdate(location, setCurrentBuildingId)
-    );
-
-    return subscription;
-};
-
 const LABEL_ZOOM_THRESHOLD = 0.008;
 // Small/annex buildings need extra zoom before their labels appear to avoid overlap
 const SMALL_BUILDING_ZOOM_THRESHOLD = 0.004;
@@ -100,18 +83,39 @@ const getBuildingMaxSpan = (coordinates: Coordinate[]): number => {
     return Math.max(latSpan, lonSpan);
 };
 
-export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta }: BuildingPolygonProps) {
+export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta, locationStatus, startBuildingId, destinationBuildingId }: BuildingPolygonProps) {
     const [currentBuildingId, setCurrentBuildingId] = useState<string | null>(null);
 
     useEffect(() => {
-        let locationSubscription: Location.LocationSubscription | null;
+        let locationSubscription: Location.LocationSubscription | null = null;
+        let isMounted = true;
 
-        setupLocationWatching(setCurrentBuildingId)
-            .then(subscription => {
-                locationSubscription = subscription;
-            });
+        const startWatching = async () => {
+            const { status } = await Location.getForegroundPermissionsAsync();
+            if (status === 'granted' && isMounted) {
+                const subscription = await Location.watchPositionAsync(
+                    {
+                        accuracy: Location.Accuracy.BestForNavigation,
+                        distanceInterval: 0, // Update immediately on any move
+                    },
+                    (location) => {
+                        if (isMounted) {
+                            handleLocationUpdate(location, setCurrentBuildingId);
+                        }
+                    }
+                );
+                if (isMounted) {
+                    locationSubscription = subscription;
+                } else {
+                    subscription.remove();
+                }
+            }
+        };
+
+        startWatching();
 
         return () => {
+            isMounted = false;
             if (locationSubscription) {
                 locationSubscription.remove();
             }
@@ -123,16 +127,26 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
             {buildings.map(b => {
                 const isUserInside = currentBuildingId === b.id;
                 const isSelected = selectedBuildingId === b.id;
+                const isStart = startBuildingId === b.id;
+                const isDestination = destinationBuildingId === b.id;
 
                 let strokeColor = "#FF0000";
-                if (isSelected) {
+                if (isStart) {
+                    strokeColor = "#34A853";
+                } else if (isDestination) {
+                    strokeColor = "#EA4335";
+                } else if (isSelected) {
                     strokeColor = "#FBBC05";
                 } else if (isUserInside) {
                     strokeColor = "#0000FF";
                 }
 
                 let fillColor = "rgba(255, 0, 0, 0.4)";
-                if (isSelected) {
+                if (isStart) {
+                    fillColor = "rgba(52, 168, 83, 0.4)";
+                } else if (isDestination) {
+                    fillColor = "rgba(234, 67, 53, 0.4)";
+                } else if (isSelected) {
                     fillColor = "rgba(251, 188, 5, 0.4)";
                 } else if (isUserInside) {
                     fillColor = "rgba(0, 0, 255, 0.4)";
@@ -145,6 +159,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                 return (
                     <React.Fragment key={b.id}>
                         <Polygon
+                            testID={`building-polygon-${b.id}-visual`}
                             coordinates={b.coordinates}
                             strokeColor={strokeColor}
                             fillColor={fillColor}
@@ -152,13 +167,34 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                             onPress={() => onSelectBuilding(b)}
                             tappable
                         />
+                        <Marker
+                            coordinate={b.labelCoord}
+                            opacity={0.01}
+                            onPress={() => onSelectBuilding(b)}
+                            testID={`building-polygon-${b.id}-polygon`}
+                        >
+                            <View style={{ width: 60, height: 60, backgroundColor: 'rgba(0,0,0,0.01)' }} />
+                        </Marker>
+                        {isUserInside && (
+                            <Marker
+                                coordinate={b.labelCoord}
+                                opacity={0.0}
+                                pointerEvents='none'
+                                testID={`building-polygon-${b.id}-highlighted`}
+                            />
+                        )}
                         {showLabel && (
                             <Marker
                                 coordinate={b.labelCoord}
-                                pointerEvents='none'
+                                pointerEvents='auto'
+                                onPress={() => onSelectBuilding(b)}
                                 anchor={{ x: 0.5, y: 1 }}
+                                testID={"building-marker-" + b.id}
                             >
-                                <View style={styles.labelContainer}>
+                                <View
+                                    style={styles.labelContainer}
+                                    testID={"building-marker-content-" + b.id}
+                                >
                                     <FontAwesome6
                                         name="location-pin"
                                         size={32}
