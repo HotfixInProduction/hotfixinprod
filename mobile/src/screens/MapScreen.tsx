@@ -42,9 +42,20 @@ const CAMPUSES = {
 
 type CampusKey = keyof typeof CAMPUSES;
 
-const SHUTTLE_INTERVAL_MINUTES = 20;
-const SHUTTLE_SERVICE_START_HOUR = 7;
-const SHUTTLE_SERVICE_END_HOUR = 23;
+// Mon–Thu shuttle departure times as minutes since midnight
+const LOY_DEPARTURE_MINUTES = [
+  9*60+15, 9*60+45, 10*60+15, 11*60+15, 11*60+45,
+  12*60+15, 12*60+45, 13*60+15, 13*60+45, 14*60+15,
+  14*60+45, 15*60+15, 15*60+45, 16*60+15, 16*60+45,
+  17*60+45, 18*60+15, 18*60+45,
+];
+const SGW_DEPARTURE_MINUTES = [
+  9*60+15, 9*60+45, 10*60+15, 10*60+45, 11*60+45,
+  12*60+15, 12*60+45, 13*60+15, 13*60+45, 14*60+15,
+  14*60+45, 15*60+15, 15*60+45, 16*60+15, 17*60+15,
+  17*60+45, 18*60+15, 18*60+45,
+];
+const isShuttleWeekday = (date: Date) => date.getDay() >= 1 && date.getDay() <= 4; // Mon–Thu
 const SHUTTLE_RIDE_MINUTES = 22;
 const SHUTTLE_DISTANCE_KM = 6.8;
 const CAMPUS_MATCH_THRESHOLD_METERS = 2200;
@@ -109,41 +120,30 @@ const resolveCampusForPlace = (place: Place | null): CampusKey | null => {
   return bestMatch;
 };
 
-const createShuttleDeparturesForDate = (date: Date) => {
-  const departures: Date[] = [];
-  const startMinutes = SHUTTLE_SERVICE_START_HOUR * 60;
-  const endMinutes = SHUTTLE_SERVICE_END_HOUR * 60;
-
-  for (let minutes = startMinutes; minutes <= endMinutes; minutes += SHUTTLE_INTERVAL_MINUTES) {
+const createShuttleDeparturesForDate = (date: Date, minutesList: number[]) =>
+  minutesList.map((minutes) => {
     const departure = new Date(date);
     departure.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
-    departures.push(departure);
+    return departure;
+  });
+
+const getNextShuttleDeparture = (now: Date, minutesList: number[]) => {
+  if (isShuttleWeekday(now)) {
+    const todayDepartures = createShuttleDeparturesForDate(now, minutesList);
+    const nextToday = todayDepartures.find((d) => d.getTime() >= now.getTime());
+    if (nextToday) {
+      return { nextDeparture: nextToday, serviceResumesNextWeekday: false };
+    }
   }
 
-  return departures;
-};
+  // Find next Mon–Thu
+  const nextDay = new Date(now);
+  do {
+    nextDay.setDate(nextDay.getDate() + 1);
+  } while (!isShuttleWeekday(nextDay));
 
-const getNextShuttleDeparture = (now: Date) => {
-  const todayDepartures = createShuttleDeparturesForDate(now);
-  const nextToday = todayDepartures.find((departure) => departure.getTime() >= now.getTime());
-
-  if (nextToday) {
-    return {
-      nextDeparture: nextToday,
-      todayDepartures,
-      serviceResumesTomorrow: false,
-    };
-  }
-
-  const tomorrow = new Date(now);
-  tomorrow.setDate(now.getDate() + 1);
-  const tomorrowDepartures = createShuttleDeparturesForDate(tomorrow);
-
-  return {
-    nextDeparture: tomorrowDepartures[0],
-    todayDepartures,
-    serviceResumesTomorrow: true,
-  };
+  const nextDayDepartures = createShuttleDeparturesForDate(nextDay, minutesList);
+  return { nextDeparture: nextDayDepartures[0], serviceResumesNextWeekday: true };
 };
 
 const formatTimeLabel = (value: Date) =>
@@ -181,20 +181,29 @@ export default function MapScreen() {
   const shuttleData = useMemo(() => {
     if (!isShuttleRoute || !startCampus || !destinationCampus) return null;
 
-    const { nextDeparture, todayDepartures, serviceResumesTomorrow } = getNextShuttleDeparture(shuttleNow);
+    const departureMins = startCampus === 'loyola' ? LOY_DEPARTURE_MINUTES : SGW_DEPARTURE_MINUTES;
+    const { nextDeparture, serviceResumesNextWeekday } = getNextShuttleDeparture(shuttleNow, departureMins);
     const nextDepartureInMinutes = Math.max(
       0,
       Math.ceil((nextDeparture.getTime() - shuttleNow.getTime()) / 60000)
     );
 
+    const scheduleDate = isShuttleWeekday(shuttleNow) ? shuttleNow : null;
+    const loyScheduleLabels = scheduleDate
+      ? createShuttleDeparturesForDate(scheduleDate, LOY_DEPARTURE_MINUTES).map(formatTimeLabel)
+      : [];
+    const sgwScheduleLabels = scheduleDate
+      ? createShuttleDeparturesForDate(scheduleDate, SGW_DEPARTURE_MINUTES).map(formatTimeLabel)
+      : [];
+
     return {
-      directionLabel: `${CAMPUSES[startCampus].name} -> ${CAMPUSES[destinationCampus].name}`,
-      reverseDirectionLabel: `${CAMPUSES[destinationCampus].name} -> ${CAMPUSES[startCampus].name}`,
-      todayScheduleLabels: todayDepartures.map(formatTimeLabel),
+      directionLabel: `${CAMPUSES[startCampus].name} → ${CAMPUSES[destinationCampus].name}`,
+      loyScheduleLabels,
+      sgwScheduleLabels,
       nextDepartureInMinutes,
       nextDepartureTimeLabel: formatTimeLabel(nextDeparture),
       totalDurationMinutes: SHUTTLE_RIDE_MINUTES + nextDepartureInMinutes,
-      serviceResumesTomorrow,
+      serviceResumesNextWeekday,
     };
   }, [destinationCampus, isShuttleRoute, shuttleNow, startCampus]);
 
@@ -776,7 +785,6 @@ export default function MapScreen() {
           shuttleInfo={transportMode === 'SHUTTLE' && shuttleData ? {
             nextDepartureInMinutes: shuttleData.nextDepartureInMinutes,
             nextDepartureTimeLabel: shuttleData.nextDepartureTimeLabel,
-            intervalMinutes: SHUTTLE_INTERVAL_MINUTES,
           } : null}
           onOpenShuttleSchedule={() => setShowShuttleSchedule(true)}
           onStart={() => {
@@ -806,35 +814,49 @@ export default function MapScreen() {
             {shuttleData && (
               <>
                 <Text style={styles.shuttleDirectionText}>{shuttleData.directionLabel}</Text>
-                <Text style={styles.shuttleNextText}>
-                  Next shuttle in {shuttleData.nextDepartureInMinutes} min ({shuttleData.nextDepartureTimeLabel})
-                </Text>
-                <Text style={styles.shuttleServiceText}>
-                  Shuttle runs every {SHUTTLE_INTERVAL_MINUTES} minutes.
-                </Text>
-                {shuttleData.serviceResumesTomorrow && (
-                  <Text style={styles.shuttleServiceResumeText}>
-                    Service has ended for today. First shuttle resumes tomorrow at {shuttleData.nextDepartureTimeLabel}.
+                {shuttleData.nextDepartureInMinutes > 60 ? (
+                  <Text style={styles.shuttleNextText}>No more shuttle departures today</Text>
+                ) : (
+                  <Text style={styles.shuttleNextText}>
+                    Next shuttle in {shuttleData.nextDepartureInMinutes} min ({shuttleData.nextDepartureTimeLabel})
                   </Text>
                 )}
+                {shuttleData.serviceResumesNextWeekday && (
+                  <Text style={styles.shuttleServiceResumeText}>
+                    Service has ended for today. Resumes next weekday at {shuttleData.nextDepartureTimeLabel}.
+                  </Text>
+                )}
+                <Text style={styles.shuttleServiceText}>Monday – Thursday only</Text>
 
-                <Text style={styles.shuttleSectionTitle}>{shuttleData.directionLabel}</Text>
-                <ScrollView style={styles.scheduleList} contentContainerStyle={styles.scheduleListContent}>
-                  {shuttleData.todayScheduleLabels.map((timeLabel) => (
-                    <Text key={`${shuttleData.directionLabel}-${timeLabel}`} style={styles.scheduleTimeText}>
-                      {timeLabel}
-                    </Text>
-                  ))}
-                </ScrollView>
-
-                <Text style={styles.shuttleSectionTitle}>{shuttleData.reverseDirectionLabel}</Text>
-                <View style={styles.scheduleRowWrap}>
-                  {shuttleData.todayScheduleLabels.map((timeLabel) => (
-                    <Text key={`${shuttleData.reverseDirectionLabel}-${timeLabel}`} style={styles.scheduleTimeChip}>
-                      {timeLabel}
-                    </Text>
-                  ))}
-                </View>
+                {shuttleData.loyScheduleLabels.length > 0 ? (
+                  <>
+                    <View style={styles.scheduleTableHeader}>
+                      <Text style={styles.scheduleTableHeaderCell}>Loyola departures</Text>
+                      <Text style={styles.scheduleTableHeaderCell}>SGW departures</Text>
+                    </View>
+                    <ScrollView style={styles.scheduleTable} contentContainerStyle={styles.scheduleTableContent}>
+                      {shuttleData.loyScheduleLabels.map((loyTime, idx) => {
+                        const sgwTime = shuttleData.sgwScheduleLabels[idx] ?? '';
+                        const isLast = idx === shuttleData.loyScheduleLabels.length - 1;
+                        return (
+                          <View key={idx} style={[styles.scheduleTableRow, idx % 2 === 1 && styles.scheduleTableRowAlt]}>
+                            <Text style={[styles.scheduleTableCell, isLast && styles.scheduleTableCellLast]}>
+                              {loyTime}{isLast ? ' *' : ''}
+                            </Text>
+                            <Text style={[styles.scheduleTableCell, isLast && styles.scheduleTableCellLast]}>
+                              {sgwTime}{isLast ? ' *' : ''}
+                            </Text>
+                          </View>
+                        );
+                      })}
+                    </ScrollView>
+                    <Text style={styles.scheduleLastBusNote}>* Last bus / Dernier départ</Text>
+                  </>
+                ) : (
+                  <Text style={styles.shuttleServiceResumeText}>
+                    No service today. Resumes next weekday.
+                  </Text>
+                )}
               </>
             )}
             <TouchableOpacity
@@ -1105,38 +1127,56 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#912338',
   },
-  scheduleList: {
-    maxHeight: 150,
+  scheduleTableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#912338',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  scheduleTableHeaderCell: {
+    flex: 1,
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  scheduleTable: {
+    maxHeight: 220,
     borderWidth: 1,
+    borderTopWidth: 0,
     borderColor: '#f0d9de',
-    borderRadius: 10,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  scheduleTableContent: {
+    paddingBottom: 4,
+  },
+  scheduleTableRow: {
+    flexDirection: 'row',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  scheduleTableRowAlt: {
     backgroundColor: '#fff9fa',
   },
-  scheduleListContent: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
-    rowGap: 6,
-  },
-  scheduleTimeText: {
-    fontSize: 14,
+  scheduleTableCell: {
+    flex: 1,
+    fontSize: 13,
     color: '#1f1f1f',
     fontWeight: '600',
+    textAlign: 'center',
   },
-  scheduleRowWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: 16,
-  },
-  scheduleTimeChip: {
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#f0d9de',
-    backgroundColor: '#fff9fa',
+  scheduleTableCellLast: {
     color: '#912338',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    fontSize: 12,
-    fontWeight: '700',
+  },
+  scheduleLastBusNote: {
+    fontSize: 11,
+    color: '#6a3f45',
+    fontStyle: 'italic',
+    marginTop: 4,
+    marginBottom: 8,
   },
 });

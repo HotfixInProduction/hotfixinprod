@@ -15,7 +15,7 @@ interface RouteInfoProps {
     shuttleInfo?: {
         nextDepartureInMinutes: number;
         nextDepartureTimeLabel: string;
-        intervalMinutes: number;
+        intervalMinutes?: number;
     } | null;
     onOpenShuttleSchedule?: () => void;
 }
@@ -91,19 +91,29 @@ const RouteInfo = ({
 
             <View style={styles.content}>
                 <View style={styles.textContainer}>
-                    <View style={styles.timeRow}>
-                        <Text style={styles.durationText}>{Math.round(duration)} min </Text>
-                        <Text style={styles.arrivalText}>• Arrive at {getArrivalTime()}</Text>
-                    </View>
+                    {!(mode === 'SHUTTLE' && shuttleInfo && shuttleInfo.nextDepartureInMinutes > 60) && (
+                        <View style={styles.timeRow}>
+                            <Text style={styles.durationText}>{Math.round(duration)} min </Text>
+                            <Text style={styles.arrivalText}>• Arrive at {getArrivalTime()}</Text>
+                        </View>
+                    )}
                     <Text style={styles.distanceText}>{distance.toFixed(1)} km</Text>
                     {mode === 'SHUTTLE' && shuttleInfo && (
                         <>
-                            <Text style={styles.shuttleDetailText}>
-                                Next shuttle in {shuttleInfo.nextDepartureInMinutes} min
-                            </Text>
-                            <Text style={styles.shuttleDetailSubtext}>
-                                Departs at {shuttleInfo.nextDepartureTimeLabel} • every {shuttleInfo.intervalMinutes} min
-                            </Text>
+                            {shuttleInfo.nextDepartureInMinutes > 60 ? (
+                                <Text style={styles.shuttleDetailText}>
+                                    No more shuttle departures today
+                                </Text>
+                            ) : (
+                                <>
+                                    <Text style={styles.shuttleDetailText}>
+                                        Next shuttle in {shuttleInfo.nextDepartureInMinutes} min
+                                    </Text>
+                                    <Text style={styles.shuttleDetailSubtext}>
+                                        Departs at {shuttleInfo.nextDepartureTimeLabel}
+                                    </Text>
+                                </>
+                            )}
                         </>
                     )}
                 </View>
