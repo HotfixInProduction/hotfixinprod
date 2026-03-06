@@ -31,6 +31,10 @@ function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent 
   const startDate = new Date(event.start.dateTime);
   const endDate = new Date(event.end.dateTime);
   const locationParts = (event.location ?? '').split(' ');
+
+  const building = location.split(' ')[0] ?? '';
+  const room = extractRoom(location);
+
   return {
     id: event.id,
     title: event.summary ?? 'No Title',
@@ -60,6 +64,11 @@ function filterConcordiaEvents(events: ClassEvent[]): ClassEvent[] {
     (event) =>
       regex.test(event.title) || regex.test(event.location) || regex.test(event.building)
   );
+}
+
+function extractRoom(location: string): string {
+  const match = location.match(/([A-Z]+[-]?\d+)/i);
+  return match ? match[0] : '';
 }
 
 export function useGoogleCalendar() {
