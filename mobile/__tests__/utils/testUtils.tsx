@@ -116,9 +116,6 @@ export const createStartDestinationPickerMock = () => {
     location: { lat: 45.4582, lng: -73.6402 },
   };
 
-<<<<<<< HEAD
-  return ({ setStart, setDestination, setMapSelectionTarget, mapSelectionTarget }: any) => (
-=======
   const mockStartWithWalking = {
     id: 'start-place-walk',
     location: { lat: 45.505, lng: -73.5789 },
@@ -129,8 +126,7 @@ export const createStartDestinationPickerMock = () => {
     location: { lat: 45.4662, lng: -73.6402 },
   };
 
-  return ({ setStart, setDestination }: any) => (
->>>>>>> 24b7b6f (added code coverage)
+  return ({ setStart, setDestination, setMapSelectionTarget, mapSelectionTarget }: any) => (
     <View testID="start-destination-picker-mock">
       <TouchableOpacity testID="set-start" onPress={() => setStart(mockStart)}>
         <Text>Set Start</Text>
