@@ -1,5 +1,6 @@
 import { AppState } from 'react-native';
 import React from 'react';
+import type { Building } from '../../src/types/building';
 
 // Create mock functions
 export const mockRequestForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
@@ -15,8 +16,10 @@ export const mockAnimateToRegion = jest.fn();
 export const mockFitToCoordinates = jest.fn();
 
 // Mock data
-export const mockBuilding = {
+export const mockBuilding: Building = {
   id: 'Hall Building',
+  label: 'H',
+  coordinates: [{ latitude: 45.4977, longitude: -73.5790 }],
   address: '1455 De Maisonneuve Blvd. W.',
   labelCoord: { latitude: 45.497285, longitude: -73.578975 },
   floorPlans: {
@@ -24,8 +27,10 @@ export const mockBuilding = {
   }
 };
 
-export const mockBuildingNoPlans = {
+export const mockBuildingNoPlans: Building = {
   id: 'Library Building',
+  label: 'LB',
+  coordinates: [{ latitude: 45.4966, longitude: -73.5785 }],
   address: '1400 De Maisonneuve Blvd. W.',
   labelCoord: { latitude: 45.496897, longitude: -73.577928 },
 };
