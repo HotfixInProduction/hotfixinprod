@@ -3,6 +3,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
+import { BUILDINGS } from '../data/buildings';
 
 import {
   GoogleCalendarState,
@@ -41,6 +42,14 @@ function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent 
     dayOfWeek: startDate.getDay(),
     color: EVENT_COLORS[index % EVENT_COLORS.length],
   };
+}
+
+export function validateEventBuilding(event: ClassEvent): boolean {
+  const eventBuilding = event.building.toUpperCase();
+
+  return BUILDINGS.some(
+    (b) => b.label.toUpperCase() === eventBuilding || b.id.toUpperCase() === eventBuilding
+  );
 }
 
 function filterConcordiaEvents(events: ClassEvent[]): ClassEvent[] {
@@ -139,7 +148,11 @@ export function useGoogleCalendar() {
       if (!existingUser) saveUserToStorage(user);
       const events: ClassEvent[] = raw.map(mapToClassEvent);
       const concordiaEvents = filterConcordiaEvents(events);
-      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events });
+      const validatedEvents = concordiaEvents.map(event => ({
+        ...event,
+        isValidBuilding: validateEventBuilding(event),
+      }));
+      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events: validatedEvents, });
     } catch (err: unknown) {
       setState(prev => ({
         ...prev,
