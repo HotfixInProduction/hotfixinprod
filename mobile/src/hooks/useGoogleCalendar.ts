@@ -43,6 +43,16 @@ function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent 
   };
 }
 
+function filterConcordiaEvents(events: ClassEvent[]): ClassEvent[] {
+  const keywords = ['Concordia', 'SGW', 'Loyola', 'Shuttle'];
+  const regex = new RegExp(keywords.join('|'), 'i');
+
+  return events.filter(
+    (event) =>
+      regex.test(event.title) || regex.test(event.location) || regex.test(event.building)
+  );
+}
+
 export function useGoogleCalendar() {
   const [state, setState] = useState<GoogleCalendarState>({
     isAuthenticated: false,
@@ -118,6 +128,7 @@ export function useGoogleCalendar() {
       ]);
       if (!existingUser) saveUserToStorage(user);
       const events: ClassEvent[] = raw.map(mapToClassEvent);
+      const concordiaEvents = filterConcordiaEvents(events);
       setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events });
     } catch (err: unknown) {
       setState(prev => ({
