@@ -19,7 +19,7 @@ export const mockFitToCoordinates = jest.fn();
 export const mockBuilding: Building = {
   id: 'Hall Building',
   label: 'H',
-  coordinates: [{ latitude: 45.4977, longitude: -73.5790 }],
+  coordinates: [{ latitude: 45.4977, longitude: -73.579 }],
   address: '1455 De Maisonneuve Blvd. W.',
   labelCoord: { latitude: 45.497285, longitude: -73.578975 },
   floorPlans: {

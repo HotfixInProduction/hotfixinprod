@@ -11,7 +11,7 @@ jest.mock('@expo/vector-icons', () => ({
 const mockBuilding: Building = {
   id: 'Hall Building',
   label: 'H',
-  coordinates: [{ latitude: 45.4977, longitude: -73.5790 }],
+  coordinates: [{ latitude: 45.4977, longitude: -73.579 }],
   labelCoord: { latitude: 45.497285, longitude: -73.578975 },
   address: '1455 De Maisonneuve Blvd. W.',
 };
