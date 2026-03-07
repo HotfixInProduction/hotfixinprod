@@ -141,8 +141,9 @@ export function useGoogleCalendar() {
       if (!state.isAuthenticated || !state.token) return;
 
       const interval = setInterval(() => {
+        console.log("Refreshing Google Calendar events...");
         loadEvents(state.token!, state.user);
-      }, 300000);
+      }, 5000);
 
       return () => clearInterval(interval);
     }, [state.isAuthenticated, state.token, state.user]);
