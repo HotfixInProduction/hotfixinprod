@@ -1,19 +1,27 @@
 import { useMemo } from 'react';
-import { findPath, generateSvgPath } from '../utils/Pathfinding';
+import { findPath, generateSvgPath, getRoomNodeId } from '../utils/Pathfinding';
 import { NavMeshNode } from '../types/building';
 
 export function useIndoorPath(
   buildingId: string | undefined,
   floorLevel: string,
-  startNodeId: number | undefined,
-  endNodeId: number | undefined
+  startRoom: string | undefined,
+  endRoom: string | undefined
 ): NavMeshNode[] | null {
   return useMemo(() => {
-    if (!buildingId || startNodeId === undefined || endNodeId === undefined) {
+    if (!buildingId || !startRoom || !endRoom) {
       return null;
     }
+    
+    const startNodeId = getRoomNodeId(buildingId, floorLevel, startRoom);
+    const endNodeId = getRoomNodeId(buildingId, floorLevel, endRoom);
+    
+    if (startNodeId === null || endNodeId === null) {
+      return null;
+    }
+    
     return findPath(buildingId, floorLevel, startNodeId, endNodeId);
-  }, [buildingId, floorLevel, startNodeId, endNodeId]);
+  }, [buildingId, floorLevel, startRoom, endRoom]);
 }
 
 export function useSvgPathString(path: NavMeshNode[] | null): string {

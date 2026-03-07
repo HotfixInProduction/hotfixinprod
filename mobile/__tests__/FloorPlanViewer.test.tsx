@@ -41,6 +41,7 @@ jest.mock('@expo/vector-icons', () => {
 jest.mock('../src/utils/Pathfinding', () => ({
     findPath: jest.fn(() => null),
     generateSvgPath: jest.fn(() => ''),
+    getRoomNodeId: jest.fn(() => null),
 }));
 
 describe('FloorPlanViewer', () => {
