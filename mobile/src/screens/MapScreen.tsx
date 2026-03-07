@@ -4,164 +4,25 @@ import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linki
 import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import StartDestinationPicker, { Place } from '../components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
-import { buildings } from '../data/buildings';
 import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
 import type { MapStep, TravelMode } from '../types/map';
-
-const INITIAL_REGION = {
-  latitude: 45.497,
-  longitude: -73.579,
-  latitudeDelta: 0.004,
-  longitudeDelta: 0.004,
-};
-
-const CAMPUSES = {
-  downtown: {
-    name: 'Downtown',
-    latitude: 45.4972,
-    longitude: -73.5789,
-    latitudeDelta: 0.004,
-    longitudeDelta: 0.004,
-  },
-  loyola: {
-    name: 'Loyola',
-    latitude: 45.4582,
-    longitude: -73.6402,
-    latitudeDelta: 0.004,
-    longitudeDelta: 0.004,
-  },
-};
-
-type CampusKey = keyof typeof CAMPUSES;
-
-// Mon–Thu shuttle departure times as minutes since midnight
-const LOY_DEPARTURE_MINUTES = [
-  9*60+15, 9*60+45, 10*60+15, 11*60+15, 11*60+45,
-  12*60+15, 12*60+45, 13*60+15, 13*60+45, 14*60+15,
-  14*60+45, 15*60+15, 15*60+45, 16*60+15, 16*60+45,
-  17*60+45, 18*60+15, 18*60+45,
-];
-const SGW_DEPARTURE_MINUTES = [
-  9*60+15, 9*60+45, 10*60+15, 10*60+45, 11*60+45,
-  12*60+15, 12*60+45, 13*60+15, 13*60+45, 14*60+15,
-  14*60+45, 15*60+15, 15*60+45, 16*60+15, 17*60+15,
-  17*60+45, 18*60+15, 18*60+45,
-];
-const isShuttleWeekday = (date: Date) => date.getDay() >= 1 && date.getDay() <= 4; // Mon–Thu
-const SHUTTLE_RIDE_MINUTES = 22;
-const SHUTTLE_DISTANCE_KM = 6.8;
-const CAMPUS_MATCH_THRESHOLD_METERS = 2200;
-const WALK_SEGMENT_VISIBILITY_THRESHOLD_METERS = 40;
-
-const SHUTTLE_TERMINALS: Record<CampusKey, { latitude: number; longitude: number }> = {
-  downtown: {
-    // Hall Building shuttle stop
-    latitude: 45.497285416040164,
-    longitude: -73.57897485280246,
-  },
-  loyola: {
-    // Loyola campus shuttle stop
-    latitude: 45.45790,
-    longitude: -73.63950,
-  },
-};
-// Force shuttle driving directions to stay on the Sherbrooke.
-const SHUTTLE_SHERBROOKE_WAYPOINTS = [
-  { latitude: 45.4822, longitude: -73.5997
-
-   },
-   { latitude: 45.4726, longitude: -73.6119
-
-   },
-  
-
-
-
-  
-];
-
-const getDistanceInMeters = (
-  latitude1: number,
-  longitude1: number,
-  latitude2: number,
-  longitude2: number
-) => {
-  const R = 6371e3;
-  const latitude1InRadians = latitude1 * Math.PI / 180;
-  const latitude2InRadians = latitude2 * Math.PI / 180;
-  const deltaLatitude = (latitude2 - latitude1) * Math.PI / 180;
-  const deltaLongitude = (longitude2 - longitude1) * Math.PI / 180;
-  const a = Math.sin(deltaLatitude / 2) * Math.sin(deltaLatitude / 2) +
-    Math.cos(latitude1InRadians) * Math.cos(latitude2InRadians) *
-    Math.sin(deltaLongitude / 2) * Math.sin(deltaLongitude / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-};
-
-const resolveCampusForPlace = (place: Place | null): CampusKey | null => {
-  if (!place) return null;
-
-  const entries = Object.entries(CAMPUSES) as [CampusKey, typeof CAMPUSES[CampusKey]][];
-  let bestMatch: CampusKey | null = null;
-  let minDistance = Number.MAX_SAFE_INTEGER;
-
-  entries.forEach(([campusKey, campus]) => {
-    const distance = getDistanceInMeters(
-      place.location.lat,
-      place.location.lng,
-      campus.latitude,
-      campus.longitude
-    );
-
-    if (distance < minDistance) {
-      minDistance = distance;
-      bestMatch = campusKey;
-    }
-  });
-
-  if (minDistance > CAMPUS_MATCH_THRESHOLD_METERS) {
-    return null;
-  }
-
-  return bestMatch;
-};
-
-const createShuttleDeparturesForDate = (date: Date, minutesList: number[]) =>
-  minutesList.map((minutes) => {
-    const departure = new Date(date);
-    departure.setHours(Math.floor(minutes / 60), minutes % 60, 0, 0);
-    return departure;
-  });
-
-const getNextShuttleDeparture = (now: Date, minutesList: number[]) => {
-  if (isShuttleWeekday(now)) {
-    const todayDepartures = createShuttleDeparturesForDate(now, minutesList);
-    const nextToday = todayDepartures.find((d) => d.getTime() >= now.getTime());
-    if (nextToday) {
-      return { nextDeparture: nextToday, serviceResumesNextWeekday: false };
-    }
-  }
-
-  // Find next Mon–Thu
-  const nextDay = new Date(now);
-  do {
-    nextDay.setDate(nextDay.getDate() + 1);
-  } while (!isShuttleWeekday(nextDay));
-
-  const nextDayDepartures = createShuttleDeparturesForDate(nextDay, minutesList);
-  return { nextDeparture: nextDayDepartures[0], serviceResumesNextWeekday: true };
-};
-
-const formatTimeLabel = (value: Date) =>
-  value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+import { useShuttleRouting } from '../hooks/useShuttleRouting';
+import {
+  CAMPUSES,
+  INITIAL_REGION,
+  SHUTTLE_SHERBROOKE_WAYPOINTS,
+  getCoordinates,
+  getPlaceName,
+  type CampusKey,
+} from '../models/MapRouting';
 
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
@@ -184,63 +45,26 @@ export default function MapScreen() {
   const [transportMode, setTransportMode] = useState<TravelMode>('DRIVING');
   const [currentDelta, setCurrentDelta] = useState(INITIAL_REGION.latitudeDelta);
   const [showShuttleSchedule, setShowShuttleSchedule] = useState(false);
-  const [shuttleNow, setShuttleNow] = useState(new Date());
   const [mapSelectionTarget, setMapSelectionTarget] = useState<'start' | 'destination' | null>(null);
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
-  const startCampus = useMemo(() => resolveCampusForPlace(start), [start]);
-  const destinationCampus = useMemo(() => resolveCampusForPlace(destination), [destination]);
-  const isShuttleRoute = Boolean(startCampus && destinationCampus && startCampus !== destinationCampus);
-
-  const shuttleData = useMemo(() => {
-    if (!isShuttleRoute || !startCampus || !destinationCampus) return null;
-
-    const departureMins = startCampus === 'loyola' ? LOY_DEPARTURE_MINUTES : SGW_DEPARTURE_MINUTES;
-    const { nextDeparture, serviceResumesNextWeekday } = getNextShuttleDeparture(shuttleNow, departureMins);
-    const nextDepartureInMinutes = Math.max(
-      0,
-      Math.ceil((nextDeparture.getTime() - shuttleNow.getTime()) / 60000)
-    );
-
-    const scheduleDate = isShuttleWeekday(shuttleNow) ? shuttleNow : null;
-    const loyScheduleLabels = scheduleDate
-      ? createShuttleDeparturesForDate(scheduleDate, LOY_DEPARTURE_MINUTES).map(formatTimeLabel)
-      : [];
-    const sgwScheduleLabels = scheduleDate
-      ? createShuttleDeparturesForDate(scheduleDate, SGW_DEPARTURE_MINUTES).map(formatTimeLabel)
-      : [];
-
-    return {
-      directionLabel: `${CAMPUSES[startCampus].name} → ${CAMPUSES[destinationCampus].name}`,
-      loyScheduleLabels,
-      sgwScheduleLabels,
-      nextDepartureInMinutes,
-      nextDepartureTimeLabel: formatTimeLabel(nextDeparture),
-      totalDurationMinutes: SHUTTLE_RIDE_MINUTES + nextDepartureInMinutes,
-      serviceResumesNextWeekday,
-    };
-  }, [destinationCampus, isShuttleRoute, shuttleNow, startCampus]);
+  const {
+    isShuttleRoute,
+    shuttleData,
+    shuttleRouteSegments,
+    shuttleRouteInfo,
+  } = useShuttleRouting({
+    start,
+    destination,
+    transportMode,
+    onTransportModeChange: setTransportMode,
+  });
 
   useEffect(() => {
-    if (transportMode !== 'SHUTTLE' || !isShuttleRoute) return;
-    const intervalId = setInterval(() => setShuttleNow(new Date()), 30000);
-    return () => clearInterval(intervalId);
-  }, [isShuttleRoute, transportMode]);
-
-  useEffect(() => {
-    if (transportMode === 'SHUTTLE' && !isShuttleRoute) {
-      setTransportMode('TRANSIT');
+    if (shuttleRouteInfo) {
+      setRouteInfo(shuttleRouteInfo);
     }
-  }, [isShuttleRoute, transportMode]);
-
-  useEffect(() => {
-    if (transportMode === 'SHUTTLE' && shuttleData && start && destination) {
-      setRouteInfo({
-        distance: SHUTTLE_DISTANCE_KM,
-        duration: shuttleData.totalDurationMinutes,
-      });
-    }
-  }, [destination, shuttleData, start, transportMode]);
+  }, [shuttleRouteInfo]);
 
   useEffect(() => {
     if (!isShuttleRoute) {
@@ -446,14 +270,6 @@ export default function MapScreen() {
     setShowFloorPlan(false);
   };
 
-  const getCoordinates = (place: Place | null) => {
-    if (!place) return undefined;
-    return {
-      latitude: place.location.lat,
-      longitude: place.location.lng,
-    };
-  };
-
   const handleClearRoute = () => {
     setStart(null);
     setDestination(null);
@@ -471,53 +287,8 @@ export default function MapScreen() {
     return 'none';
   })();
   const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
-  const getPlaceName = (place: Place | null) => {
-    if (!place) return '';
-    return (place as any).name || (place as any).id || '';
-  };
   const directionsMode: Exclude<TravelMode, 'SHUTTLE'> =
     transportMode === 'SHUTTLE' ? 'TRANSIT' : transportMode;
-
-  const shuttleRouteSegments = useMemo(() => {
-    if (
-      transportMode !== 'SHUTTLE' ||
-      !isShuttleRoute ||
-      !start ||
-      !destination ||
-      !startCampus ||
-      !destinationCampus
-    ) {
-      return null;
-    }
-
-    const startCoordinates = getCoordinates(start)!;
-    const destinationCoordinates = getCoordinates(destination)!;
-    const originTerminal = SHUTTLE_TERMINALS[startCampus];
-    const destinationTerminal = SHUTTLE_TERMINALS[destinationCampus];
-
-    const shouldDrawStartWalkingSegment =
-      getDistanceInMeters(
-        startCoordinates.latitude,
-        startCoordinates.longitude,
-        originTerminal.latitude,
-        originTerminal.longitude
-      ) > WALK_SEGMENT_VISIBILITY_THRESHOLD_METERS;
-
-    const shouldDrawDestinationWalkingSegment =
-      getDistanceInMeters(
-        destinationTerminal.latitude,
-        destinationTerminal.longitude,
-        destinationCoordinates.latitude,
-        destinationCoordinates.longitude
-      ) > WALK_SEGMENT_VISIBILITY_THRESHOLD_METERS;
-
-    return {
-      originTerminal,
-      destinationTerminal,
-      startWalking: shouldDrawStartWalkingSegment ? [startCoordinates, originTerminal] : null,
-      destinationWalking: shouldDrawDestinationWalkingSegment ? [destinationTerminal, destinationCoordinates] : null,
-    };
-  }, [destination, destinationCampus, isShuttleRoute, start, startCampus, transportMode]);
 
   return (
     <View style={styles.container}>
