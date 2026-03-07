@@ -8,10 +8,11 @@ import {
   GoogleCalendarState,
   GoogleAuthToken,
   GoogleCalendarEvent,
+  GoogleCalendarListEntry,
   GoogleUser,
   ClassEvent,
 } from '../types/calendar';
-import { GOOGLE_CALENDAR_SCOPES, fetchCalendarEvents, fetchUserProfile } from '../models/CalendarApi';
+import { GOOGLE_CALENDAR_SCOPES, fetchCalendarEvents, fetchCalendarList, fetchUserProfile } from '../models/CalendarApi';
 import {
   loadTokenFromStorage,
   saveTokenToStorage,
@@ -51,6 +52,8 @@ export function useGoogleCalendar() {
     token: null,
     user: null,
     events: [],
+    calendars: [],
+    selectedCalendarId: 'primary',
   });
 
   const redirectUri = makeRedirectUri({
@@ -79,7 +82,7 @@ export function useGoogleCalendar() {
       const stored = await loadTokenFromStorage();
       if (stored && !isTokenExpired(stored)) {
         const savedUser = await loadUserFromStorage();
-        await loadEvents(stored, savedUser);
+        await loadEvents(stored, savedUser, 'primary');
       } else {
         setState(prev => ({ ...prev, isLoading: false }));
       }
@@ -96,7 +99,7 @@ export function useGoogleCalendar() {
         tokenType: 'Bearer',
       };
       saveTokenToStorage(token);
-      loadEvents(token, null);
+      loadEvents(token, null, 'primary');
     } else if (response?.type === 'error') {
       setState(prev => ({
         ...prev,
@@ -109,16 +112,30 @@ export function useGoogleCalendar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
-  async function loadEvents(token: GoogleAuthToken, existingUser: GoogleUser | null) {
+  async function loadEvents(
+    token: GoogleAuthToken,
+    existingUser: GoogleUser | null,
+    calendarId: string
+  ) {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
-      const [raw, user] = await Promise.all([
-        fetchCalendarEvents(token.accessToken),
+      const [raw, user, calendars] = await Promise.all([
+        fetchCalendarEvents(token.accessToken, calendarId),
         existingUser ? Promise.resolve(existingUser) : fetchUserProfile(token.accessToken),
+        fetchCalendarList(token.accessToken),
       ]);
       if (!existingUser) saveUserToStorage(user);
       const events: ClassEvent[] = raw.map(mapToClassEvent);
-      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events });
+      setState({
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+        token,
+        user,
+        events,
+        calendars,
+        selectedCalendarId: calendarId,
+      });
     } catch (err: unknown) {
       setState(prev => ({
         ...prev,
@@ -135,8 +152,22 @@ export function useGoogleCalendar() {
 
   async function disconnect() {
     await Promise.all([clearTokenFromStorage(), clearUserFromStorage()]);
-    setState({ isAuthenticated: false, isLoading: false, error: null, token: null, user: null, events: [] });
+    setState({
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+      token: null,
+      user: null,
+      events: [],
+      calendars: [],
+      selectedCalendarId: 'primary',
+    });
   }
 
-  return { state, connect, disconnect };
+  async function selectCalendar(calendarId: string) {
+    if (!state.token) return;
+    await loadEvents(state.token, state.user, calendarId);
+  }
+
+  return { state, connect, disconnect, selectCalendar };
 }

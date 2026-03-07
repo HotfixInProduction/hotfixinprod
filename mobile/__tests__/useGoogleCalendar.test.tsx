@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useGoogleCalendar } from '../src/hooks/useGoogleCalendar';
 import { loadTokenFromStorage, isTokenExpired, loadUserFromStorage, saveTokenToStorage } from '../src/models/CalendarStorage';
-import { fetchCalendarEvents, fetchUserProfile } from '../src/models/CalendarApi';
+import { fetchCalendarEvents, fetchCalendarList, fetchUserProfile } from '../src/models/CalendarApi';
 
 jest.mock('../src/models/CalendarStorage', () => ({
   loadTokenFromStorage: jest.fn(),
@@ -10,19 +10,21 @@ jest.mock('../src/models/CalendarStorage', () => ({
   loadUserFromStorage: jest.fn(),
   saveUserToStorage: jest.fn(),
   clearUserFromStorage: jest.fn(),
-  isTokenExpired: jest.fn()
+  isTokenExpired: jest.fn(),
 }));
+
 jest.mock('../src/models/CalendarApi', () => ({
   fetchCalendarEvents: jest.fn(),
+  fetchCalendarList: jest.fn(),
   fetchUserProfile: jest.fn(),
-  GOOGLE_CALENDAR_SCOPES: ['scope']
+  GOOGLE_CALENDAR_SCOPES: ['scope'],
 }));
 
 // Mutable response ref so individual tests can control what useAuthRequest returns
 let mockResponse: any = null;
 const mockPromptAsync = jest.fn();
 jest.mock('expo-auth-session/providers/google', () => ({
-  useAuthRequest: () => [null, mockResponse, mockPromptAsync]
+  useAuthRequest: () => [null, mockResponse, mockPromptAsync],
 }));
 jest.mock('expo-auth-session', () => ({ makeRedirectUri: () => 'redirect' }));
 jest.mock('expo-web-browser', () => ({ maybeCompleteAuthSession: jest.fn() }));
@@ -35,17 +37,37 @@ jest.mock('expo-constants', () => ({
   },
 }));
 
+const mockEvent = {
+  id: '1',
+  start: { dateTime: new Date().toISOString() },
+  end: { dateTime: new Date().toISOString() },
+  location: 'B 101',
+  summary: 'Math',
+};
+
+const mockCalendars = [
+  { id: 'primary', summary: 'My Calendar', backgroundColor: '#4A90E2', primary: true },
+  { id: 'work@example.com', summary: 'Work', backgroundColor: '#E94B3C' },
+];
+
+const mockUser = { name: 'Test', email: 'test@mail.com', picture: 'pic' };
+
 describe('useGoogleCalendar', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     mockResponse = null;
   });
 
-  it('initializes with loading state and handles missing token', async () => {
+  // Initial state
+
+  it('initializes with correct default state', async () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue(null);
     const { result } = renderHook(() => useGoogleCalendar());
+
     expect(result.current.state.isLoading).toBe(true);
     expect(result.current.state.isAuthenticated).toBe(false);
+    expect(result.current.state.calendars).toEqual([]);
+    expect(result.current.state.selectedCalendarId).toBe('primary');
 
     await waitFor(() => expect(result.current.state.isLoading).toBe(false));
   });
@@ -59,17 +81,23 @@ describe('useGoogleCalendar', () => {
     expect(result.current.state.isAuthenticated).toBe(false);
   });
 
-  it('handles valid token and loads events', async () => {
+  // loadEvents
+
+  it('handles valid token and loads events and calendars', async () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue({ accessToken: 'token', expiresAt: Date.now() + 10000, tokenType: 'Bearer' });
     (isTokenExpired as jest.Mock).mockReturnValue(false);
     (loadUserFromStorage as jest.Mock).mockResolvedValue(null);
-    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'Math' }]);
-    (fetchUserProfile as jest.Mock).mockResolvedValue({ name: 'Test', email: 'test@mail.com', picture: 'pic' });
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([mockEvent]);
+    (fetchUserProfile as jest.Mock).mockResolvedValue(mockUser);
+    (fetchCalendarList as jest.Mock).mockResolvedValue(mockCalendars);
 
     const { result } = renderHook(() => useGoogleCalendar());
     await waitFor(() => expect(result.current.state.isAuthenticated).toBe(true));
-    expect(result.current.state.user).toEqual({ name: 'Test', email: 'test@mail.com', picture: 'pic' });
+
+    expect(result.current.state.user).toEqual(mockUser);
     expect(result.current.state.events.length).toBeGreaterThan(0);
+    expect(result.current.state.calendars).toEqual(mockCalendars);
+    expect(result.current.state.selectedCalendarId).toBe('primary');
   });
 
   it('handles valid token with existing user from storage', async () => {
@@ -77,12 +105,15 @@ describe('useGoogleCalendar', () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue({ accessToken: 'token', expiresAt: Date.now() + 10000, tokenType: 'Bearer' });
     (isTokenExpired as jest.Mock).mockReturnValue(false);
     (loadUserFromStorage as jest.Mock).mockResolvedValue(savedUser);
-    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'Math' }]);
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([mockEvent]);
+    (fetchCalendarList as jest.Mock).mockResolvedValue(mockCalendars);
 
     const { result } = renderHook(() => useGoogleCalendar());
     await waitFor(() => expect(result.current.state.isAuthenticated).toBe(true));
+
     expect(result.current.state.user).toEqual(savedUser);
     expect(fetchUserProfile).not.toHaveBeenCalled();
+    expect(result.current.state.calendars).toEqual(mockCalendars);
   });
 
   it('handles error in loadEvents', async () => {
@@ -90,7 +121,8 @@ describe('useGoogleCalendar', () => {
     (isTokenExpired as jest.Mock).mockReturnValue(false);
     (loadUserFromStorage as jest.Mock).mockResolvedValue(null);
     (fetchCalendarEvents as jest.Mock).mockRejectedValue(new Error('fetch fail'));
-    (fetchUserProfile as jest.Mock).mockResolvedValue({ name: 'Test', email: 'test@mail.com', picture: 'pic' });
+    (fetchUserProfile as jest.Mock).mockResolvedValue(mockUser);
+    (fetchCalendarList as jest.Mock).mockResolvedValue(mockCalendars);
 
     const { result } = renderHook(() => useGoogleCalendar());
     await waitFor(() => expect(result.current.state.error).toBe('fetch fail'));
@@ -102,11 +134,14 @@ describe('useGoogleCalendar', () => {
     (isTokenExpired as jest.Mock).mockReturnValue(false);
     (loadUserFromStorage as jest.Mock).mockResolvedValue(null);
     (fetchCalendarEvents as jest.Mock).mockRejectedValue('string error');
-    (fetchUserProfile as jest.Mock).mockResolvedValue({ name: 'Test', email: 'test@mail.com', picture: 'pic' });
+    (fetchUserProfile as jest.Mock).mockResolvedValue(mockUser);
+    (fetchCalendarList as jest.Mock).mockResolvedValue(mockCalendars);
 
     const { result } = renderHook(() => useGoogleCalendar());
     await waitFor(() => expect(result.current.state.error).toBe('Failed to load events'));
   });
+
+  // connect / disconnect
 
   it('connect sets loading', async () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue(null);
@@ -119,7 +154,7 @@ describe('useGoogleCalendar', () => {
     expect(result.current.state.isLoading).toBe(true);
   });
 
-  it('disconnect resets state', async () => {
+  it('disconnect resets full state including calendars', async () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue(null);
     const { result } = renderHook(() => useGoogleCalendar());
     await waitFor(() => expect(result.current.state.isLoading).toBe(false));
@@ -127,16 +162,71 @@ describe('useGoogleCalendar', () => {
     await act(async () => {
       await result.current.disconnect();
     });
+
     expect(result.current.state.isAuthenticated).toBe(false);
     expect(result.current.state.token).toBe(null);
     expect(result.current.state.user).toBe(null);
     expect(result.current.state.events).toEqual([]);
+    expect(result.current.state.calendars).toEqual([]);
+    expect(result.current.state.selectedCalendarId).toBe('primary');
   });
 
-  it('handles successful OAuth response', async () => {
+  // selectCalendar
+
+  it('selectCalendar does nothing if no token', async () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue(null);
-    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'Math' }]);
-    (fetchUserProfile as jest.Mock).mockResolvedValue({ name: 'OAuth User', email: 'oauth@mail.com', picture: 'pic' });
+    const { result } = renderHook(() => useGoogleCalendar());
+    await waitFor(() => expect(result.current.state.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.selectCalendar('work@example.com');
+    });
+
+    expect(fetchCalendarEvents).not.toHaveBeenCalled();
+  });
+
+  it('selectCalendar re-fetches events with new calendarId', async () => {
+    (loadTokenFromStorage as jest.Mock).mockResolvedValue({ accessToken: 'token', expiresAt: Date.now() + 10000, tokenType: 'Bearer' });
+    (isTokenExpired as jest.Mock).mockReturnValue(false);
+    (loadUserFromStorage as jest.Mock).mockResolvedValue(mockUser);
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([mockEvent]);
+    (fetchCalendarList as jest.Mock).mockResolvedValue(mockCalendars);
+
+    const { result } = renderHook(() => useGoogleCalendar());
+    await waitFor(() => expect(result.current.state.isAuthenticated).toBe(true));
+
+    await act(async () => {
+      await result.current.selectCalendar('work@example.com');
+    });
+
+    await waitFor(() => expect(result.current.state.selectedCalendarId).toBe('work@example.com'));
+    expect(fetchCalendarEvents).toHaveBeenCalledWith('token', 'work@example.com');
+  });
+
+  it('selectCalendar updates selectedCalendarId in state', async () => {
+    (loadTokenFromStorage as jest.Mock).mockResolvedValue({ accessToken: 'token', expiresAt: Date.now() + 10000, tokenType: 'Bearer' });
+    (isTokenExpired as jest.Mock).mockReturnValue(false);
+    (loadUserFromStorage as jest.Mock).mockResolvedValue(mockUser);
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([]);
+    (fetchCalendarList as jest.Mock).mockResolvedValue(mockCalendars);
+
+    const { result } = renderHook(() => useGoogleCalendar());
+    await waitFor(() => expect(result.current.state.isAuthenticated).toBe(true));
+
+    await act(async () => {
+      await result.current.selectCalendar('work@example.com');
+    });
+
+    await waitFor(() => expect(result.current.state.selectedCalendarId).toBe('work@example.com'));
+  });
+
+  // OAuth responses
+
+  it('handles successful OAuth response and loads calendars', async () => {
+    (loadTokenFromStorage as jest.Mock).mockResolvedValue(null);
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([mockEvent]);
+    (fetchUserProfile as jest.Mock).mockResolvedValue(mockUser);
+    (fetchCalendarList as jest.Mock).mockResolvedValue(mockCalendars);
 
     mockResponse = {
       type: 'success',
@@ -145,8 +235,10 @@ describe('useGoogleCalendar', () => {
 
     const { result } = renderHook(() => useGoogleCalendar());
     await waitFor(() => expect(result.current.state.isAuthenticated).toBe(true));
+
     expect(saveTokenToStorage).toHaveBeenCalled();
-    expect(result.current.state.user).toEqual({ name: 'OAuth User', email: 'oauth@mail.com', picture: 'pic' });
+    expect(result.current.state.user).toEqual(mockUser);
+    expect(result.current.state.calendars).toEqual(mockCalendars);
   });
 
   it('handles error OAuth response', async () => {
@@ -164,6 +256,15 @@ describe('useGoogleCalendar', () => {
   it('handles dismissed OAuth response', async () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue(null);
     mockResponse = { type: 'dismiss' };
+
+    const { result } = renderHook(() => useGoogleCalendar());
+    await waitFor(() => expect(result.current.state.isLoading).toBe(false));
+    expect(result.current.state.error).toBe(null);
+  });
+
+  it('handles cancelled OAuth response', async () => {
+    (loadTokenFromStorage as jest.Mock).mockResolvedValue(null);
+    mockResponse = { type: 'cancel' };
 
     const { result } = renderHook(() => useGoogleCalendar());
     await waitFor(() => expect(result.current.state.isLoading).toBe(false));
