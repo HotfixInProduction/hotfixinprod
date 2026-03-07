@@ -44,9 +44,13 @@ jest.mock('../src/hooks/useGoogleCalendar', () => ({
   }),
 }));
 
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: 'MaterialIcons',
-}));
+// Mock MaterialIcons
+jest.mock('@expo/vector-icons', () => {
+  const { Text } = require('react-native');
+  return {
+    MaterialIcons: (props: any) => <Text {...props}>{props.name}</Text>,
+  };
+});
 
 describe('ScheduleScreen', () => {
   beforeEach(() => {
