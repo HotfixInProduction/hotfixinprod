@@ -49,7 +49,7 @@ export default function CalendarPicker({ calendars, selectedCalendarId, onSelect
         animationType="fade"
         onRequestClose={() => setVisible(false)}
       >
-        <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
+        <Pressable testID="calendar-picker-overlay" style={styles.overlay} onPress={() => setVisible(false)}>
           <View style={styles.sheet}>
             <Text style={styles.sheetTitle}>Select Calendar</Text>
             <FlatList

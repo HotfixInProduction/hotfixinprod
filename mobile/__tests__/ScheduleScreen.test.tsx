@@ -88,7 +88,7 @@ describe('ScheduleScreen', () => {
       expect(getAllByText('My Calendar').length).toBeGreaterThan(0);
       expect(getByText('Work')).toBeTruthy();
     });
-    
+
     it('calls selectCalendar when a calendar is selected', () => {
       const { getByText } = render(<ScheduleScreen />);
 
@@ -105,6 +105,26 @@ describe('ScheduleScreen', () => {
       expect(getByText('Select Calendar')).toBeTruthy();
 
       fireEvent.press(getByText('Work'));
+      expect(queryByText('Select Calendar')).toBeNull();
+    });
+
+    it('closes modal when overlay is pressed', () => {
+      const { getByText, getByTestId, queryByText } = render(<ScheduleScreen />);
+
+      fireEvent.press(getByText('My Calendar'));
+      expect(getByText('Select Calendar')).toBeTruthy();
+
+      fireEvent(getByTestId('calendar-picker-overlay'), 'press');
+      expect(queryByText('Select Calendar')).toBeNull();
+    });
+
+    it('closes modal on hardware back request', () => {
+      const { getByText, queryByText } = render(<ScheduleScreen />);
+
+      fireEvent.press(getByText('My Calendar'));
+      expect(getByText('Select Calendar')).toBeTruthy();
+
+      fireEvent(getByText('Select Calendar'), 'requestClose');
       expect(queryByText('Select Calendar')).toBeNull();
     });
   });
