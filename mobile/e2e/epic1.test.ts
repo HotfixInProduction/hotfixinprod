@@ -1,7 +1,7 @@
 import { element, by, expect, waitFor } from 'detox';
 import { setupApp, navigateToMap, zoomIn, openBuildingSelector, selectCampus, searchAndSelectBuilding, wait, dismissAlert } from './helpers';
 
-describe('US-1 Campus Map exploration', () => {
+describe('Epic 1 Campus Map exploration', () => {
 
     it('AT-1.1-1.3 View SGW and Loyola Campus Maps', async () => {
         await setupApp();
