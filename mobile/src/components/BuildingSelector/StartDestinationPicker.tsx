@@ -23,6 +23,8 @@ type StartDestinationPickerProps = {
   transportMode: TravelMode;
   mapSelectionTarget?: 'start' | 'destination' | null;
   setMapSelectionTarget?: (target: 'start' | 'destination' | null) => void;
+  setDirectionsGoogle: (data: any) => void;
+  setRouteInfo: (val: {distance: number, duration: number} | null) => void;
 };
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -32,7 +34,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   TRANSIT: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo }) => {
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
@@ -167,7 +169,15 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
           const response = await fetch(url);
           const data = await response.json();
           if (data.routes.length > 0) {
-            setInstructions(data.routes[0].legs[0].steps);
+
+            setDirectionsGoogle(data) // this sends data for route display
+            setInstructions(data.routes[0].legs[0].steps); // this sends data for instruction display
+            
+            setRouteInfo({
+              distance: data.routes[0].legs[0].distance.value / 1000, // convert meters to km
+              duration: Math.ceil(data.routes[0].legs[0].duration.value / 60), // convert seconds to mins
+            });
+
             console.log(data.routes[0].legs[0].steps)
           }
         } catch (error) {

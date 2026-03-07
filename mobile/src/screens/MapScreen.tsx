@@ -14,7 +14,10 @@ import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
+import { useRouteProcessor } from '../hooks/useRouteProcessor';
+import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
+import { Polyline } from 'react-native-maps';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -62,6 +65,8 @@ export default function MapScreen() {
   const [transportMode, setTransportMode] = useState<TravelMode>('DRIVING');
   const [currentDelta, setCurrentDelta] = useState(INITIAL_REGION.latitudeDelta);
   const [mapSelectionTarget, setMapSelectionTarget] = useState<'start' | 'destination' | null>(null);
+  const [directionsGoogle, setDirectionsGoogle] = useState<any>(null);
+  const processedSteps = useRouteProcessor(directionsGoogle);
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
   useEffect(() => {
@@ -276,6 +281,7 @@ export default function MapScreen() {
     setRouteInfo(null);
     setInstructions([]);
     setShowInstructions(false);
+    setDirectionsGoogle(null);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
 
@@ -313,20 +319,8 @@ export default function MapScreen() {
         />
 
         {start && destination && googleMapsApiKey && (
-          <MapViewDirections
-            origin={getCoordinates(start)}
-            destination={getCoordinates(destination)}
-            apikey={googleMapsApiKey}
-            strokeWidth={3}
-            strokeColor="hotpink"
-            mode={transportMode}
-            onReady={result => {
-              setRouteInfo({
-                distance: result.distance, // in km
-                duration: result.duration, // in mins
-              })
-            }}
-          />
+          
+          <RoutePolylineSteps processedSteps={processedSteps} />
         )}
 
         {start && (
@@ -336,8 +330,17 @@ export default function MapScreen() {
         {destination && (
           <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" testID="destination-marker" />
         )}
-
+      <Polyline
+        coordinates={[
+          { latitude: 45.497, longitude: -73.579 }, // Downtown
+          { latitude: 45.458, longitude: -73.640 }  // Loyola
+        ]}
+        strokeColor="black"
+        strokeWidth={10}
+        zIndex={9999}
+      />
       </MapView>
+      
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} testID="safe-area-view">
         <View style={styles.campusSelectorContainer}>
           <View style={styles.campusSelector}>
@@ -431,6 +434,8 @@ export default function MapScreen() {
             transportMode={transportMode}
             mapSelectionTarget={mapSelectionTarget}
             setMapSelectionTarget={setMapSelectionTarget}
+            setDirectionsGoogle={setDirectionsGoogle}
+            setRouteInfo={setRouteInfo}
           />
         </Animated.View>
       )}
