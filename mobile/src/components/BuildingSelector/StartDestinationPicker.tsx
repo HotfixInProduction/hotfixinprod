@@ -30,6 +30,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   WALKING: 'walking',
   BICYCLING: 'bicycling',
   TRANSIT: 'transit',
+  SHUTTLE: 'transit',
 };
 
 const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget }) => {
@@ -149,6 +150,10 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
   useEffect(() => {
     const fetchDirections = async () => {
       if (start && destination) {
+        if (transportMode === 'SHUTTLE') {
+          setInstructions([]);
+          return;
+        }
 
         if (!googleMapsApiKey) {
           return;

@@ -1,5 +1,6 @@
 import { AppState } from 'react-native';
 import React from 'react';
+import type { Building } from '../../src/types/building';
 
 // Create mock functions
 export const mockRequestForegroundPermissions = jest.fn().mockResolvedValue({ status: 'granted' });
@@ -15,8 +16,10 @@ export const mockAnimateToRegion = jest.fn();
 export const mockFitToCoordinates = jest.fn();
 
 // Mock data
-export const mockBuilding = {
+export const mockBuilding: Building = {
   id: 'Hall Building',
+  label: 'H',
+  coordinates: [{ latitude: 45.4977, longitude: -73.579 }],
   address: '1455 De Maisonneuve Blvd. W.',
   labelCoord: { latitude: 45.497285, longitude: -73.578975 },
   floorPlans: {
@@ -24,8 +27,10 @@ export const mockBuilding = {
   }
 };
 
-export const mockBuildingNoPlans = {
+export const mockBuildingNoPlans: Building = {
   id: 'Library Building',
+  label: 'LB',
+  coordinates: [{ latitude: 45.4966, longitude: -73.5785 }],
   address: '1400 De Maisonneuve Blvd. W.',
   labelCoord: { latitude: 45.496897, longitude: -73.577928 },
 };
@@ -55,12 +60,14 @@ export const createMapMock = () => {
   const MockPolygon = (props: any) => <View {...props} />;
 
   const MockMarker = (props: any) => <View {...props} />;
+  const MockPolyline = (props: any) => <View testID="map-polyline" {...props} />;
 
   return {
     __esModule: true,
     default: MockMapView,
     Polygon: MockPolygon,
     Marker: MockMarker,
+    Polyline: MockPolyline,
   };
 };
 
@@ -113,6 +120,36 @@ export const createStartDestinationPickerMock = () => {
     name: 'destination-place',
     location: { lat: 45.4582, lng: -73.6402 },
   };
+  const mockDestinationDowntown = {
+    id: 'destination-downtown',
+    name: 'destination-downtown',
+    location: { lat: 45.4972, lng: -73.5789 },
+  };
+  const mockStartFar = {
+    id: 'start-place-far',
+    name: 'start-place-far',
+    location: { lat: 45.55, lng: -73.9 },
+  };
+
+  const mockStartWithWalking = {
+    id: 'start-place-walk',
+    location: { lat: 45.505, lng: -73.5789 },
+  };
+
+  const mockDestinationWithWalking = {
+    id: 'destination-place-walk',
+    location: { lat: 45.4662, lng: -73.6402 },
+  };
+  const mockStartTerminal = {
+    id: 'start-terminal',
+    name: 'start-terminal',
+    location: { lat: 45.497285416040164, lng: -73.57897485280246 },
+  };
+  const mockDestinationTerminal = {
+    id: 'destination-terminal',
+    name: 'destination-terminal',
+    location: { lat: 45.4579, lng: -73.6395 },
+  };
 
   return ({ setStart, setDestination, setMapSelectionTarget, mapSelectionTarget }: any) => (
     <View testID="start-destination-picker-mock">
@@ -121,6 +158,24 @@ export const createStartDestinationPickerMock = () => {
       </TouchableOpacity>
       <TouchableOpacity testID="set-destination" onPress={() => setDestination(mockDestination)}>
         <Text>Set Destination</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-destination-downtown" onPress={() => setDestination(mockDestinationDowntown)}>
+        <Text>Set Destination Downtown</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-start-far" onPress={() => setStart(mockStartFar)}>
+        <Text>Set Start Far</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-start-walk" onPress={() => setStart(mockStartWithWalking)}>
+        <Text>Set Start Walk</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-destination-walk" onPress={() => setDestination(mockDestinationWithWalking)}>
+        <Text>Set Destination Walk</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-start-terminal" onPress={() => setStart(mockStartTerminal)}>
+        <Text>Set Start Terminal</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-destination-terminal" onPress={() => setDestination(mockDestinationTerminal)}>
+        <Text>Set Destination Terminal</Text>
       </TouchableOpacity>
       <TouchableOpacity testID="clear-start" onPress={() => setStart(null)}>
         <Text>Clear Start</Text>
@@ -146,7 +201,7 @@ export const createStartDestinationPickerMock = () => {
 export const createMapDirectionsMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return (props: any) => (
-    <View testID="map-directions">
+    <View testID={props.strokeColor === '#912338' ? 'map-directions-shuttle' : 'map-directions'}>
       <Text testID="map-directions-mode">{props.mode}</Text>
       <TouchableOpacity
         testID="trigger-directions-ready"
@@ -246,7 +301,7 @@ export const setupAppStateMock = () => {
 
 export const createRouteInfoMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onClose, onStart, duration, distance, mode, onModeChange }: any) => (
+  return ({ onClose, onStart, duration, distance, mode, onModeChange, allowShuttleMode, onOpenShuttleSchedule }: any) => (
     <View testID="route-info-mock">
       <Text>Arrive at Destination</Text>
       <Text>{duration}</Text>
@@ -264,6 +319,19 @@ export const createRouteInfoMock = () => {
       <TouchableOpacity testID="route-info-mode-transit" onPress={() => onModeChange('TRANSIT')}>
         <Text>Transit</Text>
       </TouchableOpacity>
+      <TouchableOpacity testID="route-info-mode-force-shuttle" onPress={() => onModeChange('SHUTTLE')}>
+        <Text>Force Shuttle</Text>
+      </TouchableOpacity>
+      {allowShuttleMode && (
+        <TouchableOpacity testID="route-info-mode-shuttle" onPress={() => onModeChange('SHUTTLE')}>
+          <Text>Shuttle</Text>
+        </TouchableOpacity>
+      )}
+      {mode === 'SHUTTLE' && (
+        <TouchableOpacity testID="route-info-open-shuttle-schedule" onPress={onOpenShuttleSchedule}>
+          <Text>Schedule</Text>
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
         testID="route-info-start-button"
         onPress={onStart}

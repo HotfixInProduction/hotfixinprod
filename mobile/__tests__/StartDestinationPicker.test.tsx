@@ -246,6 +246,29 @@ describe('StartDestinationPicker', () => {
     });
   });
 
+  it('clears instructions and skips fetch when transport mode is SHUTTLE', async () => {
+    const start = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+    const destination = {name : "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: {lat: 45.497285416040164, lng: -73.57897485280246}}
+
+    globalThis.fetch = jest.fn();
+    const mockSetInstructions = jest.fn();
+
+    render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        start={start}
+        destination={destination}
+        setInstructions={mockSetInstructions}
+        transportMode="SHUTTLE"
+      />
+    );
+
+    await waitFor(() => {
+      expect(mockSetInstructions).toHaveBeenCalledWith([]);
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+    });
+  });
+
   it('does not fetch instructions when googleMapsApiKey is missing', async () => {
     const start = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
     const destination = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }

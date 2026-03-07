@@ -1,9 +1,9 @@
 import { element, by, expect, waitFor } from 'detox';
 import { setupApp, navigateToMap, zoomIn, openBuildingSelector, selectCampus, searchAndSelectBuilding, wait } from './helpers';
 
-describe('Outdoor Directions E2E Test', () => {
+describe('Epic 2Outdoor Directions E2E Test', () => {
 
-    it('Path A: should select start and destination via map clicks', async () => {
+    it('AT 2.1-2.5 Path A: Should select start and destination via map clicks', async () => {
         const hallCoords = { latitude: 45.497170, longitude: -73.579000 };
         await setupApp({ location: 'always' }, hallCoords);
         await navigateToMap();
@@ -32,7 +32,7 @@ describe('Outdoor Directions E2E Test', () => {
         await expect(element(by.id('destination-marker'))).toExist();
     });
 
-    it('Path B: should select start via Current Location and destination via search', async () => {
+    it('AT 2.1-2.5 Path B: Should select start via Current Location and destination via search', async () => {
         const hallCoords = { latitude: 45.497170, longitude: -73.579000 };
         await setupApp({ location: 'always' }, hallCoords);
         await navigateToMap();
