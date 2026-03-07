@@ -1,14 +1,20 @@
 import { render } from '@testing-library/react-native';
 import React from 'react';
 
-// Mock buildings with a building that has no coordinates property
+// Mock buildings with a building that has coordinates
 jest.mock('../src/data/buildings', () => ({
   buildings: [
     {
-      id: 'Test Building No Coords',
-      label: 'TBNC',
+      id: 'Test Building',
+      label: 'TB',
       labelCoord: { latitude: 45.497, longitude: -73.579 },
-      address: 'Test Address'
+      address: 'Test Address',
+      coordinates: [
+        { latitude: 45.497, longitude: -73.579 },
+        { latitude: 45.498, longitude: -73.579 },
+        { latitude: 45.498, longitude: -73.578 },
+        { latitude: 45.497, longitude: -73.578 }
+      ]
     }
   ]
 }));
@@ -33,22 +39,22 @@ jest.mock('react-native-maps', () => {
 
 import BuildingPolygon from '../src/components/BuildingPolygon';
 
-describe('BuildingPolygon - no coordinates edge case', () => {
+describe('BuildingPolygon - with coordinates', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('handles buildings without coordinates gracefully', () => {
+  it('renders building marker when zoomed in enough', () => {
     const { queryByTestId } = render(
       <BuildingPolygon onSelectBuilding={() => { }} selectedBuildingId={null} currentDelta={0.001} />
     );
-    expect(queryByTestId('building-marker-Test Building No Coords')).toBeTruthy();
+    expect(queryByTestId('building-marker-Test Building')).toBeTruthy();
   });
 
-  it('uses default zoom threshold for buildings without coordinates', () => {
+  it('hides building marker when zoomed out too far', () => {
     const { queryByTestId } = render(
       <BuildingPolygon onSelectBuilding={() => { }} selectedBuildingId={null} currentDelta={0.01} />
     );
-    expect(queryByTestId('building-marker-Test Building No Coords')).toBeNull();
+    expect(queryByTestId('building-marker-Test Building')).toBeNull();
   });
 });

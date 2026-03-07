@@ -355,6 +355,7 @@ describe('FloorPlanViewer', () => {
         it('handles unknown building without prefix', () => {
             const unknownBuilding = createMockBuilding({
                 id: 'Unknown Building',
+                label: '' as any,
                 floorPlans: {
                     '1': '<svg><rect inkscape:label="101" /></svg>',
                 },
