@@ -153,22 +153,22 @@ describe('getRoomNodeId', () => {
   describe('John Molson Building', () => {
     it('should return node ID for a valid room on floor S2', () => {
       const nodeId = getRoomNodeId('John Molson Building', 'S2', '245');
-      expect(nodeId).toBe(0);
+      expect(nodeId).toBe(55);
     });
 
     it('should return node ID for another valid room on floor S2', () => {
       const nodeId = getRoomNodeId('John Molson Building', 'S2', '330');
-      expect(nodeId).toBe(0);
+      expect(nodeId).toBe(3);
     });
 
     it('should return node ID for a valid room on floor 1', () => {
       const nodeId = getRoomNodeId('John Molson Building', '1', '1.294');
-      expect(nodeId).toBe(0);
+      expect(nodeId).toBe(49);
     });
 
     it('should return node ID for another valid room on floor 1', () => {
       const nodeId = getRoomNodeId('John Molson Building', '1', '1.115');
-      expect(nodeId).toBe(0);
+      expect(nodeId).toBe(42);
     });
 
     it('should return null for non-existent room label', () => {
