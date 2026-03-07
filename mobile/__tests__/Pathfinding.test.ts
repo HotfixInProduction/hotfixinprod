@@ -131,17 +131,17 @@ describe('getRoomNodeId', () => {
   describe('Hall Building floor 9', () => {
     it('should return node ID for a valid room label on floor 9', () => {
       const nodeId = getRoomNodeId('Hall Building', '9', '920');
-      expect(nodeId).toBe(0);
+      expect(nodeId).toBe(11);
     });
 
     it('should return node ID for room label with decimal on floor 9', () => {
       const nodeId = getRoomNodeId('Hall Building', '9', '927.01');
-      expect(nodeId).toBe(0);
+      expect(nodeId).toBe(14);
     });
 
     it('should return node ID for elevator room label on floor 9', () => {
       const nodeId = getRoomNodeId('Hall Building', '9', '9elv');
-      expect(nodeId).toBe(0);
+      expect(nodeId).toBe(43);
     });
 
     it('should return null for non-existent room label on floor 9', () => {
