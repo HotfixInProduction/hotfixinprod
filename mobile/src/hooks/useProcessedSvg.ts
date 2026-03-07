@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { highlightRoomInSvg, generatePathElements } from '../utils/svgUtils';
-import { NavMeshNode } from '../types/indoor';
+import { NavMeshNode } from '../types/building';
 
 export function useProcessedSvg(
   rawSvgContent: string | undefined,

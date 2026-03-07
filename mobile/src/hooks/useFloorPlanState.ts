@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Building } from '../types/indoor';
+import { Building } from '../types/building';
 
 type RoomPickerTarget = 'start' | 'end' | null;
 

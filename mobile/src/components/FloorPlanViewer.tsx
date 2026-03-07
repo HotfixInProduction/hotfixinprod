@@ -10,7 +10,7 @@ import { useRoomList } from '../hooks/useRoomList';
 import { useIndoorPath, useSvgPathString } from '../hooks/useIndoorPath';
 import { useProcessedSvg } from '../hooks/useProcessedSvg';
 import RoomPickerModal from './RoomPickerModal';
-import { Building } from '../types/indoor';
+import { Building } from '../types/building';
 
 type Props = Readonly<{
     building: Building | null;

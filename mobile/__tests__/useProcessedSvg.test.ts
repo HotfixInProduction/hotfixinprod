@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react-native';
 import { useProcessedSvg } from '../src/hooks/useProcessedSvg';
-import { NavMeshNode } from '../src/types/indoor';
+import { NavMeshNode } from '../src/types/building';
 
 // Mock svgUtils
 jest.mock('../src/utils/svgUtils', () => ({

@@ -2,6 +2,17 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import FloorPlanViewer from '../src/components/FloorPlanViewer';
 import { suppressActWarnings } from './utils/testUtils';
+import { Building } from '../src/types/building';
+
+// Helper to create minimal building mock with all required properties
+const createMockBuilding = (overrides: Partial<Building>): Building => ({
+    id: 'Hall Building',
+    label: 'H',
+    address: '1455 De Maisonneuve Blvd. W.',
+    coordinates: [{ latitude: 45.497, longitude: -73.579 }],
+    labelCoord: { latitude: 45.497, longitude: -73.579 },
+    ...overrides,
+});
 
 // Mock react-native-svg synchronously
 jest.mock('react-native-svg', () => {
@@ -36,14 +47,12 @@ describe('FloorPlanViewer', () => {
     suppressActWarnings();
     
     const mockOnClose = jest.fn();
-    const mockBuilding = {
-        id: 'Hall Building',
-        address: '1455 De Maisonneuve Blvd. W.',
+    const mockBuilding = createMockBuilding({
         floorPlans: {
             '8': '<svg>Floor 8</svg>',
             '9': '<svg>Floor 9</svg>',
         },
-    };
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -113,13 +122,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('does not render floor selector when only one floor exists', () => {
-            const singleFloorBuilding = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const singleFloorBuilding = createMockBuilding({
                 floorPlans: {
                     '8': '<svg>Floor 8</svg>',
                 },
-            };
+            });
 
             const { queryByText } = render(
                 <FloorPlanViewer building={singleFloorBuilding} floorLevel="8" onClose={mockOnClose} />
@@ -150,13 +157,11 @@ describe('FloorPlanViewer', () => {
     });
 
     describe('Room selectors', () => {
-        const buildingWithRooms = {
-            id: 'Hall Building',
-            address: '1455 De Maisonneuve Blvd. W.',
+        const buildingWithRooms = createMockBuilding({
             floorPlans: {
                 '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="803" /><rect inkscape:label="829" /></svg>',
             },
-        };
+        });
 
         it('renders room selector buttons', () => {
             const { getByText } = render(
@@ -168,13 +173,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('displays default room values', () => {
-            const buildingWithDefaults = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithDefaults = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="829" /><rect inkscape:label="862" /></svg>',
                 },
-            };
+            });
 
             const { getByText } = render(
                 <FloorPlanViewer building={buildingWithDefaults} floorLevel="8" onClose={mockOnClose} />
@@ -212,13 +215,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('displays "Select room" when startRoom is not set', () => {
-            const buildingNoRooms = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingNoRooms = createMockBuilding({
                 floorPlans: {
                     '8': '<svg></svg>',
                 },
-            };
+            });
 
             const { queryAllByText } = render(
                 <FloorPlanViewer building={buildingNoRooms} floorLevel="8" onClose={mockOnClose} />
@@ -312,14 +313,14 @@ describe('FloorPlanViewer', () => {
 
     describe('Building prefix resolution', () => {
         it('uses building label for prefix', () => {
-            const buildingWithLabel = {
+            const buildingWithLabel = createMockBuilding({
                 id: 'Custom Building',
                 label: 'XX',
                 address: '123 Test St',
                 floorPlans: {
                     '1': '<svg><rect inkscape:label="101" /></svg>',
                 },
-            };
+            });
 
             const { getAllByText } = render(
                 <FloorPlanViewer 
@@ -336,13 +337,12 @@ describe('FloorPlanViewer', () => {
         });
 
         it('uses fallback prefix map when label is not set', () => {
-            const buildingWithRooms = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithRooms = createMockBuilding({
+                label: undefined as any, // Explicitly unset label
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="801" /></svg>',
                 },
-            };
+            });
 
             const { getByText } = render(
                 <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} startRoom="801" />
@@ -353,13 +353,12 @@ describe('FloorPlanViewer', () => {
         });
 
         it('handles unknown building without prefix', () => {
-            const unknownBuilding = {
+            const unknownBuilding = createMockBuilding({
                 id: 'Unknown Building',
-                address: 'Unknown Address',
                 floorPlans: {
                     '1': '<svg><rect inkscape:label="101" /></svg>',
                 },
-            };
+            });
 
             const { getByText } = render(
                 <FloorPlanViewer building={unknownBuilding} floorLevel="1" onClose={mockOnClose} startRoom="101" />
@@ -372,13 +371,11 @@ describe('FloorPlanViewer', () => {
 
     describe('SVG room highlighting', () => {
         it('highlights start room with green when startRoom prop is provided', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -395,13 +392,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('highlights next room with blue when nextRoom prop is provided', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="805" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -418,13 +413,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('highlights both startRoom and nextRoom with different colors', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /><rect inkscape:label="805" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -446,13 +439,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('highlights multiple rooms with same label (duplicates) for startRoom', () => {
-            const buildingWithDuplicateLabels = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithDuplicateLabels = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="829" style="fill:#da3636;" /><path inkscape:label="829" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -471,13 +462,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('highlights multiple rooms with same label (duplicates) for nextRoom', () => {
-            const buildingWithDuplicateLabels = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithDuplicateLabels = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="829" style="fill:#da3636;" /><path inkscape:label="829" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -496,13 +485,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('does not modify SVG when startRoom and nextRoom are undefined', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -521,13 +508,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('does not modify SVG when startRoom label is not found', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -544,13 +529,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('does not modify SVG when nextRoom label is not found', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -567,13 +550,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('highlights startRoom when element has NO style attribute (adds style to end)', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="803" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -590,13 +571,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('highlights nextRoom when element has NO style attribute (adds style to end)', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><path inkscape:label="805" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
@@ -613,13 +592,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('uses default values for startRoom (829) and nextRoom (862)', () => {
-            const buildingWithSvg = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="829" style="fill:#da3636;" /><rect inkscape:label="862" style="fill:#da3636;" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId, getByText } = render(
                 <FloorPlanViewer 
@@ -638,13 +615,11 @@ describe('FloorPlanViewer', () => {
 
     describe('Room extraction from SVG', () => {
         it('extracts and sorts numeric room labels', async () => {
-            const buildingWithNumericRooms = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithNumericRooms = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="829" /><rect inkscape:label="801" /><rect inkscape:label="810" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId, getByText } = render(
                 <FloorPlanViewer building={buildingWithNumericRooms} floorLevel="8" onClose={mockOnClose} />
@@ -661,13 +636,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('filters out layer/group names from room list', async () => {
-            const buildingWithLayers = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithLayers = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="Floor" /><rect inkscape:label="Layer 1" /><rect inkscape:label="layer 2" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId, getByText } = render(
                 <FloorPlanViewer building={buildingWithLayers} floorLevel="8" onClose={mockOnClose} />
@@ -683,13 +656,11 @@ describe('FloorPlanViewer', () => {
         });
 
         it('filters out S1/S2 vec labels', async () => {
-            const buildingWithVecLabels = {
-                id: 'Hall Building',
-                address: '1455 De Maisonneuve Blvd. W.',
+            const buildingWithVecLabels = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="S1 vec" /><rect inkscape:label="S2 vec" /></svg>',
                 },
-            };
+            });
 
             const { getByTestId, getByText } = render(
                 <FloorPlanViewer building={buildingWithVecLabels} floorLevel="8" onClose={mockOnClose} />

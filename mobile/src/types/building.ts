@@ -20,3 +20,8 @@ export interface Building {
     hasBikeRacks?: boolean;
     floorPlans?: FloorPlanMap;
 }
+
+export interface NavMeshNode {
+    id: string | number;
+    data?: { x: number; y: number };
+}

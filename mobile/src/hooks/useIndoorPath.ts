@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { findPath, generateSvgPath } from '../utils/Pathfinding';
-import { NavMeshNode } from '../types/indoor';
+import { NavMeshNode } from '../types/building';
 
 export function useIndoorPath(
   buildingId: string | undefined,
