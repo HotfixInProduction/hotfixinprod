@@ -196,7 +196,7 @@ export const createStartDestinationPickerMock = () => {
 export const createMapDirectionsMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return (props: any) => (
-    <View testID={props.testID || 'map-directions-component'}>
+    <View testID={props.strokeColor === '#912338' ? 'map-directions-shuttle' : 'map-directions'}>
       <Text testID="map-directions-mode">{props.mode}</Text>
       <TouchableOpacity
         testID="trigger-directions-ready"

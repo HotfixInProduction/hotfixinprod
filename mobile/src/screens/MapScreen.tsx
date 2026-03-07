@@ -315,7 +315,6 @@ export default function MapScreen() {
         {start && destination && googleMapsApiKey && transportMode !== 'SHUTTLE' && (
           <MapViewDirections
             key="map-directions-standard"
-            testID="map-directions"
             origin={getCoordinates(start)}
             destination={getCoordinates(destination)}
             apikey={googleMapsApiKey}
@@ -336,7 +335,6 @@ export default function MapScreen() {
             {googleMapsApiKey ? (
               <MapViewDirections
                 key="map-directions-shuttle"
-                testID="map-directions-shuttle"
                 origin={shuttleRouteSegments.originTerminal}
                 destination={shuttleRouteSegments.destinationTerminal}
                 waypoints={SHUTTLE_SHERBROOKE_WAYPOINTS}
