@@ -1,19 +1,26 @@
 import path from 'ngraph.path';
 import loadFromJson, { JsonNode, JsonGraph } from 'ngraph.fromjson';
-import hall8NavMesh from '../data/navmesh/hall8.json';
-import hall9NavMesh from '../data/navmesh/hall9.json';
-import john1NavMesh from '../data/navmesh/john1.json';
-import johnS2NavMesh from '../data/navmesh/johnS2.json';
+import hall8NavMeshJson from '../data/navmesh/hall8.json';
+import hall9NavMeshJson from '../data/navmesh/hall9.json';
+import john1NavMeshJson from '../data/navmesh/john1.json';
+import johnS2NavMeshJson from '../data/navmesh/johnS2.json';
 import { NavMeshNode } from '../types/building';
 
 type NavMesh = JsonGraph<JsonNode<{ x: number; y: number }>, { fromId: string | number; toId: string | number }> & {
   roomToNode?: Record<string, string>;
 };
+
+// Widen types at import time to satisfy TypeScript's lint rules
+const hall8NavMesh: NavMesh = hall8NavMeshJson;
+const hall9NavMesh: NavMesh = hall9NavMeshJson;
+const john1NavMesh: NavMesh = john1NavMeshJson;
+const johnS2NavMesh: NavMesh = johnS2NavMeshJson;
+
 const navMeshes: Map<string, NavMesh> = new Map([
-  ['Hall Building#8', hall8NavMesh as NavMesh],
-  ['Hall Building#9', hall9NavMesh as NavMesh],
-  ['John Molson Building#S2', johnS2NavMesh as NavMesh],
-  ['John Molson Building#1', john1NavMesh as NavMesh],
+  ['Hall Building#8', hall8NavMesh],
+  ['Hall Building#9', hall9NavMesh],
+  ['John Molson Building#S2', johnS2NavMesh],
+  ['John Molson Building#1', john1NavMesh],
 ]);
 
 /**
@@ -38,7 +45,7 @@ export function getRoomNodeId(
   roomLabel: string
 ): number | null {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  if (!navMesh || !navMesh.roomToNode) {
+  if (!navMesh?.roomToNode) {
     return null;
   }
 
