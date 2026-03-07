@@ -15,14 +15,13 @@ export const RoutePolylineSteps: React.FC<RouteStepsProps> = ({processedSteps}) 
 
                 // To fix SonarQube, needed to provide a unique key to Polyline since before we were relying on index of the step
                 const key = `${step.mode}-${step.coordinates[0].latitude}-${step.coordinates[0].longitude}`;
-                
-                // DEBUG: See why it's picking a specific color
-                console.log(`Segment ${index} mode: ${step.mode}, Color: ${strategy.strokeColor}`);
+    
                 return (
                     <Polyline
                         key={key}
                         coordinates={step.coordinates}
-                        strokeColor={strategy.strokeColor}
+                        //strokeColor={strategy.strokeColor}
+                        fillColor={strategy.strokeColor}
                         strokeWidth={strategy.strokeWidth}
                         lineDashPattern={strategy.lineDashPattern}
                         geodesic={true}

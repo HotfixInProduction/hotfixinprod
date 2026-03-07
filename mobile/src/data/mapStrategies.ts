@@ -8,27 +8,27 @@ interface RouteStyle {
 
 export const StepStrategies: Record<TravelMode | 'DEFAULT', RouteStyle> = {
   WALKING: {
-    strokeColor: "#4285F4",
-    strokeWidth: 4,
-    lineDashPattern: [2, 10],
+    strokeColor: "#1A73E8",
+    strokeWidth: 5,        
+    lineDashPattern: [2, 6],
   },
   TRANSIT: {
-    strokeColor: "#34A853",
-    strokeWidth: 6,
+    strokeColor: "#000000",
+    strokeWidth: 8,        
     lineDashPattern: undefined,
   },
   DRIVING: {
-    strokeColor: "#35ea7d",
+    strokeColor: "#D93025",
     strokeWidth: 4,
     lineDashPattern: undefined,
   },
   BICYCLING: {
-    strokeColor: "#FBBC05",
+    strokeColor: "#E37400",
     strokeWidth: 4,
-    lineDashPattern: undefined,
+    lineDashPattern: [10, 5],
   },
   DEFAULT: {
-    strokeColor: "#912338",
+    strokeColor: "#5F6368",
     strokeWidth: 4,
   },
 };

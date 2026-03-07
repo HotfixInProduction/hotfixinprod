@@ -43,6 +43,13 @@ const CAMPUSES = {
   },
 };
 
+const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
+  DRIVING: 'driving',
+  WALKING: 'walking',
+  BICYCLING: 'bicycling',
+  TRANSIT: 'transit',
+};
+
 type CampusKey = keyof typeof CAMPUSES;
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
@@ -210,6 +217,48 @@ export default function MapScreen() {
     }
   }, [start, destination]);
 
+  useEffect(() => {
+      const fetchDirections = async () => {
+        if (start && destination) {
+  
+          if (!googleMapsApiKey) {
+            return;
+          }
+          console.log("Fetching new route for mode:", transportMode);
+  
+          const params = new URLSearchParams({
+            origin: `${start.location.lat},${start.location.lng}`,
+            destination: `${destination.location.lat},${destination.location.lng}`,
+            key: googleMapsApiKey,
+            mode: GOOGLE_DIRECTIONS_MODE[transportMode],
+          });
+  
+          const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
+  
+          try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.routes.length > 0) {
+  
+              setDirectionsGoogle(data) // this sends data for route display
+              setInstructions(data.routes[0].legs[0].steps); // this sends data for instruction display
+              
+              setRouteInfo({
+                distance: data.routes[0].legs[0].distance.value / 1000, // convert meters to km
+                duration: Math.ceil(data.routes[0].legs[0].duration.value / 60), // convert seconds to mins
+              });
+  
+              console.log(data.routes[0].legs[0].steps)
+            }
+          } catch (error) {
+            console.error("Fetch failed", error);
+          }
+        }
+      }
+      fetchDirections();
+    }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
+  
+
   const handleCloseBuilding = () => {
     Animated.timing(buildingInfoSlideAnim, {
       toValue: 300,
@@ -330,15 +379,6 @@ export default function MapScreen() {
         {destination && (
           <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" testID="destination-marker" />
         )}
-      <Polyline
-        coordinates={[
-          { latitude: 45.497, longitude: -73.579 }, // Downtown
-          { latitude: 45.458, longitude: -73.640 }  // Loyola
-        ]}
-        strokeColor="black"
-        strokeWidth={10}
-        zIndex={9999}
-      />
       </MapView>
       
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} testID="safe-area-view">

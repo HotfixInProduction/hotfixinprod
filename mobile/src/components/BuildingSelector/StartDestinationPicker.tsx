@@ -148,46 +148,6 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
     }
   };
 
-  useEffect(() => {
-    const fetchDirections = async () => {
-      if (start && destination) {
-
-        if (!googleMapsApiKey) {
-          return;
-        }
-
-        const params = new URLSearchParams({
-          origin: `${start.location.lat},${start.location.lng}`,
-          destination: `${destination.location.lat},${destination.location.lng}`,
-          key: googleMapsApiKey,
-          mode: GOOGLE_DIRECTIONS_MODE[transportMode],
-        });
-
-        const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
-
-        try {
-          const response = await fetch(url);
-          const data = await response.json();
-          if (data.routes.length > 0) {
-
-            setDirectionsGoogle(data) // this sends data for route display
-            setInstructions(data.routes[0].legs[0].steps); // this sends data for instruction display
-            
-            setRouteInfo({
-              distance: data.routes[0].legs[0].distance.value / 1000, // convert meters to km
-              duration: Math.ceil(data.routes[0].legs[0].duration.value / 60), // convert seconds to mins
-            });
-
-            console.log(data.routes[0].legs[0].steps)
-          }
-        } catch (error) {
-          console.error("Fetch failed", error);
-        }
-      }
-    }
-    fetchDirections();
-  }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
-
   return (
     <View style={styles.container} testID="building-selector-container">
       <Text style={styles.label}>Start Building</Text>
