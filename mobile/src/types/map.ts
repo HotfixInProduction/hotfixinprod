@@ -1,4 +1,4 @@
-export type TravelMode = 'DRIVING' | 'WALKING' | 'BICYCLING' | 'TRANSIT';
+export type TravelMode = 'DRIVING' | 'WALKING' | 'BICYCLING' | 'TRANSIT' | 'SHUTTLE';
 
 export interface MapStep {
   distance: { text: string; value: number };
