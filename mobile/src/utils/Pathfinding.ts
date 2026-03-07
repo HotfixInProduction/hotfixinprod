@@ -47,7 +47,7 @@ export function getRoomNodeId(
     return null;
   }
 
-  return parseInt(nodeId, 10);
+  return Number.parseInt(nodeId, 10);
 }
 
 /**
