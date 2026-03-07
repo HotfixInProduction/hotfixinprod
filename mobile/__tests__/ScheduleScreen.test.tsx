@@ -31,7 +31,6 @@ jest.mock('../src/hooks/useGoogleCalendar', () => ({
 
 // Mock MaterialIcons
 jest.mock('@expo/vector-icons', () => {
-  const React = require('react');
   const { Text } = require('react-native');
   return {
     MaterialIcons: (props: any) => <Text {...props}>{props.name}</Text>,

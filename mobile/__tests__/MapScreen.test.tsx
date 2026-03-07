@@ -926,7 +926,7 @@ describe('MapScreen Shuttle Coverage', () => {
         return fixedNow.getTime();
       }
     }
-    (global as any).Date = MockDate as any;
+    (globalThis as any).Date = MockDate as any;
     try {
       const { getByTestId, getByText, queryByTestId } = render(<MapScreen />);
 
@@ -966,7 +966,7 @@ describe('MapScreen Shuttle Coverage', () => {
         expect(queryByTestId('shuttle-schedule-modal')).toBeNull();
       });
     } finally {
-      (global as any).Date = OriginalDate;
+      (globalThis as any).Date = OriginalDate;
     }
   });
 

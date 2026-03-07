@@ -313,40 +313,41 @@ export default function MapScreen() {
         />
 
         {start && destination && googleMapsApiKey && transportMode !== 'SHUTTLE' && (
-          <View testID="map-directions">
-            <MapViewDirections
-              origin={getCoordinates(start)}
-              destination={getCoordinates(destination)}
-              apikey={googleMapsApiKey}
-              strokeWidth={3}
-              strokeColor="hotpink"
-              mode={directionsMode}
-              onReady={result => {
-                setRouteInfo({
-                  distance: result.distance, // in km
-                  duration: result.duration, // in mins
-                })
-              }}
-            />
-          </View>
+          <MapViewDirections
+            key="map-directions-standard"
+            testID="map-directions"
+            origin={getCoordinates(start)}
+            destination={getCoordinates(destination)}
+            apikey={googleMapsApiKey}
+            strokeWidth={3}
+            strokeColor="hotpink"
+            mode={directionsMode}
+            onReady={result => {
+              setRouteInfo({
+                distance: result.distance, // in km
+                duration: result.duration, // in mins
+              })
+            }}
+          />
         )}
 
         {shuttleRouteSegments && (
           <>
             {googleMapsApiKey ? (
-              <View testID="map-directions-shuttle">
-                <MapViewDirections
-                  origin={shuttleRouteSegments.originTerminal}
-                  destination={shuttleRouteSegments.destinationTerminal}
-                  waypoints={SHUTTLE_SHERBROOKE_WAYPOINTS}
-                  apikey={googleMapsApiKey}
-                  strokeWidth={4}
-                  strokeColor="#912338"
-                  mode="DRIVING"
-                />
-              </View>
+              <MapViewDirections
+                key="map-directions-shuttle"
+                testID="map-directions-shuttle"
+                origin={shuttleRouteSegments.originTerminal}
+                destination={shuttleRouteSegments.destinationTerminal}
+                waypoints={SHUTTLE_SHERBROOKE_WAYPOINTS}
+                apikey={googleMapsApiKey}
+                strokeWidth={4}
+                strokeColor="#912338"
+                mode="DRIVING"
+              />
             ) : (
               <Polyline
+                key="map-directions-shuttle-fallback"
                 coordinates={[shuttleRouteSegments.originTerminal, shuttleRouteSegments.destinationTerminal]}
                 strokeWidth={4}
                 strokeColor="#912338"
@@ -355,6 +356,7 @@ export default function MapScreen() {
 
             {shuttleRouteSegments.startWalking && (
               <Polyline
+                key="map-directions-shuttle-start-walking"
                 coordinates={shuttleRouteSegments.startWalking}
                 strokeWidth={3}
                 strokeColor="#555"
@@ -364,6 +366,7 @@ export default function MapScreen() {
 
             {shuttleRouteSegments.destinationWalking && (
               <Polyline
+                key="map-directions-shuttle-destination-walking"
                 coordinates={shuttleRouteSegments.destinationWalking}
                 strokeWidth={3}
                 strokeColor="#555"
@@ -639,9 +642,10 @@ export default function MapScreen() {
                     <ScrollView style={styles.scheduleTable} contentContainerStyle={styles.scheduleTableContent}>
                       {shuttleData.loyScheduleLabels.map((loyTime, idx) => {
                         const sgwTime = shuttleData.sgwScheduleLabels[idx] ?? '';
+                        const rowKey = `${loyTime}-${sgwTime}`;
                         const isLast = idx === shuttleData.loyScheduleLabels.length - 1;
                         return (
-                          <View key={idx} style={[styles.scheduleTableRow, idx % 2 === 1 && styles.scheduleTableRowAlt]}>
+                          <View key={rowKey} style={[styles.scheduleTableRow, idx % 2 === 1 && styles.scheduleTableRowAlt]}>
                             <Text style={[styles.scheduleTableCell, isLast && styles.scheduleTableCellLast]}>
                               {loyTime}{isLast ? ' *' : ''}
                             </Text>
