@@ -69,10 +69,24 @@ const SHUTTLE_TERMINALS: Record<CampusKey, { latitude: number; longitude: number
   },
   loyola: {
     // Loyola campus shuttle stop
-    latitude: CAMPUSES.loyola.latitude,
-    longitude: CAMPUSES.loyola.longitude,
+    latitude: 45.45790,
+    longitude: -73.63950,
   },
 };
+// Force shuttle driving directions to stay on the Sherbrooke.
+const SHUTTLE_SHERBROOKE_WAYPOINTS = [
+  { latitude: 45.4822, longitude: -73.5997
+
+   },
+   { latitude: 45.4726, longitude: -73.6119
+
+   },
+  
+
+
+
+  
+];
 
 const getDistanceInMeters = (
   latitude1: number,
@@ -498,7 +512,8 @@ export default function MapScreen() {
       ) > WALK_SEGMENT_VISIBILITY_THRESHOLD_METERS;
 
     return {
-      shuttle: [originTerminal, destinationTerminal],
+      originTerminal,
+      destinationTerminal,
       startWalking: shouldDrawStartWalkingSegment ? [startCoordinates, originTerminal] : null,
       destinationWalking: shouldDrawDestinationWalkingSegment ? [destinationTerminal, destinationCoordinates] : null,
     };
@@ -527,24 +542,46 @@ export default function MapScreen() {
         />
 
         {start && destination && googleMapsApiKey && transportMode !== 'SHUTTLE' && (
-          <MapViewDirections
-            origin={getCoordinates(start)}
-            destination={getCoordinates(destination)}
-            apikey={googleMapsApiKey}
-            strokeWidth={3}
-            strokeColor="hotpink"
-            mode={directionsMode}
-            onReady={result => {
-              setRouteInfo({
-                distance: result.distance, // in km
-                duration: result.duration, // in mins
-              })
-            }}
-          />
+          <View testID="map-directions">
+            <MapViewDirections
+              origin={getCoordinates(start)}
+              destination={getCoordinates(destination)}
+              apikey={googleMapsApiKey}
+              strokeWidth={3}
+              strokeColor="hotpink"
+              mode={directionsMode}
+              onReady={result => {
+                setRouteInfo({
+                  distance: result.distance, // in km
+                  duration: result.duration, // in mins
+                })
+              }}
+            />
+          </View>
         )}
 
         {shuttleRouteSegments && (
           <>
+            {googleMapsApiKey ? (
+              <View testID="map-directions-shuttle">
+                <MapViewDirections
+                  origin={shuttleRouteSegments.originTerminal}
+                  destination={shuttleRouteSegments.destinationTerminal}
+                  waypoints={SHUTTLE_SHERBROOKE_WAYPOINTS}
+                  apikey={googleMapsApiKey}
+                  strokeWidth={4}
+                  strokeColor="#912338"
+                  mode="DRIVING"
+                />
+              </View>
+            ) : (
+              <Polyline
+                coordinates={[shuttleRouteSegments.originTerminal, shuttleRouteSegments.destinationTerminal]}
+                strokeWidth={4}
+                strokeColor="#912338"
+              />
+            )}
+
             {shuttleRouteSegments.startWalking && (
               <Polyline
                 coordinates={shuttleRouteSegments.startWalking}
@@ -553,12 +590,6 @@ export default function MapScreen() {
                 lineDashPattern={[8, 8]}
               />
             )}
-
-            <Polyline
-              coordinates={shuttleRouteSegments.shuttle}
-              strokeWidth={4}
-              strokeColor="#912338"
-            />
 
             {shuttleRouteSegments.destinationWalking && (
               <Polyline

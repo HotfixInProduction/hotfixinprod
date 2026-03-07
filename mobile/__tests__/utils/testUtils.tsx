@@ -135,6 +135,16 @@ export const createStartDestinationPickerMock = () => {
     id: 'destination-place-walk',
     location: { lat: 45.4662, lng: -73.6402 },
   };
+  const mockStartTerminal = {
+    id: 'start-terminal',
+    name: 'start-terminal',
+    location: { lat: 45.497285416040164, lng: -73.57897485280246 },
+  };
+  const mockDestinationTerminal = {
+    id: 'destination-terminal',
+    name: 'destination-terminal',
+    location: { lat: 45.4579, lng: -73.6395 },
+  };
 
   return ({ setStart, setDestination, setMapSelectionTarget, mapSelectionTarget }: any) => (
     <View testID="start-destination-picker-mock">
@@ -155,6 +165,12 @@ export const createStartDestinationPickerMock = () => {
       </TouchableOpacity>
       <TouchableOpacity testID="set-destination-walk" onPress={() => setDestination(mockDestinationWithWalking)}>
         <Text>Set Destination Walk</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-start-terminal" onPress={() => setStart(mockStartTerminal)}>
+        <Text>Set Start Terminal</Text>
+      </TouchableOpacity>
+      <TouchableOpacity testID="set-destination-terminal" onPress={() => setDestination(mockDestinationTerminal)}>
+        <Text>Set Destination Terminal</Text>
       </TouchableOpacity>
       <TouchableOpacity testID="clear-start" onPress={() => setStart(null)}>
         <Text>Clear Start</Text>
@@ -180,7 +196,7 @@ export const createStartDestinationPickerMock = () => {
 export const createMapDirectionsMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
   return (props: any) => (
-    <View testID="map-directions">
+    <View testID={props.testID || 'map-directions-component'}>
       <Text testID="map-directions-mode">{props.mode}</Text>
       <TouchableOpacity
         testID="trigger-directions-ready"

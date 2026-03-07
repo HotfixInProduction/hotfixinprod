@@ -748,11 +748,11 @@ describe('Transportation Modes', () => {
   });
 
   it('renders only shuttle segment when both points are at shuttle terminals', async () => {
-    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
+    const { getByTestId, queryByTestId, queryAllByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
-    fireEvent.press(getByTestId('set-start'));
-    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('set-start-terminal'));
+    fireEvent.press(getByTestId('set-destination-terminal'));
     fireEvent.press(getByTestId('trigger-directions-ready'));
 
     await waitFor(() => {
@@ -764,7 +764,8 @@ describe('Transportation Modes', () => {
 
     await waitFor(() => {
       expect(queryByTestId('map-directions')).toBeNull();
-      expect(getAllByTestId('map-polyline')).toHaveLength(1);
+      expect(getByTestId('map-directions-shuttle')).toBeTruthy();
+      expect(queryAllByTestId('map-polyline')).toHaveLength(0);
       expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
     });
   });
@@ -786,7 +787,8 @@ describe('Transportation Modes', () => {
 
     await waitFor(() => {
       expect(queryByTestId('map-directions')).toBeNull();
-      expect(getAllByTestId('map-polyline')).toHaveLength(3);
+      expect(getByTestId('map-directions-shuttle')).toBeTruthy();
+      expect(getAllByTestId('map-polyline')).toHaveLength(2);
       expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
     });
   });
