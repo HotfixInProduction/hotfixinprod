@@ -24,39 +24,17 @@ import {
   getPlaceName,
   type CampusKey,
 } from '../models/MapRouting';
+import MapViewDirections from 'react-native-maps-directions';
 
-const INITIAL_REGION = {
-  latitude: 45.497,
-  longitude: -73.579,
-  latitudeDelta: 0.004,
-  longitudeDelta: 0.004,
-};
-
-const CAMPUSES = {
-  downtown: {
-    name: 'Downtown',
-    latitude: 45.4972,
-    longitude: -73.5789,
-    latitudeDelta: 0.004,
-    longitudeDelta: 0.004,
-  },
-  loyola: {
-    name: 'Loyola',
-    latitude: 45.4582,
-    longitude: -73.6402,
-    latitudeDelta: 0.004,
-    longitudeDelta: 0.004,
-  },
-};
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   DRIVING: 'driving',
   WALKING: 'walking',
   BICYCLING: 'bicycling',
   TRANSIT: 'transit',
+  SHUTTLE: 'shuttle'
 };
 
-type CampusKey = keyof typeof CAMPUSES;
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
