@@ -3,7 +3,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
-import { BUILDINGS } from '../data/buildings';
+import { buildings } from '../data/buildings';
 
 import {
   GoogleCalendarState,
@@ -32,15 +32,15 @@ function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent 
   const endDate = new Date(event.end.dateTime);
   const locationParts = (event.location ?? '').split(' ');
 
-  const building = location.split(' ')[0] ?? '';
-  const room = extractRoom(location);
+  const building = locationParts[0] ?? '';
+  const room = locationParts[1] ?? '';
 
   return {
     id: event.id,
     title: event.summary ?? 'No Title',
     location: event.location ?? '',
-    building: locationParts[0] ?? '',
-    room: locationParts[1] ?? '',
+    building,
+    room,
     startTime: startDate,
     endTime: endDate,
     dayOfWeek: startDate.getDay(),
@@ -51,13 +51,13 @@ function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent 
 export function validateEventBuilding(event: ClassEvent): boolean {
   const eventBuilding = event.building.toUpperCase();
 
-  return BUILDINGS.some(
+  return buildings.some(
     (b) => b.label.toUpperCase() === eventBuilding || b.id.toUpperCase() === eventBuilding
   );
 }
 
 function filterConcordiaEvents(events: ClassEvent[]): ClassEvent[] {
-  const keywords = ['Concordia', 'SGW', 'Loyola', 'Shuttle'];
+  const keywords = ['Concordia'];
   const regex = new RegExp(keywords.join('|'), 'i');
 
   return events.filter(
@@ -141,9 +141,8 @@ export function useGoogleCalendar() {
       if (!state.isAuthenticated || !state.token) return;
 
       const interval = setInterval(() => {
-        console.log("Refreshing Google Calendar events...");
         loadEvents(state.token!, state.user);
-      }, 5000);
+      }, 30000);
 
       return () => clearInterval(interval);
     }, [state.isAuthenticated, state.token, state.user]);
@@ -162,7 +161,9 @@ export function useGoogleCalendar() {
         ...event,
         isValidBuilding: validateEventBuilding(event),
       }));
-      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events: validatedEvents, });
+  const renderableEvents = validatedEvents.filter(event => event.isValidBuilding);
+
+      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events: renderableEvents, });
     } catch (err: unknown) {
       setState(prev => ({
         ...prev,
