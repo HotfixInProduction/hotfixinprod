@@ -1,9 +1,8 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
-import { useGoogleCalendar, mapToClassEvent, extractRoom, filterValidClassEvents, validateEventBuilding } from '../src/hooks/useGoogleCalendar';
+import { useGoogleCalendar, mapToClassEvent, extractRoom } from '../src/hooks/useGoogleCalendar';
 import type { GoogleCalendarEvent, ClassEvent } from '../src/types/calendar';
 import { loadTokenFromStorage, isTokenExpired, loadUserFromStorage, saveTokenToStorage } from '../src/models/CalendarStorage';
 import { fetchCalendarEvents, fetchUserProfile } from '../src/models/CalendarApi';
-import { classCodes } from '../src/data/classCodes';
 
 jest.mock('../src/models/CalendarStorage', () => ({
   loadTokenFromStorage: jest.fn(),
@@ -172,9 +171,6 @@ describe('useGoogleCalendar', () => {
     expect(result.current.state.error).toBe(null);
   });
 
-const BUILDINGS = [
-  { label: 'MB', latitude: 45.4973, longitude: -73.5789 }
-];
 
 describe('extractRoom', () => {
   it('extracts room correctly for standard formats', () => {

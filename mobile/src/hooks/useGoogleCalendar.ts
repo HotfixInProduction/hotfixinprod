@@ -63,14 +63,14 @@ export function filterValidClassEvents(events: ClassEvent[]): ClassEvent[] {
   return events.filter(e => {
     const text = `${e.title || ''} ${e.location || ''}`;
     return validCodes.some(code => {
-      const regex = new RegExp(`\\b${code}[- ]?\\d+`, 'i');
+      const regex = new RegExp(String.raw`\b${code}[- ]?\d+`, 'i');
       return regex.test(text);
     });
   });
 }
 
 export function extractRoom(location: string): string {
-    const cleaned = location.replace(/\s+/g, '');
+    const cleaned = location.replaceAll(/\s+/g, '');
     const match = /^[A-Z]+-?\d+/i.exec(cleaned);
     return match ? match[0] : '';
 }
@@ -145,7 +145,7 @@ export function useGoogleCalendar() {
       if (!state.isAuthenticated || !state.token) return;
 
       const interval = setInterval(() => {
-        loadEvents(state.token!, state.user);
+        loadEvents(state.token, state.user);
       }, 30000);
 
       return () => clearInterval(interval);
