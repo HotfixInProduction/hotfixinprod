@@ -9,10 +9,11 @@ import StartDestinationPicker, { Place } from '../components/BuildingSelector/St
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
-import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
+import { useRouteProcessor } from '../hooks/useRouteProcessor';
+import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
 import {
@@ -23,6 +24,16 @@ import {
   getPlaceName,
   type CampusKey,
 } from '../models/MapRouting';
+import MapViewDirections from 'react-native-maps-directions';
+
+
+const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
+  DRIVING: 'driving',
+  WALKING: 'walking',
+  BICYCLING: 'bicycling',
+  TRANSIT: 'transit',
+  SHUTTLE: 'shuttle'
+};
 
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
@@ -46,6 +57,8 @@ export default function MapScreen() {
   const [currentDelta, setCurrentDelta] = useState(INITIAL_REGION.latitudeDelta);
   const [showShuttleSchedule, setShowShuttleSchedule] = useState(false);
   const [mapSelectionTarget, setMapSelectionTarget] = useState<'start' | 'destination' | null>(null);
+  const [directionsGoogle, setDirectionsGoogle] = useState<any>(null);
+  const processedSteps = useRouteProcessor(directionsGoogle);
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
 
   const {
@@ -213,6 +226,54 @@ export default function MapScreen() {
     }
   }, [start, destination]);
 
+  useEffect(() => {
+      const fetchDirections = async () => {
+        if (transportMode === 'SHUTTLE') {
+          setDirectionsGoogle(null);
+          setInstructions([]);
+          return;
+        }
+        
+        if (start && destination) {
+  
+          if (!googleMapsApiKey) {
+            return;
+          }
+          console.log("Fetching new route for mode:", transportMode);
+  
+          const params = new URLSearchParams({
+            origin: `${start.location.lat},${start.location.lng}`,
+            destination: `${destination.location.lat},${destination.location.lng}`,
+            key: googleMapsApiKey,
+            mode: GOOGLE_DIRECTIONS_MODE[transportMode],
+          });
+  
+          const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
+  
+          try {
+            const response = await fetch(url);
+            const data = await response.json();
+            if (data.routes.length > 0) {
+  
+              setDirectionsGoogle(data) // this sends data for route display
+              setInstructions(data.routes[0].legs[0].steps); // this sends data for instruction display
+              
+              setRouteInfo({
+                distance: data.routes[0].legs[0].distance.value / 1000, // convert meters to km
+                duration: Math.ceil(data.routes[0].legs[0].duration.value / 60), // convert seconds to mins
+              });
+  
+              console.log(data.routes[0].legs[0].steps)
+            }
+          } catch (error) {
+            console.error("Fetch failed", error);
+          }
+        }
+      }
+      fetchDirections();
+    }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
+  
+
   const handleCloseBuilding = () => {
     Animated.timing(buildingInfoSlideAnim, {
       toValue: 300,
@@ -276,6 +337,7 @@ export default function MapScreen() {
     setRouteInfo(null);
     setInstructions([]);
     setShowInstructions(false);
+    setDirectionsGoogle(null);
     setShowShuttleSchedule(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
@@ -311,22 +373,9 @@ export default function MapScreen() {
           destinationBuildingId={destination?.name || null}
         />
 
-        {start && destination && googleMapsApiKey && transportMode !== 'SHUTTLE' && (
-          <MapViewDirections
-            key="map-directions-standard"
-            origin={getCoordinates(start)}
-            destination={getCoordinates(destination)}
-            apikey={googleMapsApiKey}
-            strokeWidth={3}
-            strokeColor="hotpink"
-            mode={directionsMode}
-            onReady={result => {
-              setRouteInfo({
-                distance: result.distance, // in km
-                duration: result.duration, // in mins
-              })
-            }}
-          />
+        {start && destination && googleMapsApiKey && (
+          
+          <RoutePolylineSteps processedSteps={processedSteps} />
         )}
 
         {shuttleRouteSegments && (
@@ -380,8 +429,8 @@ export default function MapScreen() {
         {destination && (
           <Marker coordinate={getCoordinates(destination)!} title="Destination" pinColor="red" testID="destination-marker" />
         )}
-
       </MapView>
+      
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']} testID="safe-area-view">
         <View style={styles.campusSelectorContainer}>
           <View style={styles.campusSelector}>
@@ -475,6 +524,8 @@ export default function MapScreen() {
             transportMode={transportMode}
             mapSelectionTarget={mapSelectionTarget}
             setMapSelectionTarget={setMapSelectionTarget}
+            setDirectionsGoogle={setDirectionsGoogle}
+            setRouteInfo={setRouteInfo}
           />
         </Animated.View>
       )}
@@ -578,6 +629,7 @@ export default function MapScreen() {
       )}
 
       {activeModal === 'routeInfo' && routeInfo && (
+        <View testID="route-info-container"> 
         <RouteInfo
           duration={routeInfo.duration}
           distance={routeInfo.distance}
@@ -598,6 +650,7 @@ export default function MapScreen() {
           }}
           onClose={handleClearRoute}
         />
+        </View>
       )}
 
       <Modal

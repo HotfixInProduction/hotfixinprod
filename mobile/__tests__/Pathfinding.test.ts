@@ -1,4 +1,4 @@
-import { findPath, generateSvgPath } from '../src/utils/Pathfinding';
+import { findPath, generateSvgPath, getRoomNodeId } from '../src/utils/Pathfinding';
 import { JsonNode } from 'ngraph.fromjson';
 import path from 'ngraph.path';
 
@@ -87,7 +87,148 @@ describe('Pathfinding', () => {
     });
   });
 
-  describe('pathfinder edge cases', () => {
+describe('getRoomNodeId', () => {
+  describe('Hall Building floor 8', () => {
+    it('should return node ID for a valid room label', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '829');
+      expect(nodeId).toBe(67);
+    });
+
+    it('should return node ID for room label with decimal point', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '802.01');
+      expect(nodeId).toBe(20);
+    });
+
+    it('should return node ID for elevator room label', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '8el1');
+      expect(nodeId).toBe(41);
+    });
+
+    it('should return node ID for another elevator room label', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '8el2');
+      expect(nodeId).toBe(41);
+    });
+
+    it('should return null for non-existent room label', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '999');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return the correct node ID for room 801', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '801');
+      expect(nodeId).toBe(17);
+    });
+
+    it('should return the same node ID for rooms mapped to same node', () => {
+      // 822 and 865 both map to node 2
+      const nodeId1 = getRoomNodeId('Hall Building', '8', '863');
+      const nodeId2 = getRoomNodeId('Hall Building', '8', '865');
+      expect(nodeId1).toBe(2);
+      expect(nodeId2).toBe(2);
+    });
+  });
+
+  describe('Hall Building floor 9', () => {
+    it('should return node ID for a valid room label on floor 9', () => {
+      const nodeId = getRoomNodeId('Hall Building', '9', '920');
+      expect(nodeId).toBe(11);
+    });
+
+    it('should return node ID for room label with decimal on floor 9', () => {
+      const nodeId = getRoomNodeId('Hall Building', '9', '927.01');
+      expect(nodeId).toBe(14);
+    });
+
+    it('should return node ID for elevator room label on floor 9', () => {
+      const nodeId = getRoomNodeId('Hall Building', '9', '9elv');
+      expect(nodeId).toBe(43);
+    });
+
+    it('should return null for non-existent room label on floor 9', () => {
+      const nodeId = getRoomNodeId('Hall Building', '9', '9999');
+      expect(nodeId).toBeNull();
+    });
+  });
+
+  describe('John Molson Building', () => {
+    it('should return node ID for a valid room on floor S2', () => {
+      const nodeId = getRoomNodeId('John Molson Building', 'S2', '245');
+      expect(nodeId).toBe(55);
+    });
+
+    it('should return node ID for another valid room on floor S2', () => {
+      const nodeId = getRoomNodeId('John Molson Building', 'S2', '330');
+      expect(nodeId).toBe(3);
+    });
+
+    it('should return node ID for a valid room on floor 1', () => {
+      const nodeId = getRoomNodeId('John Molson Building', '1', '1.294');
+      expect(nodeId).toBe(49);
+    });
+
+    it('should return node ID for another valid room on floor 1', () => {
+      const nodeId = getRoomNodeId('John Molson Building', '1', '1.115');
+      expect(nodeId).toBe(42);
+    });
+
+    it('should return null for non-existent room label', () => {
+      const nodeId = getRoomNodeId('John Molson Building', 'S2', 'nonexistent');
+      expect(nodeId).toBeNull();
+    });
+  });
+
+  describe('error cases', () => {
+    it('should return null for non-existent building', () => {
+      const nodeId = getRoomNodeId('Unknown Building', '8', '801');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return null for non-existent floor level', () => {
+      const nodeId = getRoomNodeId('Hall Building', '99', '801');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return null for incorrect building name format', () => {
+      // The function expects exact building ID matching
+      const nodeId = getRoomNodeId('hall', '8', '801');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return null for empty room label', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return null for empty building ID', () => {
+      const nodeId = getRoomNodeId('', '8', '801');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return null for empty floor level', () => {
+      const nodeId = getRoomNodeId('Hall Building', '', '801');
+      expect(nodeId).toBeNull();
+    });
+  });
+
+  describe('return type validation', () => {
+    it('should return a number when room is found', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '801');
+      expect(typeof nodeId).toBe('number');
+    });
+
+    it('should return null (not undefined) when room is not found', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', 'nonexistent');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return integer node IDs', () => {
+      const nodeId = getRoomNodeId('Hall Building', '8', '801');
+      expect(Number.isInteger(nodeId)).toBe(true);
+    });
+  });
+});
+
+describe('pathfinder edge cases', () => {
     afterEach(() => {
       jest.restoreAllMocks();
     });

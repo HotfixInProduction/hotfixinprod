@@ -16,8 +16,6 @@ type Props = Readonly<{
     building: Building | null;
     floorLevel?: string;
     onClose: () => void;
-    pathStartNode?: number;
-    pathEndNode?: number;
     startRoom?: string;
     nextRoom?: string;
 }>;
@@ -28,8 +26,6 @@ export default function FloorPlanViewer({
     building,
     floorLevel,
     onClose,
-    pathStartNode = 13,
-    pathEndNode = 10,
     startRoom: startRoomProp = '829',
     nextRoom: nextRoomProp = '862',
 }: Props) {
@@ -49,7 +45,7 @@ export default function FloorPlanViewer({
 
     const roomList = useRoomList(rawSvgContent);
 
-    const path = useIndoorPath(building?.id, currentFloor, pathStartNode, pathEndNode);
+    const path = useIndoorPath(building?.id, currentFloor, startRoom, nextRoom);
 
     const pathString = useSvgPathString(path);
 
