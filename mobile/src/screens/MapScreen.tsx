@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import MapView,{ PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
 import { useEffect, useRef, useState } from 'react';
@@ -9,15 +9,12 @@ import StartDestinationPicker, { Place } from '../components/BuildingSelector/St
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
-import { buildings } from '../data/buildings';
-import MapViewDirections from 'react-native-maps-directions';
 import Config from "react-native-config";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
 import { useRouteProcessor } from '../hooks/useRouteProcessor';
 import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
-import { Polyline } from 'react-native-maps';
 
 const INITIAL_REGION = {
   latitude: 45.497,
@@ -579,6 +576,7 @@ export default function MapScreen() {
       )}
 
       {activeModal === 'routeInfo' && routeInfo && (
+        <View testID="route-info-container"> 
         <RouteInfo
           duration={routeInfo.duration}
           distance={routeInfo.distance}
@@ -587,6 +585,7 @@ export default function MapScreen() {
           onStart={() => setShowInstructions(true)}
           onClose={handleClearRoute}
         />
+        </View>
       )}
 
       <StatusBar style="auto" />

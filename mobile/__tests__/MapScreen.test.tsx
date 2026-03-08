@@ -709,22 +709,39 @@ describe('Auto-zoom Map', () => {
 
 describe('Transportation Modes', () => {
   it('updates map directions mode immediately when mode is changed', async () => {
-    const { getByTestId } = render(<MapScreen />);
+    globalThis.fetch = jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          status: 'OK',
+          routes: [{
+            legs: [{
+              distance: { value: 5000, text: '5.0 km' },
+              duration: { value: 600, text: '10 mins' },
+              steps: []
+            }]
+          }]
+        }),
+      } as Response) 
+    );
+    
+    const { getByTestId, findByTestId } = render(<MapScreen />);
 
+    
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
 
-    await waitFor(() => {
-      expect(getByTestId('map-directions-mode').props.children).toBe('DRIVING');
-      expect(getByTestId('route-info-mock')).toBeTruthy();
-    });
+    const routeInfoContainer = await findByTestId('route-info-mock');
+    expect(routeInfoContainer).toBeTruthy();
+
+    expect(getByTestId('route-info-mode')).toHaveTextContent('Mode: DRIVING');
 
     fireEvent.press(getByTestId('route-info-mode-walking'));
 
     await waitFor(() => {
-      expect(getByTestId('map-directions-mode').props.children).toBe('WALKING');
+      expect(getByTestId('route-info-mode')).toHaveTextContent('Mode: WALKING');
     });
   });
 
@@ -734,7 +751,7 @@ describe('Transportation Modes', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    
 
     await waitFor(() => {
       expect(getByText('Mode: DRIVING')).toBeTruthy();
@@ -756,7 +773,7 @@ describe('Clearing Route', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -790,14 +807,11 @@ describe('Clearing Route', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
     });
-
-    // Trigger the onStart callback which is passed to RouteInfo
-    const routeInfoMock = getByTestId('route-info-mock');
     // The onStart callback should be available through the mock
     fireEvent.press(getByTestId('route-info-start-button'));
 
@@ -816,7 +830,7 @@ describe('Clearing Route', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();

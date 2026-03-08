@@ -86,6 +86,8 @@ describe('StartDestinationPicker', () => {
     setDestination: jest.fn(),
     setInstructions: jest.fn(),
     transportMode: 'DRIVING' as const,
+    setDirectionsGoogle: jest.fn(),
+    setRouteInfo: jest.fn()
   };
 
   it('passes correct placeholder for start building selector', () => {
@@ -194,56 +196,6 @@ describe('StartDestinationPicker', () => {
 
     expect(mockSetStart).toHaveBeenCalledWith(startPlace);
     expect(mockSetDestination).toHaveBeenCalledWith(destPlace);
-  });
-
-  it('fetches instructions from google and updates instructions', async () => {
-    const start = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
-    const destination = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
-
-    const instructions = [{ html_instructions: 'Turn left', distance: { text: '4km' } }];
-
-    globalThis.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () =>
-          Promise.resolve({
-            routes: [{
-              legs: [
-                { steps: instructions, },
-              ],
-            },
-            ],
-          }),
-      }),
-    ) as jest.Mock;
-
-    const mockSetInstructions = jest.fn();
-    render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setInstructions={mockSetInstructions} />);
-
-    await waitFor(() => {
-      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164%2C-73.57897485280246&destination=45.497285416040164%2C-73.57897485280246"));
-      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("mode=driving"));
-      expect(mockSetInstructions).toHaveBeenCalledWith(instructions);
-    });
-  });
-
-  it('fetches instructions but fetch fails', async () => {
-    const start = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
-    const destination = { name: "Hall Building", address: "1455 De Maisonneuve Blvd. W.", location: { lat: 45.497285416040164, lng: -73.57897485280246 } }
-
-    globalThis.fetch = jest.fn(() =>
-      Promise.reject(new Error("Something with the network went wrong"))
-    ) as jest.Mock;
-    console.error = jest.fn();
-
-    const mockSetInstructions = jest.fn();
-    render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setStart={jest.fn()} setInstructions={mockSetInstructions} />);
-
-    await waitFor(() => {
-      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("origin=45.497285416040164%2C-73.57897485280246&destination=45.497285416040164%2C-73.57897485280246"));
-      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining("mode=driving"));
-      expect(mockSetInstructions).not.toHaveBeenCalled();
-      expect(console.error).toHaveBeenCalledWith("Fetch failed", new Error("Something with the network went wrong"));
-    });
   });
 
   it('does not fetch instructions when googleMapsApiKey is missing', async () => {
@@ -457,7 +409,7 @@ describe('StartDestinationPicker', () => {
 
   it('passes value prop to BuildingSelector for start building', async () => {
     const mockPlace = createMockPlace('Test Building', '123 Test St');
-    const { rerender } = render(<StartDestinationPicker {...defaultStartDestProps} start={mockPlace} />);
+    render(<StartDestinationPicker {...defaultStartDestProps} start={mockPlace} />);
 
     await waitFor(() => {
       const calls = (BuildingSelector as jest.Mock).mock.calls;
@@ -468,7 +420,7 @@ describe('StartDestinationPicker', () => {
 
   it('passes value prop to BuildingSelector for destination building', async () => {
     const mockPlace = createMockPlace('Test Destination', '456 Test Ave', 41.8781, -87.6298);
-    const { rerender } = render(<StartDestinationPicker {...defaultStartDestProps} destination={mockPlace} />);
+    render(<StartDestinationPicker {...defaultStartDestProps} destination={mockPlace} />);
 
     await waitFor(() => {
       const calls = (BuildingSelector as jest.Mock).mock.calls;
@@ -619,25 +571,6 @@ describe('StartDestinationPicker', () => {
       expect(mockSetStart).toHaveBeenCalledWith(expect.objectContaining({
         name: 'Only Street',
       }));
-    });
-  });
-
-  it('handles empty routes from directions fetch', async () => {
-    const start = { name: "Start", address: "Start", location: { lat: 1, lng: 1 } };
-    const destination = { name: "Dest", address: "Dest", location: { lat: 2, lng: 2 } };
-
-    globalThis.fetch = jest.fn(() =>
-      Promise.resolve({
-        json: () => Promise.resolve({ routes: [] }),
-      }),
-    ) as jest.Mock;
-
-    const mockSetInstructions = jest.fn();
-    render(<StartDestinationPicker {...defaultStartDestProps} start={start} destination={destination} setInstructions={mockSetInstructions} />);
-
-    await waitFor(() => {
-      expect(globalThis.fetch).toHaveBeenCalled();
-      expect(mockSetInstructions).not.toHaveBeenCalled();
     });
   });
 });

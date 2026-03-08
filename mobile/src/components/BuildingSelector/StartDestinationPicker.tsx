@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import BuildingSelector from './BuildingSelector';
-import Config from "react-native-config";
 import * as Location from 'expo-location';
 import { buildings } from '../../data/buildings';
 import type { MapStep, TravelMode } from '../../types/map';
@@ -35,7 +34,6 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
 };
 
 const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo }) => {
-  const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
   // Calculate distance between two coordinates in meters using Haversine formula
