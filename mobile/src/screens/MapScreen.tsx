@@ -228,6 +228,12 @@ export default function MapScreen() {
 
   useEffect(() => {
       const fetchDirections = async () => {
+        if (transportMode === 'SHUTTLE') {
+          setDirectionsGoogle(null);
+          setInstructions([]);
+          return;
+        }
+        
         if (start && destination) {
   
           if (!googleMapsApiKey) {
