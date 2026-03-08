@@ -8,7 +8,6 @@ import {
   GoogleCalendarState,
   GoogleAuthToken,
   GoogleCalendarEvent,
-  GoogleCalendarListEntry,
   GoogleUser,
   ClassEvent,
 } from '../types/calendar';

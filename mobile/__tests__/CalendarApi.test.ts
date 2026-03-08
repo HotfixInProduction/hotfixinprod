@@ -13,12 +13,12 @@ describe('CalendarApi', () => {
   // fetchUserProfile
 
   it('fetchUserProfile throws error on bad response', async () => {
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({ ok: false, status: 401 }));
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({ ok: false, status: 401 }));
     await expect(fetchUserProfile('token')).rejects.toThrow('Profile API error: 401');
   });
 
   it('fetchUserProfile returns user data', async () => {
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
       ok: true,
       json: async () => ({ name: 'Test', email: 'test@mail.com', picture: 'pic' }),
     }));
@@ -27,7 +27,7 @@ describe('CalendarApi', () => {
   });
 
   it('fetchUserProfile handles missing fields with empty string fallbacks', async () => {
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
       ok: true,
       json: async () => ({}),
     }));
@@ -38,7 +38,7 @@ describe('CalendarApi', () => {
   // fetchCalendarList
 
   it('fetchCalendarList throws error on bad response', async () => {
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({ ok: false, status: 403 }));
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({ ok: false, status: 403 }));
     await expect(fetchCalendarList('token')).rejects.toThrow('CalendarList API error: 403');
   });
 
@@ -47,7 +47,7 @@ describe('CalendarApi', () => {
       { id: 'primary', summary: 'My Calendar', backgroundColor: '#4A90E2', primary: true },
       { id: 'work@example.com', summary: 'Work', backgroundColor: '#E94B3C' },
     ];
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
       ok: true,
       json: async () => ({ items: mockCalendars }),
     }));
@@ -56,7 +56,7 @@ describe('CalendarApi', () => {
   });
 
   it('fetchCalendarList returns empty array when items is missing', async () => {
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
       ok: true,
       json: async () => ({}),
     }));
@@ -69,7 +69,7 @@ describe('CalendarApi', () => {
       ok: true,
       json: async () => ({ items: [] }),
     }));
-    (global.fetch as jest.Mock) = mockFetch;
+    (globalThis.fetch as jest.Mock) = mockFetch;
     await fetchCalendarList('my-token');
     expect(mockFetch).toHaveBeenCalledWith(
       'https://www.googleapis.com/calendar/v3/users/me/calendarList',
@@ -82,7 +82,7 @@ describe('CalendarApi', () => {
   // fetchCalendarEvents
 
   it('fetchCalendarEvents throws error on bad response', async () => {
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({ ok: false, status: 403 }));
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({ ok: false, status: 403 }));
     await expect(fetchCalendarEvents('token')).rejects.toThrow('Calendar API error: 403');
   });
 
@@ -91,7 +91,7 @@ describe('CalendarApi', () => {
       { id: '1', start: { dateTime: '2026-03-10T10:00:00' }, end: { dateTime: '2026-03-10T11:00:00' } },
       { id: '2', start: { date: '2026-03-10' }, end: { date: '2026-03-10' } }, // all-day, should be filtered
     ];
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
       ok: true,
       json: async () => ({ items }),
     }));
@@ -101,7 +101,7 @@ describe('CalendarApi', () => {
   });
 
   it('fetchCalendarEvents returns empty array when items is missing', async () => {
-    (global.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
+    (globalThis.fetch as jest.Mock) = jest.fn(() => Promise.resolve({
       ok: true,
       json: async () => ({}),
     }));
@@ -114,7 +114,7 @@ describe('CalendarApi', () => {
       ok: true,
       json: async () => ({ items: [] }),
     }));
-    (global.fetch as jest.Mock) = mockFetch;
+    (globalThis.fetch as jest.Mock) = mockFetch;
     await fetchCalendarEvents('token');
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining('/calendars/primary/events'),
@@ -127,7 +127,7 @@ describe('CalendarApi', () => {
       ok: true,
       json: async () => ({ items: [] }),
     }));
-    (global.fetch as jest.Mock) = mockFetch;
+    (globalThis.fetch as jest.Mock) = mockFetch;
     await fetchCalendarEvents('token', 'work@example.com');
     expect(mockFetch).toHaveBeenCalledWith(
       expect.stringContaining(encodeURIComponent('work@example.com')),
@@ -140,7 +140,7 @@ describe('CalendarApi', () => {
       ok: true,
       json: async () => ({ items: [] }),
     }));
-    (global.fetch as jest.Mock) = mockFetch;
+    (globalThis.fetch as jest.Mock) = mockFetch;
     await fetchCalendarEvents('my-token');
     expect(mockFetch).toHaveBeenCalledWith(
       expect.any(String),

@@ -12,10 +12,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { GoogleCalendarListEntry } from '../../types/calendar';
 
 interface Props {
-  calendars: GoogleCalendarListEntry[];
-  selectedCalendarId: string;
-  onSelect: (calendarId: string) => void;
-  isLoading: boolean;
+  readonly calendars: GoogleCalendarListEntry[];
+  readonly selectedCalendarId: string;
+  readonly onSelect: (calendarId: string) => void;
+  readonly isLoading: boolean;
 }
 
 export default function CalendarPicker({ calendars, selectedCalendarId, onSelect, isLoading }: Props) {
