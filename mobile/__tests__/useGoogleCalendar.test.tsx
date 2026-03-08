@@ -63,7 +63,7 @@ describe('useGoogleCalendar', () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue({ accessToken: 'token', expiresAt: Date.now() + 10000, tokenType: 'Bearer' });
     (isTokenExpired as jest.Mock).mockReturnValue(false);
     (loadUserFromStorage as jest.Mock).mockResolvedValue(null);
-    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'Math' }]);
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'Concordia: Math' }]);
     (fetchUserProfile as jest.Mock).mockResolvedValue({ name: 'Test', email: 'test@mail.com', picture: 'pic' });
 
     const { result } = renderHook(() => useGoogleCalendar());
