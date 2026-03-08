@@ -3,6 +3,8 @@ import * as Google from 'expo-auth-session/providers/google';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
+import { buildings } from '../data/buildings';
+import classCodes from '../data/classCodes';
 
 import {
   GoogleCalendarState,
@@ -26,21 +28,51 @@ WebBrowser.maybeCompleteAuthSession();
 
 const EVENT_COLORS = ['#4A90E2', '#E94B3C', '#50C878', '#F39C12', '#9B59B6'];
 
-function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent {
+export function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent {
   const startDate = new Date(event.start.dateTime);
   const endDate = new Date(event.end.dateTime);
   const locationParts = (event.location ?? '').split(' ');
+
+  const building = locationParts[0] ?? '';
+  const room = locationParts[1] ?? '';
+
   return {
     id: event.id,
     title: event.summary ?? 'No Title',
     location: event.location ?? '',
-    building: locationParts[0] ?? '',
-    room: locationParts[1] ?? '',
+    building,
+    room,
     startTime: startDate,
     endTime: endDate,
     dayOfWeek: startDate.getDay(),
     color: EVENT_COLORS[index % EVENT_COLORS.length],
   };
+}
+
+export function validateEventBuilding(event: ClassEvent): boolean {
+  const eventBuilding = event.building.toUpperCase();
+
+  return buildings.some(
+    (b) => b.label.toUpperCase() === eventBuilding || b.id.toUpperCase() === eventBuilding
+  );
+}
+
+export function filterValidClassEvents(events: ClassEvent[]): ClassEvent[] {
+  const validCodes = Object.keys(classCodes);
+
+  return events.filter(e => {
+    const text = `${e.title || ''} ${e.location || ''}`;
+    return validCodes.some(code => {
+      const regex = new RegExp(String.raw`\b${code}[- ]?\d+`, 'i');
+      return regex.test(text);
+    });
+  });
+}
+
+export function extractRoom(location: string): string {
+    const cleaned = location.replaceAll(/\s+/g, '');
+    const match = /^[A-Z]+-?\d+/i.exec(cleaned);
+    return match ? match[0] : '';
 }
 
 export function useGoogleCalendar() {
@@ -109,6 +141,17 @@ export function useGoogleCalendar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [response]);
 
+    useEffect(() => {
+      if (!state.isAuthenticated || !state.token) return;
+
+      const interval = setInterval(() => {
+          if (!state.token) return;
+        loadEvents(state.token, state.user);
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }, [state.isAuthenticated, state.token, state.user]);
+
   async function loadEvents(token: GoogleAuthToken, existingUser: GoogleUser | null) {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
@@ -118,7 +161,13 @@ export function useGoogleCalendar() {
       ]);
       if (!existingUser) saveUserToStorage(user);
       const events: ClassEvent[] = raw.map(mapToClassEvent);
-      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events });
+      const concordiaEvents = filterValidClassEvents(events);
+      const validatedEvents = concordiaEvents.map(event => ({
+        ...event,
+        isValidBuilding: validateEventBuilding(event),
+      }));
+
+      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events: validatedEvents, });
     } catch (err: unknown) {
       setState(prev => ({
         ...prev,

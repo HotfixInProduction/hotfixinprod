@@ -1,5 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
-import { useGoogleCalendar } from '../src/hooks/useGoogleCalendar';
+import { useGoogleCalendar, mapToClassEvent, extractRoom, filterValidClassEvents, validateEventBuilding } from '../src/hooks/useGoogleCalendar';
+import type { GoogleCalendarEvent, ClassEvent } from '../src/types/calendar';
 import { loadTokenFromStorage, isTokenExpired, loadUserFromStorage, saveTokenToStorage } from '../src/models/CalendarStorage';
 import { fetchCalendarEvents, fetchUserProfile } from '../src/models/CalendarApi';
 
@@ -63,7 +64,7 @@ describe('useGoogleCalendar', () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue({ accessToken: 'token', expiresAt: Date.now() + 10000, tokenType: 'Bearer' });
     (isTokenExpired as jest.Mock).mockReturnValue(false);
     (loadUserFromStorage as jest.Mock).mockResolvedValue(null);
-    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'Math' }]);
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'SOEN 345' }]);
     (fetchUserProfile as jest.Mock).mockResolvedValue({ name: 'Test', email: 'test@mail.com', picture: 'pic' });
 
     const { result } = renderHook(() => useGoogleCalendar());
@@ -77,7 +78,7 @@ describe('useGoogleCalendar', () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue({ accessToken: 'token', expiresAt: Date.now() + 10000, tokenType: 'Bearer' });
     (isTokenExpired as jest.Mock).mockReturnValue(false);
     (loadUserFromStorage as jest.Mock).mockResolvedValue(savedUser);
-    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'Math' }]);
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'SOEN 345' }]);
 
     const { result } = renderHook(() => useGoogleCalendar());
     await waitFor(() => expect(result.current.state.isAuthenticated).toBe(true));
@@ -135,7 +136,7 @@ describe('useGoogleCalendar', () => {
 
   it('handles successful OAuth response', async () => {
     (loadTokenFromStorage as jest.Mock).mockResolvedValue(null);
-    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'Math' }]);
+    (fetchCalendarEvents as jest.Mock).mockResolvedValue([{ id: '1', start: { dateTime: new Date().toISOString() }, end: { dateTime: new Date().toISOString() }, location: 'B 101', summary: 'SOEN 345 Lecture' }]);
     (fetchUserProfile as jest.Mock).mockResolvedValue({ name: 'OAuth User', email: 'oauth@mail.com', picture: 'pic' });
 
     mockResponse = {
@@ -169,4 +170,84 @@ describe('useGoogleCalendar', () => {
     await waitFor(() => expect(result.current.state.isLoading).toBe(false));
     expect(result.current.state.error).toBe(null);
   });
+
+
+describe('extractRoom', () => {
+  it('extracts room correctly for standard formats', () => {
+    expect(extractRoom('H 353')).toBe('H353');
+    expect(extractRoom('B-101')).toBe('B-101');
+    expect(extractRoom('XYZ123')).toBe('XYZ123');
+  });
+
+  it('returns empty string for invalid input', () => {
+    expect(extractRoom('NoRoomHere')).toBe('');
+    expect(extractRoom('')).toBe('');
+  });
+});
+
+describe('mapToClassEvent', () => {
+  it('maps a GoogleCalendarEvent to a ClassEvent', () => {
+    const googleEvent: GoogleCalendarEvent = {
+      id: '1',
+      summary: 'SOEN 345',
+      location: 'H 353',
+      start: { dateTime: '2026-03-07T10:00:00Z' },
+      end: { dateTime: '2026-03-07T11:00:00Z' },
+    };
+    const classEvent = mapToClassEvent(googleEvent, 0);
+    expect(classEvent.title).toBe('SOEN 345');
+    expect(classEvent.building).toBe('H');
+    expect(classEvent.room).toBe('353');
+    expect(classEvent.color).toBeDefined();
+  });
+
+  it('handles missing location', () => {
+    const googleEvent: GoogleCalendarEvent = {
+      id: '3',
+      summary: 'COMP 346',
+      location: undefined,
+      start: { dateTime: '2026-03-07T10:00:00Z' },
+      end: { dateTime: '2026-03-07T11:00:00Z' },
+    };
+    const classEvent = mapToClassEvent(googleEvent, 0);
+    expect(classEvent.location).toBe('');
+    expect(classEvent.building).toBe('');
+  });
+});
+
+describe('filterValidClassEvents', () => {
+  const makeEvent = (title: string): ClassEvent => ({
+    id: '1', title, location: '', building: '', room: '',
+    startTime: new Date(), endTime: new Date(), dayOfWeek: 1, color: '#000',
+  });
+
+  it('keeps events matching code + number (SOEN 345, SOEN345, SOEN-345)', () => {
+    expect(filterValidClassEvents([makeEvent('SOEN 345 LEC')])).toHaveLength(1);
+    expect(filterValidClassEvents([makeEvent('SOEN345')])).toHaveLength(1);
+    expect(filterValidClassEvents([makeEvent('SOEN-345')])).toHaveLength(1);
+  });
+
+  it('filters out events with no class code', () => {
+    expect(filterValidClassEvents([makeEvent('Team Meeting')])).toHaveLength(0);
+  });
+
+  it('filters out events with a code but no number', () => {
+    expect(filterValidClassEvents([makeEvent('SOEN Tutorial')])).toHaveLength(0);
+  });
+});
+
+describe('validateEventBuilding', () => {
+  const makeEvent = (building: string): ClassEvent => ({
+    id: '1', title: 'SOEN 345', location: `${building} 100`,
+    building, room: '100', startTime: new Date(), endTime: new Date(), dayOfWeek: 1, color: '#000',
+  });
+
+  it('returns true for a known building', () => {
+    expect(validateEventBuilding(makeEvent('H'))).toBe(true);
+  });
+
+  it('returns false for an unknown building', () => {
+    expect(validateEventBuilding(makeEvent('UNKN'))).toBe(false);
+  });
+});
 });
