@@ -67,8 +67,9 @@ function filterConcordiaEvents(events: ClassEvent[]): ClassEvent[] {
 }
 
 function extractRoom(location: string): string {
-  const match = location.match(/([A-Z]+[-]?\d+)/i);
-  return match ? match[0] : '';
+    const cleaned = location.replace(/\s+/g, '');
+    const match = /^[A-Z]+-?\d+/i.exec(cleaned);
+    return match ? match[0] : '';
 }
 
 export function useGoogleCalendar() {
