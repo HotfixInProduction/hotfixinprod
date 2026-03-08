@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import BuildingSelector from './BuildingSelector';
-import Config from "react-native-config";
 import * as Location from 'expo-location';
 import { buildings } from '../../data/buildings';
 import type { MapStep, TravelMode } from '../../types/map';
@@ -23,6 +22,8 @@ type StartDestinationPickerProps = {
   transportMode: TravelMode;
   mapSelectionTarget?: 'start' | 'destination' | null;
   setMapSelectionTarget?: (target: 'start' | 'destination' | null) => void;
+  setDirectionsGoogle: (data: any) => void;
+  setRouteInfo: (val: {distance: number, duration: number} | null) => void;
 };
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -33,8 +34,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   SHUTTLE: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget }) => {
-  const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo }) => {
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
   // Calculate distance between two coordinates in meters using Haversine formula
@@ -146,42 +146,6 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
       setLoadingCurrentLocation(false);
     }
   };
-
-  useEffect(() => {
-    const fetchDirections = async () => {
-      if (start && destination) {
-        if (transportMode === 'SHUTTLE') {
-          setInstructions([]);
-          return;
-        }
-
-        if (!googleMapsApiKey) {
-          return;
-        }
-
-        const params = new URLSearchParams({
-          origin: `${start.location.lat},${start.location.lng}`,
-          destination: `${destination.location.lat},${destination.location.lng}`,
-          key: googleMapsApiKey,
-          mode: GOOGLE_DIRECTIONS_MODE[transportMode],
-        });
-
-        const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
-
-        try {
-          const response = await fetch(url);
-          const data = await response.json();
-          if (data.routes.length > 0) {
-            setInstructions(data.routes[0].legs[0].steps);
-            console.log(data.routes[0].legs[0].steps)
-          }
-        } catch (error) {
-          console.error("Fetch failed", error);
-        }
-      }
-    }
-    fetchDirections();
-  }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
 
   return (
     <View style={styles.container} testID="building-selector-container">
