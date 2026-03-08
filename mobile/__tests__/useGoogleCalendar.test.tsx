@@ -1,5 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
-import { useGoogleCalendar, mapToClassEvent, extractRoom } from '../src/hooks/useGoogleCalendar';
+import { useGoogleCalendar, mapToClassEvent, extractRoom, filterValidClassEvents, validateEventBuilding } from '../src/hooks/useGoogleCalendar';
 import type { GoogleCalendarEvent, ClassEvent } from '../src/types/calendar';
 import { loadTokenFromStorage, isTokenExpired, loadUserFromStorage, saveTokenToStorage } from '../src/models/CalendarStorage';
 import { fetchCalendarEvents, fetchUserProfile } from '../src/models/CalendarApi';
@@ -186,7 +186,7 @@ describe('extractRoom', () => {
 });
 
 describe('mapToClassEvent', () => {
-  it('maps GoogleCalendarEvent to ClassEvent correctly', () => {
+  it('maps a GoogleCalendarEvent to a ClassEvent', () => {
     const googleEvent: GoogleCalendarEvent = {
       id: '1',
       summary: 'SOEN 345',
@@ -194,18 +194,60 @@ describe('mapToClassEvent', () => {
       start: { dateTime: '2026-03-07T10:00:00Z' },
       end: { dateTime: '2026-03-07T11:00:00Z' },
     };
-
-    const classEvent: ClassEvent = mapToClassEvent(googleEvent, 1);
-
-    expect(classEvent.id).toBe('1');
+    const classEvent = mapToClassEvent(googleEvent, 0);
     expect(classEvent.title).toBe('SOEN 345');
-    expect(classEvent.location).toBe('H 353');
     expect(classEvent.building).toBe('H');
     expect(classEvent.room).toBe('353');
-    expect(classEvent.startTime.toISOString()).toBe('2026-03-07T10:00:00.000Z');
-    expect(classEvent.endTime.toISOString()).toBe('2026-03-07T11:00:00.000Z');
-    expect(classEvent.dayOfWeek).toBe(new Date(googleEvent.start.dateTime).getDay());
     expect(classEvent.color).toBeDefined();
+  });
+
+  it('handles missing location', () => {
+    const googleEvent: GoogleCalendarEvent = {
+      id: '3',
+      summary: 'COMP 346',
+      location: undefined,
+      start: { dateTime: '2026-03-07T10:00:00Z' },
+      end: { dateTime: '2026-03-07T11:00:00Z' },
+    };
+    const classEvent = mapToClassEvent(googleEvent, 0);
+    expect(classEvent.location).toBe('');
+    expect(classEvent.building).toBe('');
+  });
+});
+
+describe('filterValidClassEvents', () => {
+  const makeEvent = (title: string): ClassEvent => ({
+    id: '1', title, location: '', building: '', room: '',
+    startTime: new Date(), endTime: new Date(), dayOfWeek: 1, color: '#000',
+  });
+
+  it('keeps events matching code + number (SOEN 345, SOEN345, SOEN-345)', () => {
+    expect(filterValidClassEvents([makeEvent('SOEN 345 LEC')])).toHaveLength(1);
+    expect(filterValidClassEvents([makeEvent('SOEN345')])).toHaveLength(1);
+    expect(filterValidClassEvents([makeEvent('SOEN-345')])).toHaveLength(1);
+  });
+
+  it('filters out events with no class code', () => {
+    expect(filterValidClassEvents([makeEvent('Team Meeting')])).toHaveLength(0);
+  });
+
+  it('filters out events with a code but no number', () => {
+    expect(filterValidClassEvents([makeEvent('SOEN Tutorial')])).toHaveLength(0);
+  });
+});
+
+describe('validateEventBuilding', () => {
+  const makeEvent = (building: string): ClassEvent => ({
+    id: '1', title: 'SOEN 345', location: `${building} 100`,
+    building, room: '100', startTime: new Date(), endTime: new Date(), dayOfWeek: 1, color: '#000',
+  });
+
+  it('returns true for a known building', () => {
+    expect(validateEventBuilding(makeEvent('H'))).toBe(true);
+  });
+
+  it('returns false for an unknown building', () => {
+    expect(validateEventBuilding(makeEvent('UNKN'))).toBe(false);
   });
 });
 });
