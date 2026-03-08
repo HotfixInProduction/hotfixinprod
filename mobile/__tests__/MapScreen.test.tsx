@@ -1019,6 +1019,11 @@ describe('MapScreen Shuttle Coverage', () => {
   });
 
   it('switches back to transit when shuttle mode is forced on a non-shuttle route', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ routes: [] }),
+    } as any);
+
     const { getByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
