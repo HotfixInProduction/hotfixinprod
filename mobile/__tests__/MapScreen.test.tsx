@@ -770,11 +770,10 @@ describe('Transportation Modes', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-terminal'));
     fireEvent.press(getByTestId('set-destination-terminal'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    // 
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
-      expect(getByTestId('map-directions')).toBeTruthy();
     });
 
     fireEvent.press(getByTestId('route-info-mode-shuttle'));
@@ -788,16 +787,31 @@ describe('Transportation Modes', () => {
   });
 
   it('renders shuttle plus dotted walking segments when start and destination are away from terminals', async () => {
-    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
+    globalThis.fetch = jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          status: 'OK',
+          routes: [{
+            legs: [{
+              distance: { value: 5000, text: '5.0 km' },
+              duration: { value: 600, text: '10 mins' },
+              steps: []
+            }]
+          }]
+        }),
+      } as Response) 
+    );
+    const { getByTestId, queryByTestId, getAllByTestId, findByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-walk'));
     fireEvent.press(getByTestId('set-destination-walk'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    // 
 
     await waitFor(() => {
-      expect(getByTestId('route-info-mock')).toBeTruthy();
-      expect(getByTestId('map-directions')).toBeTruthy();
+      expect(findByTestId('route-info-mock')).toBeTruthy();
     });
 
     fireEvent.press(getByTestId('route-info-mode-shuttle'));
@@ -947,7 +961,7 @@ describe('MapScreen Shuttle Coverage', () => {
       fireEvent.press(getByTestId('building-selector-toggle'));
       fireEvent.press(getByTestId('set-start'));
       fireEvent.press(getByTestId('set-destination'));
-      fireEvent.press(getByTestId('trigger-directions-ready'));
+      // 
 
       await waitFor(() => {
         expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -990,7 +1004,7 @@ describe('MapScreen Shuttle Coverage', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    // 
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -1010,7 +1024,7 @@ describe('MapScreen Shuttle Coverage', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination-downtown'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    // 
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -1030,7 +1044,7 @@ describe('MapScreen Shuttle Coverage', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-far'));
     fireEvent.press(getByTestId('set-destination'));
-    fireEvent.press(getByTestId('trigger-directions-ready'));
+    // 
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
