@@ -166,9 +166,8 @@ export function useGoogleCalendar() {
         ...event,
         isValidBuilding: validateEventBuilding(event),
       }));
-  const renderableEvents = validatedEvents.filter(event => event.isValidBuilding);
 
-      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events: renderableEvents, });
+      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events: validatedEvents, });
     } catch (err: unknown) {
       setState(prev => ({
         ...prev,
