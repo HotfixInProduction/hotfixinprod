@@ -351,4 +351,3 @@ describe('validateEventBuilding', () => {
     expect(validateEventBuilding(makeEvent('UNKN'))).toBe(false);
   });
 });
-});
