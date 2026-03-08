@@ -1,5 +1,6 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
-import { useGoogleCalendar, mapToClassEvent, extractRoom, filterValidClassEvents, validateEventBuilding, GoogleCalendarEvent, ClassEvent } from '../src/hooks/useGoogleCalendar';
+import { useGoogleCalendar, mapToClassEvent, extractRoom, filterValidClassEvents, validateEventBuilding } from '../src/hooks/useGoogleCalendar';
+import type { GoogleCalendarEvent, ClassEvent } from '../src/types/calendar';
 import { loadTokenFromStorage, isTokenExpired, loadUserFromStorage, saveTokenToStorage } from '../src/models/CalendarStorage';
 import { fetchCalendarEvents, fetchUserProfile } from '../src/models/CalendarApi';
 import { classCodes } from '../src/data/classCodes';
