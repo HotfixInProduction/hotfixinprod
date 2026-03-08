@@ -4,6 +4,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { buildings } from '../data/buildings';
+import classCodes from '../data/classCodes';
 
 import {
   GoogleCalendarState,
@@ -27,7 +28,7 @@ WebBrowser.maybeCompleteAuthSession();
 
 const EVENT_COLORS = ['#4A90E2', '#E94B3C', '#50C878', '#F39C12', '#9B59B6'];
 
-function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent {
+export function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent {
   const startDate = new Date(event.start.dateTime);
   const endDate = new Date(event.end.dateTime);
   const locationParts = (event.location ?? '').split(' ');
@@ -56,17 +57,19 @@ export function validateEventBuilding(event: ClassEvent): boolean {
   );
 }
 
-function filterConcordiaEvents(events: ClassEvent[]): ClassEvent[] {
-  const keywords = ['Concordia'];
-  const regex = new RegExp(keywords.join('|'), 'i');
+export function filterValidClassEvents(events: ClassEvent[]): ClassEvent[] {
+  const validCodes = Object.keys(classCodes);
 
-  return events.filter(
-    (event) =>
-      regex.test(event.title) || regex.test(event.location) || regex.test(event.building)
-  );
+  return events.filter(e => {
+    const text = `${e.title || ''} ${e.location || ''}`;
+    return validCodes.some(code => {
+      const regex = new RegExp(`\\b${code}[- ]?\\d+`, 'i');
+      return regex.test(text);
+    });
+  });
 }
 
-function extractRoom(location: string): string {
+export function extractRoom(location: string): string {
     const cleaned = location.replace(/\s+/g, '');
     const match = /^[A-Z]+-?\d+/i.exec(cleaned);
     return match ? match[0] : '';
@@ -157,7 +160,7 @@ export function useGoogleCalendar() {
       ]);
       if (!existingUser) saveUserToStorage(user);
       const events: ClassEvent[] = raw.map(mapToClassEvent);
-      const concordiaEvents = filterConcordiaEvents(events);
+      const concordiaEvents = filterValidClassEvents(events);
       const validatedEvents = concordiaEvents.map(event => ({
         ...event,
         isValidBuilding: validateEventBuilding(event),
