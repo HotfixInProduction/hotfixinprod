@@ -148,18 +148,6 @@ export function useGoogleCalendar() {
     existingUser: GoogleUser | null,
     calendarId: string
   ) {
-    useEffect(() => {
-      if (!state.isAuthenticated || !state.token) return;
-
-      const interval = setInterval(() => {
-          if (!state.token) return;
-        loadEvents(state.token, state.user);
-      }, 30000);
-
-      return () => clearInterval(interval);
-    }, [state.isAuthenticated, state.token, state.user]);
-
-  async function loadEvents(token: GoogleAuthToken, existingUser: GoogleUser | null) {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     try {
       const [raw, user, calendars] = await Promise.all([
@@ -169,23 +157,21 @@ export function useGoogleCalendar() {
       ]);
       if (!existingUser) saveUserToStorage(user);
       const events: ClassEvent[] = raw.map(mapToClassEvent);
+      const concordiaEvents = filterValidClassEvents(events);
+      const validatedEvents = concordiaEvents.map(event => ({
+        ...event,
+        isValidBuilding: validateEventBuilding(event),
+      }));
       setState({
         isAuthenticated: true,
         isLoading: false,
         error: null,
         token,
         user,
-        events,
+        events: validatedEvents,
         calendars,
         selectedCalendarId: calendarId,
       });
-      const concordiaEvents = filterValidClassEvents(events);
-      const validatedEvents = concordiaEvents.map(event => ({
-        ...event,
-        isValidBuilding: validateEventBuilding(event),
-      }));
-
-      setState({ isAuthenticated: true, isLoading: false, error: null, token, user, events: validatedEvents, });
     } catch (err: unknown) {
       setState(prev => ({
         ...prev,
@@ -194,6 +180,18 @@ export function useGoogleCalendar() {
       }));
     }
   }
+
+  useEffect(() => {
+    if (!state.isAuthenticated || !state.token) return;
+
+    const interval = setInterval(() => {
+      if (!state.token) return;
+      loadEvents(state.token, state.user, state.selectedCalendarId);
+    }, 30000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.isAuthenticated, state.token, state.user]);
 
   async function connect() {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
