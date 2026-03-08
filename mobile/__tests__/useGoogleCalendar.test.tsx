@@ -43,7 +43,7 @@ const mockEvent = {
   start: { dateTime: new Date().toISOString() },
   end: { dateTime: new Date().toISOString() },
   location: 'B 101',
-  summary: 'Math',
+  summary: 'SOEN 345',
 };
 
 const mockCalendars = [
