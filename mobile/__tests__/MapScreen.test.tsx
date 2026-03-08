@@ -1021,7 +1021,15 @@ describe('MapScreen Shuttle Coverage', () => {
   it('switches back to transit when shuttle mode is forced on a non-shuttle route', async () => {
     globalThis.fetch = jest.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ routes: [] }),
+      json: () => Promise.resolve({
+        routes: [{
+          legs: [{
+            distance: { value: 3000, text: '3.0 km' },
+            duration: { value: 480, text: '8 mins' },
+            steps: []
+          }]
+        }]
+      }),
     } as any);
 
     const { getByTestId } = render(<MapScreen />);
