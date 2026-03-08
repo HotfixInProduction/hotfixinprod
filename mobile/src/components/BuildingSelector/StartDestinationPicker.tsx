@@ -31,6 +31,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   WALKING: 'walking',
   BICYCLING: 'bicycling',
   TRANSIT: 'transit',
+  SHUTTLE: 'transit',
 };
 
 const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo }) => {

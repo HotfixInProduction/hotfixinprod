@@ -11,6 +11,13 @@ interface RouteInfoProps {
     onModeChange: (mode: TravelMode) => void;
     onStart: () => void;
     onClose: () => void;
+    allowShuttleMode?: boolean;
+    shuttleInfo?: {
+        nextDepartureInMinutes: number;
+        nextDepartureTimeLabel: string;
+        intervalMinutes?: number;
+    } | null;
+    onOpenShuttleSchedule?: () => void;
 }
 
 type MaterialIconName = React.ComponentProps<typeof MaterialIcons>['name'];
@@ -20,12 +27,24 @@ const MODE_METADATA: Record<TravelMode, { label: string; icon: MaterialIconName 
     WALKING: { label: 'Walk', icon: 'directions-walk' },
     BICYCLING: { label: 'Bike', icon: 'directions-bike' },
     TRANSIT: { label: 'Transit', icon: 'directions-transit' },
+    SHUTTLE: { label: 'Shuttle', icon: 'airport-shuttle' },
 };
 
-const MODE_OPTIONS: TravelMode[] = ['DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT'];
-
-const RouteInfo = ({ duration, distance, mode, onModeChange, onStart, onClose }: RouteInfoProps) => {
+const RouteInfo = ({
+    duration,
+    distance,
+    mode,
+    onModeChange,
+    onStart,
+    onClose,
+    allowShuttleMode = false,
+    shuttleInfo = null,
+    onOpenShuttleSchedule,
+}: RouteInfoProps) => {
     const modeMetadata = MODE_METADATA[mode];
+    const modeOptions: TravelMode[] = allowShuttleMode
+        ? ['DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT', 'SHUTTLE']
+        : ['DRIVING', 'WALKING', 'BICYCLING', 'TRANSIT'];
 
     // Calculate Arrival Time
     const getArrivalTime = () => {
@@ -47,7 +66,7 @@ const RouteInfo = ({ duration, distance, mode, onModeChange, onStart, onClose }:
             </View>
 
             <View style={styles.modeSelector}>
-                {MODE_OPTIONS.map((modeOption) => {
+                {modeOptions.map((modeOption) => {
                     const metadata = MODE_METADATA[modeOption];
                     const isActive = modeOption === mode;
                     return (
@@ -72,13 +91,43 @@ const RouteInfo = ({ duration, distance, mode, onModeChange, onStart, onClose }:
 
             <View style={styles.content}>
                 <View style={styles.textContainer}>
-                    <View style={styles.timeRow}>
-                        <Text style={styles.durationText}>{Math.round(duration)} min </Text>
-                        <Text style={styles.arrivalText}>• Arrive at {getArrivalTime()}</Text>
-                    </View>
+                    {!(mode === 'SHUTTLE' && shuttleInfo && shuttleInfo.nextDepartureInMinutes > 60) && (
+                        <View style={styles.timeRow}>
+                            <Text style={styles.durationText}>{Math.round(duration)} min </Text>
+                            <Text style={styles.arrivalText}>• Arrive at {getArrivalTime()}</Text>
+                        </View>
+                    )}
                     <Text style={styles.distanceText}>{distance.toFixed(1)} km</Text>
+                    {mode === 'SHUTTLE' && shuttleInfo && (
+                        <>
+                            {shuttleInfo.nextDepartureInMinutes > 60 ? (
+                                <Text style={styles.shuttleDetailText}>
+                                    No more shuttle departures today
+                                </Text>
+                            ) : (
+                                <>
+                                    <Text style={styles.shuttleDetailText}>
+                                        Next shuttle in {shuttleInfo.nextDepartureInMinutes} min
+                                    </Text>
+                                    <Text style={styles.shuttleDetailSubtext}>
+                                        Departs at {shuttleInfo.nextDepartureTimeLabel}
+                                    </Text>
+                                </>
+                            )}
+                        </>
+                    )}
                 </View>
-                <ConfirmButton onPress={onStart} title="Start" />
+                {mode === 'SHUTTLE' ? (
+                    <TouchableOpacity
+                        style={styles.scheduleButton}
+                        onPress={onOpenShuttleSchedule}
+                        testID="route-info-open-shuttle-schedule"
+                    >
+                        <Text style={styles.scheduleButtonText}>Schedule</Text>
+                    </TouchableOpacity>
+                ) : (
+                    <ConfirmButton onPress={onStart} title="Start" />
+                )}
             </View>
         </View>
     );
@@ -125,12 +174,15 @@ const styles = StyleSheet.create({
     },
     modeSelector: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
+        flexWrap: 'wrap',
         columnGap: 6,
+        rowGap: 8,
         marginBottom: 12,
     },
     modeButton: {
-        flex: 1,
+        flexGrow: 1,
+        flexBasis: '30%',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -180,6 +232,29 @@ const styles = StyleSheet.create({
         color: '#912338',
         fontWeight: '500',
         marginTop: 2,
+    },
+    shuttleDetailText: {
+        marginTop: 6,
+        color: '#912338',
+        fontSize: 14,
+        fontWeight: '700',
+    },
+    shuttleDetailSubtext: {
+        marginTop: 2,
+        color: '#4f4f4f',
+        fontSize: 12,
+        fontWeight: '500',
+    },
+    scheduleButton: {
+        backgroundColor: '#912338',
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+    },
+    scheduleButtonText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 14,
     },
 });
 

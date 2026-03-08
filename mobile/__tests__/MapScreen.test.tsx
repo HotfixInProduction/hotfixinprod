@@ -763,6 +763,52 @@ describe('Transportation Modes', () => {
       expect(getByText('Mode: TRANSIT')).toBeTruthy();
     });
   });
+
+  it('renders only shuttle segment when both points are at shuttle terminals', async () => {
+    const { getByTestId, queryByTestId, queryAllByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start-terminal'));
+    fireEvent.press(getByTestId('set-destination-terminal'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(getByTestId('map-directions')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-shuttle'));
+
+    await waitFor(() => {
+      expect(queryByTestId('map-directions')).toBeNull();
+      expect(getByTestId('map-directions-shuttle')).toBeTruthy();
+      expect(queryAllByTestId('map-polyline')).toHaveLength(0);
+      expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
+    });
+  });
+
+  it('renders shuttle plus dotted walking segments when start and destination are away from terminals', async () => {
+    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start-walk'));
+    fireEvent.press(getByTestId('set-destination-walk'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(getByTestId('map-directions')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-shuttle'));
+
+    await waitFor(() => {
+      expect(queryByTestId('map-directions')).toBeNull();
+      expect(getByTestId('map-directions-shuttle')).toBeTruthy();
+      expect(getAllByTestId('map-polyline')).toHaveLength(2);
+      expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
+    });
+  });
 });
 
 describe('Clearing Route', () => {
@@ -874,6 +920,121 @@ describe('MapScreen Edge Cases', () => {
     await waitFor(() => {
       const buildingInfoContainer = getByTestId('building-info-container');
       expect(buildingInfoContainer.props.pointerEvents).toBe('auto');
+    });
+  });
+});
+
+describe('MapScreen Shuttle Coverage', () => {
+  it('opens shuttle schedule, renders timetable rows, and closes via button and onRequestClose', async () => {
+    const OriginalDate = Date;
+    const fixedNow = new OriginalDate('2026-03-02T10:00:00');
+    class MockDate extends OriginalDate {
+      constructor(...args: any[]) {
+        if (args.length === 0) {
+          super(fixedNow.getTime());
+          return;
+        }
+        super(args[0]);
+      }
+      static now() {
+        return fixedNow.getTime();
+      }
+    }
+    (globalThis as any).Date = MockDate as any;
+    try {
+      const { getByTestId, getByText, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('set-start'));
+      fireEvent.press(getByTestId('set-destination'));
+      fireEvent.press(getByTestId('trigger-directions-ready'));
+
+      await waitFor(() => {
+        expect(getByTestId('route-info-mock')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('route-info-mode-shuttle'));
+      fireEvent.press(getByTestId('route-info-open-shuttle-schedule'));
+
+      await waitFor(() => {
+        expect(getByTestId('shuttle-schedule-modal')).toBeTruthy();
+        expect(getByText('* Last bus / Dernier départ')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('Close schedule'));
+      await waitFor(() => {
+        expect(queryByTestId('shuttle-schedule-modal')).toBeNull();
+      });
+
+      fireEvent.press(getByTestId('route-info-open-shuttle-schedule'));
+      await waitFor(() => {
+        expect(getByTestId('shuttle-schedule-modal')).toBeTruthy();
+      });
+
+      const shuttleModal = getByTestId('shuttle-schedule-modal');
+      act(() => {
+        shuttleModal.props.onRequestClose();
+      });
+
+      await waitFor(() => {
+        expect(queryByTestId('shuttle-schedule-modal')).toBeNull();
+      });
+    } finally {
+      (globalThis as any).Date = OriginalDate;
+    }
+  });
+
+  it('opens shuttle schedule when Start is pressed in shuttle mode', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-shuttle'));
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('shuttle-schedule-modal')).toBeTruthy();
+    });
+  });
+
+  it('switches back to transit when shuttle mode is forced on a non-shuttle route', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination-downtown'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(getByTestId('route-info-mode').props.children).toContain('DRIVING');
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-force-shuttle'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mode').props.children).toContain('TRANSIT');
+    });
+  });
+
+  it('disables shuttle mode when start is outside both campus thresholds', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start-far'));
+    fireEvent.press(getByTestId('set-destination'));
+    fireEvent.press(getByTestId('trigger-directions-ready'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(queryByTestId('route-info-mode-shuttle')).toBeNull();
     });
   });
 });
