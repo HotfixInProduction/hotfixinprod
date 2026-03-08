@@ -1,5 +1,5 @@
 import { renderHook, act, waitFor } from '@testing-library/react-native';
-import { useGoogleCalendar, mapToClassEvent, extractRoom, filterValidClassEvents, validateEventBuilding } from '../src/hooks/useGoogleCalendar';
+import { useGoogleCalendar, mapToClassEvent, extractRoom, filterValidClassEvents, validateEventBuilding, GoogleCalendarEvent, ClassEvent } from '../src/hooks/useGoogleCalendar';
 import { loadTokenFromStorage, isTokenExpired, loadUserFromStorage, saveTokenToStorage } from '../src/models/CalendarStorage';
 import { fetchCalendarEvents, fetchUserProfile } from '../src/models/CalendarApi';
 import { classCodes } from '../src/data/classCodes';
@@ -177,8 +177,8 @@ const BUILDINGS = [
 
 describe('extractRoom', () => {
   it('extracts room correctly for standard formats', () => {
-    expect(extractRoom('H 353', 'H')).toBe('H353');
-    expect(extractRoom('B-101', 'B')).toBe('B-101');
+    expect(extractRoom('H 353')).toBe('H353');
+    expect(extractRoom('B-101')).toBe('B-101');
     expect(extractRoom('XYZ123')).toBe('XYZ123');
   });
 
