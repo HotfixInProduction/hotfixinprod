@@ -4,9 +4,8 @@ import { RoutePolylineSteps } from '../src/components/RoutePolylineSteps';
 import { StepStrategies } from '../src/data/mapStrategies';
 import { StepProcessed } from '../src/hooks/useRouteProcessor';
 
-// 1. Mock the native Polyline component from react-native-maps
+//Mock the native Polyline component from react-native-maps
 jest.mock('react-native-maps', () => {
-  const React = require('react');
   const { View } = require('react-native');
   
   // We mock it as a View so we can query it via testID in the virtual DOM
@@ -23,13 +22,13 @@ describe('RoutePolylineSteps Component', () => {
       mode: 'WALKING',
       coordinates: [
         { latitude: 45.497, longitude: -73.579 },
-        { latitude: 45.498, longitude: -73.580 },
+        { latitude: 45.498, longitude: -73.58 },
       ],
     },
     {
       mode: 'DRIVING',
       coordinates: [
-        { latitude: 45.498, longitude: -73.580 },
+        { latitude: 45.498, longitude: -73.58 },
         { latitude: 45.499, longitude: -73.581 },
       ],
     },
@@ -54,7 +53,6 @@ describe('RoutePolylineSteps Component', () => {
     expect(polylines[0].props.lineDashPattern).toEqual(walkingStrategy.lineDashPattern);
 
     // Test Driving Styles (Second Polyline)
-    // Checking your specific implementation: fillColor={strategy.strokeColor}
     const drivingStrategy = StepStrategies['DRIVING'] || StepStrategies.DEFAULT;
     expect(polylines[1].props.fillColor).toBe(drivingStrategy.strokeColor);
     expect(polylines[1].props.zIndex).toBe(100);
