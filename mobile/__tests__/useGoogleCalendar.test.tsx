@@ -211,29 +211,4 @@ describe('mapToClassEvent', () => {
     expect(classEvent.color).toBeDefined();
   });
 });
-
-describe('useGoogleCalendar hook', () => {
-  it('handles valid token and loads events', async () => {
-    const mockEvents: ClassEvent[] = [
-      {
-        id: '1',
-        title: 'SOEN 345',
-        location: 'MB 101',
-        building: 'MB',
-        room: '101',
-        startTime: new Date('2026-03-07T10:00:00Z'),
-        endTime: new Date('2026-03-07T11:00:00Z'),
-        dayOfWeek: 0,
-        color: '#000'
-      }
-    ];
-
-
-    const result = { current: { state: { isAuthenticated: true, user: { name: 'Test', email: 'test@mail.com', picture: 'pic' }, events: mockEvents } } };
-
-    expect(result.current.state.isAuthenticated).toBe(true);
-    expect(result.current.state.user).toEqual({ name: 'Test', email: 'test@mail.com', picture: 'pic' });
-    expect(result.current.state.events.length).toBeGreaterThan(0);
-  });
-  });
-  });
+});
