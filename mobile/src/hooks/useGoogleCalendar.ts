@@ -145,6 +145,7 @@ export function useGoogleCalendar() {
       if (!state.isAuthenticated || !state.token) return;
 
       const interval = setInterval(() => {
+          if (!state.token) return;
         loadEvents(state.token, state.user);
       }, 30000);
 
