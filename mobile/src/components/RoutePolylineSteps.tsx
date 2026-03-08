@@ -20,7 +20,7 @@ export const RoutePolylineSteps: React.FC<RouteStepsProps> = ({processedSteps}) 
                     <Polyline
                         key={key}
                         coordinates={step.coordinates}
-                        //strokeColor={strategy.strokeColor}
+                        strokeColor={strategy.strokeColor}
                         fillColor={strategy.strokeColor}
                         strokeWidth={strategy.strokeWidth}
                         lineDashPattern={strategy.lineDashPattern}

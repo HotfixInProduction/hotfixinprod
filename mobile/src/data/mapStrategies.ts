@@ -23,7 +23,7 @@ export const StepStrategies: Record<TravelMode | 'DEFAULT', RouteStyle> = {
     lineDashPattern: undefined,
   },
   BICYCLING: {
-    strokeColor: "#E37400",
+    strokeColor: "#1B5E20",
     strokeWidth: 4,
     lineDashPattern: [10, 5],
   },
