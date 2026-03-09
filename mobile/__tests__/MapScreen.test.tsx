@@ -803,7 +803,7 @@ describe('Transportation Modes', () => {
         }),
       } as Response) 
     );
-    const { getByTestId, queryByTestId, getAllByTestId, findByTestId } = render(<MapScreen />);
+    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-walk'));
@@ -811,7 +811,7 @@ describe('Transportation Modes', () => {
     // 
 
     await waitFor(() => {
-      expect(findByTestId('route-info-mock')).toBeTruthy();
+      expect(getByTestId('route-info-mock')).toBeTruthy();
     });
 
     fireEvent.press(getByTestId('route-info-mode-shuttle'));
