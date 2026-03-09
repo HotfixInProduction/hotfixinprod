@@ -8,7 +8,7 @@ interface Props {
   hourHeight: number;
 }
 
-export default function TimeColumn({ width, startHour, totalHours, hourHeight }: Props) {
+export default function TimeColumn({ width, startHour, totalHours, hourHeight }: Readonly<Props>) {
   return (
     <View style={[styles.col, { width }]}>
       {Array.from({ length: totalHours }).map((_, i) => {
@@ -17,7 +17,7 @@ export default function TimeColumn({ width, startHour, totalHours, hourHeight }:
         const period = hour >= 12 ? 'PM' : 'AM';
         const label = `${displayHour}:00 ${period}`;
         return (
-          <View key={i} style={[styles.label, { height: hourHeight }]}>
+          <View key={label} style={[styles.label, { height: hourHeight }]}>
             <Text style={styles.text}>{label}</Text>
           </View>
         );

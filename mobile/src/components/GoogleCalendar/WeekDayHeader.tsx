@@ -27,7 +27,7 @@ function isToday(monday: Date, dayIndex: number): boolean {
   );
 }
 
-export default function WeekDayHeader({ timeColWidth, dayColWidth, monday }: Props) {
+export default function WeekDayHeader({ timeColWidth, dayColWidth, monday }: Readonly<Props>) {
   return (
     <View style={[styles.row, { paddingLeft: timeColWidth, height: DAY_HEADER_HEIGHT }]}>
       {WEEK_DAY_INDICES.map((dayIdx, i) => {

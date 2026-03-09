@@ -55,7 +55,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                         {isUserInside && (
                             <Marker
                                 coordinate={b.labelCoord}
-                                opacity={0.0}
+                                opacity={0}
                                 pointerEvents='none'
                                 testID={`building-polygon-${b.id}-highlighted`}
                             />

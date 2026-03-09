@@ -23,11 +23,11 @@ export default function DayColumn({
   showNowLine,
   nowTop,
   getEventStyle,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <View style={[styles.col, { width }, isToday && styles.todayCol]}>
-      {Array.from({ length: totalHours + 1 }).map((_, j) => (
-        <View key={j} style={[styles.gridLine, { top: j * hourHeight }]} />
+      {Array.from({ length: totalHours + 1 }, (_, j) => j).map((hourOffset) => (
+        <View key={`grid-${hourOffset}`} style={[styles.gridLine, { top: hourOffset * hourHeight }]} />
       ))}
 
       {showNowLine && isToday && (

@@ -156,7 +156,7 @@ export function useGoogleCalendar() {
         fetchCalendarList(token.accessToken),
       ]);
       if (!existingUser) saveUserToStorage(user);
-      const events: ClassEvent[] = raw.map(mapToClassEvent);
+      const events: ClassEvent[] = raw.map((e, i) => mapToClassEvent(e, i));
       const concordiaEvents = filterValidClassEvents(events);
       const validatedEvents = concordiaEvents.map(event => ({
         ...event,

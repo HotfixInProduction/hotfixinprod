@@ -11,7 +11,7 @@ interface RouteInstructionsProps {
 const RouteInstructions = ({ instructions, onClose }: RouteInstructionsProps) => {
     // helper to strip HTML tags from Google's instructions (e.g., <b>Turn left</b>)
     const formatText = (html: string) => {
-        let text = html.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ');
+        let text = html.replaceAll(/<[^>]*>?/gm, '').replaceAll(/&nbsp;/g, ' ');
 
         // look for "Destination" and add a newline before it
         if (text.includes("Destination")) {
@@ -31,8 +31,8 @@ const RouteInstructions = ({ instructions, onClose }: RouteInstructionsProps) =>
             </View>
 
             <ScrollView style={styles.scrollArea}>
-                {instructions.map((step, index) => (
-                    <View key={index} style={styles.stepRow}>
+                {instructions.map((step) => (
+                    <View key={step.html_instructions} style={styles.stepRow}>
                         <View style={styles.textColumn}>
                             <Text style={styles.instructionText}>{formatText(step.html_instructions)}</Text>
                             <Text style={styles.distanceText}>{step.distance.text}</Text>

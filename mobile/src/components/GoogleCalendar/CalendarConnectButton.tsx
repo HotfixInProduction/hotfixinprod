@@ -8,7 +8,7 @@ interface Props {
   onConnect: () => void;
 }
 
-export default function CalendarConnectButton({ isLoading, error, onConnect }: Props) {
+export default function CalendarConnectButton({ isLoading, error, onConnect }: Readonly<Props>) {
   return (
     <View style={styles.wrapper}>
       <TouchableOpacity
