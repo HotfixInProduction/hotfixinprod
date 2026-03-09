@@ -803,7 +803,7 @@ describe('Transportation Modes', () => {
         }),
       } as Response) 
     );
-    const { getByTestId, queryByTestId, getAllByTestId, findByTestId } = render(<MapScreen />);
+    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-walk'));
@@ -811,7 +811,7 @@ describe('Transportation Modes', () => {
     // 
 
     await waitFor(() => {
-      expect(findByTestId('route-info-mock')).toBeTruthy();
+      expect(getByTestId('route-info-mock')).toBeTruthy();
     });
 
     fireEvent.press(getByTestId('route-info-mode-shuttle'));
@@ -1019,6 +1019,19 @@ describe('MapScreen Shuttle Coverage', () => {
   });
 
   it('switches back to transit when shuttle mode is forced on a non-shuttle route', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        routes: [{
+          legs: [{
+            distance: { value: 3000, text: '3.0 km' },
+            duration: { value: 480, text: '8 mins' },
+            steps: []
+          }]
+        }]
+      }),
+    } as any);
+
     const { getByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));

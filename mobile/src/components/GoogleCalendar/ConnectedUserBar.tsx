@@ -8,7 +8,7 @@ interface Props {
   onDisconnect: () => void;
 }
 
-export default function ConnectedUserBar({ user, onDisconnect }: Props) {
+export default function ConnectedUserBar({ user, onDisconnect }: Readonly<Props>) {
   return (
     <View style={styles.bar}>
       {user.picture ? (
