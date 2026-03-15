@@ -89,6 +89,16 @@
     "906": "25",
     "961.19": "69"
   },
+  "poiToNode": {
+    "9elv": { "nodeId": "43", "type": "elevator", "label": "Elevator" },
+    "9esc_exit": { "nodeId": "99", "type": "escalator", "label": "Escalator Exit (from Hall 8)" },
+    "9st1": { "nodeId": "41", "type": "stairs", "label": "Stairs 1" },
+    "9st2": { "nodeId": "32", "type": "stairs", "label": "Stairs 2" },
+    "9st3": { "nodeId": "82", "type": "stairs", "label": "Stairs 3" },
+    "9st4": { "nodeId": "60", "type": "stairs", "label": "Stairs 4" },
+    "9wr1": { "nodeId": "2", "type": "washroom", "label": "Washroom 1" },
+    "9wr2": { "nodeId": "30", "type": "washroom", "label": "Washroom 2" }
+  },
   "nodes": [
     {
       "id": "0",

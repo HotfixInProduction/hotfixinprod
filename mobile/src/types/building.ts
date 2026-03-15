@@ -21,6 +21,14 @@ export interface Building {
     floorPlans?: FloorPlanMap;
 }
 
+export type POIType = 'washroom' | 'water_fountain' | 'stairs' | 'elevator' | 'escalator';
+
+export interface POIInfo {
+    nodeId: string;
+    type: POIType;
+    label?: string;
+}
+
 export interface NavMeshNode {
     id: string | number;
     data?: { x: number; y: number };

@@ -1,4 +1,4 @@
-import { findPath, generateSvgPath, getRoomNodeId } from '../src/utils/Pathfinding';
+import { findPath, generateSvgPath, getRoomNodeId, getPOIsByType, getAllPOIs, getPOINodeId } from '../src/utils/Pathfinding';
 import { JsonNode } from 'ngraph.fromjson';
 import path from 'ngraph.path';
 
@@ -269,6 +269,176 @@ describe('pathfinder edge cases', () => {
 
       expect(capturedOptions.heuristic(nodeWithoutData, nodeWithData)).toBe(0);
       expect(capturedOptions.heuristic(nodeWithData, nodeWithoutData)).toBe(0);
+    });
+  });
+});
+
+describe('getPOIsByType', () => {
+  describe('Hall Building floor 8', () => {
+    it('should return elevators on floor 8', () => {
+      const elevators = getPOIsByType('Hall Building', '8', 'elevator');
+      expect(elevators.length).toBe(2);
+      expect(elevators.map(e => e.nodeId)).toContain('41');
+    });
+
+    it('should return escalators on floor 8', () => {
+      const escalators = getPOIsByType('Hall Building', '8', 'escalator');
+      expect(escalators.length).toBe(2);
+      expect(escalators[0].type).toBe('escalator');
+    });
+
+    it('should return stairs on floor 8', () => {
+      const stairs = getPOIsByType('Hall Building', '8', 'stairs');
+      expect(stairs.length).toBe(4);
+    });
+
+    it('should return washrooms on floor 8', () => {
+      const washrooms = getPOIsByType('Hall Building', '8', 'washroom');
+      expect(washrooms.length).toBe(2);
+    });
+
+    it('should return empty array for water_fountain (none defined)', () => {
+      const fountains = getPOIsByType('Hall Building', '8', 'water_fountain');
+      expect(fountains).toEqual([]);
+    });
+
+    it('should include label in returned POIs', () => {
+      const elevators = getPOIsByType('Hall Building', '8', 'elevator');
+      expect(elevators[0].label).toBeDefined();
+    });
+  });
+
+  describe('Hall Building floor 9', () => {
+    it('should return elevator on floor 9', () => {
+      const elevators = getPOIsByType('Hall Building', '9', 'elevator');
+      expect(elevators.length).toBe(1);
+      expect(elevators[0].nodeId).toBe('43');
+    });
+
+    it('should return escalator on floor 9', () => {
+      const escalators = getPOIsByType('Hall Building', '9', 'escalator');
+      expect(escalators.length).toBe(1);
+      expect(escalators[0].label).toBe('Escalator Exit (from Hall 8)');
+    });
+
+    it('should return stairs on floor 9', () => {
+      const stairs = getPOIsByType('Hall Building', '9', 'stairs');
+      expect(stairs.length).toBe(4);
+    });
+  });
+
+  describe('John Molson Building', () => {
+    it('should return empty array for floor with no POIs defined (S2)', () => {
+      const elevators = getPOIsByType('John Molson Building', 'S2', 'elevator');
+      expect(elevators).toEqual([]);
+    });
+
+    it('should return empty array for floor with no POIs defined (1)', () => {
+      const washrooms = getPOIsByType('John Molson Building', '1', 'washroom');
+      expect(washrooms).toEqual([]);
+    });
+  });
+
+  describe('error cases', () => {
+    it('should return empty array for non-existent building', () => {
+      const pois = getPOIsByType('Unknown Building', '8', 'elevator');
+      expect(pois).toEqual([]);
+    });
+
+    it('should return empty array for non-existent floor', () => {
+      const pois = getPOIsByType('Hall Building', '99', 'elevator');
+      expect(pois).toEqual([]);
+    });
+  });
+});
+
+describe('getAllPOIs', () => {
+  it('should return all POIs on floor 8', () => {
+    const pois = getAllPOIs('Hall Building', '8');
+    expect(Object.keys(pois).length).toBe(10); // 2 elevators + 2 escalators + 4 stairs + 2 washrooms
+  });
+
+  it('should return POI with correct structure', () => {
+    const pois = getAllPOIs('Hall Building', '8');
+    const elevator = pois['8el1'];
+    expect(elevator).toBeDefined();
+    expect(elevator.nodeId).toBe('41');
+    expect(elevator.type).toBe('elevator');
+    expect(elevator.label).toBe('Elevator 1');
+  });
+
+  it('should return empty object for floor with no POIs', () => {
+    const pois = getAllPOIs('John Molson Building', 'S2');
+    expect(pois).toEqual({});
+  });
+
+  it('should return empty object for non-existent building', () => {
+    const pois = getAllPOIs('Unknown Building', '8');
+    expect(pois).toEqual({});
+  });
+});
+
+describe('getPOINodeId', () => {
+  describe('Hall Building floor 8', () => {
+    it('should return node ID for elevator POI', () => {
+      const nodeId = getPOINodeId('Hall Building', '8', '8el1');
+      expect(nodeId).toBe(41);
+    });
+
+    it('should return node ID for washroom POI', () => {
+      const nodeId = getPOINodeId('Hall Building', '8', '8wr1');
+      expect(nodeId).toBe(20);
+    });
+
+    it('should return node ID for stairs POI', () => {
+      const nodeId = getPOINodeId('Hall Building', '8', '8st1');
+      expect(nodeId).toBe(95);
+    });
+
+    it('should return null for non-existent POI label', () => {
+      const nodeId = getPOINodeId('Hall Building', '8', 'nonexistent');
+      expect(nodeId).toBeNull();
+    });
+  });
+
+  describe('Hall Building floor 9', () => {
+    it('should return node ID for elevator POI', () => {
+      const nodeId = getPOINodeId('Hall Building', '9', '9elv');
+      expect(nodeId).toBe(43);
+    });
+
+    it('should return node ID for escalator POI', () => {
+      const nodeId = getPOINodeId('Hall Building', '9', '9esc_exit');
+      expect(nodeId).toBe(99);
+    });
+  });
+
+  describe('error cases', () => {
+    it('should return null for non-existent building', () => {
+      const nodeId = getPOINodeId('Unknown Building', '8', '8el1');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return null for non-existent floor', () => {
+      const nodeId = getPOINodeId('Hall Building', '99', '8el1');
+      expect(nodeId).toBeNull();
+    });
+
+    it('should return null for floor with no POIs', () => {
+      const nodeId = getPOINodeId('John Molson Building', 'S2', 'any');
+      expect(nodeId).toBeNull();
+    });
+  });
+
+  describe('return type validation', () => {
+    it('should return a number when POI is found', () => {
+      const nodeId = getPOINodeId('Hall Building', '8', '8el1');
+      expect(typeof nodeId).toBe('number');
+    });
+
+    it('should return integer node IDs', () => {
+      const nodeId = getPOINodeId('Hall Building', '8', '8el1');
+      expect(Number.isInteger(nodeId)).toBe(true);
     });
   });
 });

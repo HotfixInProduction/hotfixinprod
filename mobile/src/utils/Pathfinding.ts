@@ -4,17 +4,18 @@ import hall8NavMeshJson from '../data/navmesh/hall8.json';
 import hall9NavMeshJson from '../data/navmesh/hall9.json';
 import john1NavMeshJson from '../data/navmesh/john1.json';
 import johnS2NavMeshJson from '../data/navmesh/johnS2.json';
-import { NavMeshNode } from '../types/building';
+import { NavMeshNode, POIInfo, POIType } from '../types/building';
 
 type NavMesh = JsonGraph<JsonNode<{ x: number; y: number }>, { fromId: string | number; toId: string | number }> & {
   roomToNode?: Record<string, string>;
+  poiToNode?: Record<string, POIInfo>;
 };
 
 // Widen types at import time to satisfy TypeScript's lint rules
-const hall8NavMesh: NavMesh = hall8NavMeshJson;
-const hall9NavMesh: NavMesh = hall9NavMeshJson;
-const john1NavMesh: NavMesh = john1NavMeshJson;
-const johnS2NavMesh: NavMesh = johnS2NavMeshJson;
+const hall8NavMesh: NavMesh = hall8NavMeshJson as NavMesh;
+const hall9NavMesh: NavMesh = hall9NavMeshJson as NavMesh;
+const john1NavMesh: NavMesh = john1NavMeshJson as NavMesh;
+const johnS2NavMesh: NavMesh = johnS2NavMeshJson as NavMesh;
 
 const navMeshes: Map<string, NavMesh> = new Map([
   ['Hall Building#8', hall8NavMesh],
@@ -135,4 +136,53 @@ export function generateSvgPath(path: NavMeshNode[]): string {
   }
 
   return pathString;
+}
+
+export function getPOIsByType(
+  buildingId: string,
+  floorLevel: string,
+  poiType: POIType
+): (POIInfo & { label: string })[] {
+  const navMesh = getNavMeshByKey(buildingId, floorLevel);
+  if (!navMesh?.poiToNode) {
+    return [];
+  }
+
+  const pois: (POIInfo & { label: string })[] = [];
+  for (const [poiLabel, poiInfo] of Object.entries(navMesh.poiToNode)) {
+    if (poiInfo.type === poiType) {
+      pois.push({
+        ...poiInfo,
+        label: poiInfo.label || poiLabel,
+      });
+    }
+  }
+
+  return pois;
+}
+
+export function getAllPOIs(
+  buildingId: string,
+  floorLevel: string
+): Record<string, POIInfo> {
+  const navMesh = getNavMeshByKey(buildingId, floorLevel);
+  return navMesh?.poiToNode || {};
+}
+
+export function getPOINodeId(
+  buildingId: string,
+  floorLevel: string,
+  poiLabel: string
+): number | null {
+  const navMesh = getNavMeshByKey(buildingId, floorLevel);
+  if (!navMesh?.poiToNode) {
+    return null;
+  }
+
+  const poiInfo = navMesh.poiToNode[poiLabel];
+  if (!poiInfo) {
+    return null;
+  }
+
+  return Number.parseInt(poiInfo.nodeId, 10);
 }

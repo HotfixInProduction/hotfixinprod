@@ -69,6 +69,18 @@
     "8el1": "41",
     "8el2": "41"
   },
+  "poiToNode": {
+    "8el1": { "nodeId": "41", "type": "elevator", "label": "Elevator 1" },
+    "8el2": { "nodeId": "41", "type": "elevator", "label": "Elevator 2" },
+    "8esc_up": { "nodeId": "46", "type": "escalator", "label": "Escalator Up" },
+    "8esc_down": { "nodeId": "48", "type": "escalator", "label": "Escalator Down" },
+    "8st1": { "nodeId": "95", "type": "stairs", "label": "Stairs 1" },
+    "8st2": { "nodeId": "4", "type": "stairs", "label": "Stairs 2" },
+    "8st3": { "nodeId": "79", "type": "stairs", "label": "Stairs 3" },
+    "8st4": { "nodeId": "85", "type": "stairs", "label": "Stairs 4" },
+    "8wr1": { "nodeId": "20", "type": "washroom", "label": "Washroom 1" },
+    "8wr2": { "nodeId": "25", "type": "washroom", "label": "Washroom 2" }
+  },
   "nodes": [
     {
       "id": "0",
