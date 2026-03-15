@@ -91,7 +91,8 @@
   },
   "poiToNode": {
     "9elv": { "nodeId": "43", "type": "elevator", "label": "Elevator" },
-    "9esc_exit": { "nodeId": "99", "type": "escalator", "label": "Escalator Exit (from Hall 8)" },
+    "9esc_entry": { "nodeId": "8", "type": "escalator", "label": "Escalator Entry" },
+    "9esc_exit": { "nodeId": "99", "type": "escalator", "label": "Escalator Exit" },
     "9st1": { "nodeId": "41", "type": "stairs", "label": "Stairs 1" },
     "9st2": { "nodeId": "32", "type": "stairs", "label": "Stairs 2" },
     "9st3": { "nodeId": "82", "type": "stairs", "label": "Stairs 3" },

@@ -315,10 +315,11 @@ describe('getPOIsByType', () => {
       expect(elevators[0].nodeId).toBe('43');
     });
 
-    it('should return escalator on floor 9', () => {
+    it('should return escalators on floor 9', () => {
       const escalators = getPOIsByType('Hall Building', '9', 'escalator');
-      expect(escalators.length).toBe(1);
-      expect(escalators[0].label).toBe('Escalator Exit (from Hall 8)');
+      expect(escalators.length).toBe(2);
+      expect(escalators.map(e => e.label)).toContain('Escalator Entry');
+      expect(escalators.map(e => e.label)).toContain('Escalator Exit');
     });
 
     it('should return stairs on floor 9', () => {
