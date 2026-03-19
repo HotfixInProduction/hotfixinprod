@@ -51,11 +51,15 @@ function extractRoomsFromSvg(svgContent: string): string[] {
   }
   
   // Extract from text elements (new format - room numbers like "867", "801", etc.)
-  const textRegex = /<text[^>]*>\s*(\d{2,}[.\d]*)\s*<\/text>/gi;
+  // Using a safer regex pattern to avoid ReDoS:
+  // - [^<] instead of [^>]* to prevent excessive backtracking
+  // - Limit the number pattern to reasonable lengths
+  const textRegex = /<text[^>]*>([^<]{0,50})<\/text>/gi;
   while ((match = textRegex.exec(svgContent)) !== null) {
-    const label = match[1].trim();
-    if (label) {
-      rooms.add(label);
+    const textContent = match[1].trim();
+    // Only match numeric room labels (2+ digits, optionally with decimal point)
+    if (/^\d{2,}(?:\.\d+)?$/.test(textContent)) {
+      rooms.add(textContent);
     }
   }
   

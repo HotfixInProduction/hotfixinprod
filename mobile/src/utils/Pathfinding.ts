@@ -88,7 +88,12 @@ function generateLabelVariants(roomLabel: string, prefix: string): string[] {
   // Handle trailing zeros: 805.10 -> prefix-805-1 (remove trailing zeros after decimal)
   if (roomLabel.includes('.')) {
     const [base, decimal] = roomLabel.split('.');
-    const trimmedDecimal = decimal.replace(/0+$/, '');
+    // Use string manipulation instead of regex to avoid ReDoS
+    // Remove trailing zeros by finding the last non-zero position
+    let trimmedDecimal = decimal;
+    while (trimmedDecimal.length > 0 && trimmedDecimal[trimmedDecimal.length - 1] === '0') {
+      trimmedDecimal = trimmedDecimal.slice(0, -1);
+    }
     if (trimmedDecimal) {
       variants.push(`${prefix}-${base}-${trimmedDecimal}`);
     } else {
