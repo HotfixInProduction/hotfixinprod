@@ -1,4 +1,15 @@
 import { renderHook } from '@testing-library/react-native';
+
+// Mock the navmesh JSON before importing the hook
+jest.mock('../src/data/navmesh/hall8.json', () => ({
+  roomToNode: {
+    'H-867': 'Hall_F8_room_291',
+    'H-801': 'Hall_F8_room_329',
+    'H-23': 'Hall_F1_room_44',
+    'H-131': 'Hall_F1_room_47',
+  },
+}), { virtual: true });
+
 import { useRoomList } from '../src/hooks/useRoomList';
 
 describe('useRoomList', () => {

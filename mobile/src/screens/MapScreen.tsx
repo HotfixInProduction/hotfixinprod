@@ -16,6 +16,7 @@ import { useRouteProcessor } from '../hooks/useRouteProcessor';
 import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
+import { RoomSelection } from '../types/building';
 import {
   CAMPUSES,
   INITIAL_REGION,
@@ -60,6 +61,10 @@ export default function MapScreen() {
   const [directionsGoogle, setDirectionsGoogle] = useState<any>(null);
   const processedSteps = useRouteProcessor(directionsGoogle);
   const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
+  
+  // Room selection state for cross-building persistence
+  const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
+  const [destinationRoomSelection, setDestinationRoomSelection] = useState<RoomSelection | null>(null);
 
   const {
     isShuttleRoute,
@@ -537,6 +542,10 @@ export default function MapScreen() {
         <FloorPlanViewer
           building={selectedBuilding}
           onClose={() => setShowFloorPlan(false)}
+          startRoomSelection={startRoomSelection}
+          destinationRoomSelection={destinationRoomSelection}
+          onStartRoomChange={setStartRoomSelection}
+          onDestinationRoomChange={setDestinationRoomSelection}
         />
       )}
 

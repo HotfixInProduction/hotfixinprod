@@ -1,3 +1,8 @@
+import { cc1Svg } from './svgs/cc1';
+import { ve1Svg } from './svgs/ve1';
+import { ve2Svg } from './svgs/ve2';
+import { hall1Svg } from './svgs/hall1';
+import { hall2Svg } from './svgs/hall2';
 import { hall8Svg } from './svgs/hall8';
 import { hall9Svg } from './svgs/hall9';
 import { john1Svg } from './svgs/john1';
@@ -31,6 +36,8 @@ export const buildings = [
         isAccessible: true,
         hasBikeRacks: true,
         floorPlans: {
+            '1': hall1Svg,
+            '2': hall2Svg,
             '8': hall8Svg,
             '9': hall9Svg
         }
@@ -1042,7 +1049,10 @@ export const buildings = [
             'Loyola College for Diversity & Sustainability', 'Zen Den'
         ],
         isAccessible: true,
-        hasBikeRacks: true
+        hasBikeRacks: true,
+        floorPlans: {
+            '1': cc1Svg
+        }
     },
     {
         id: 'Administration Building',
@@ -1388,6 +1398,10 @@ export const buildings = [
         departments: ['Applied Human Sciences'],
         services: ['Library'],
         isAccessible: true,
-        hasBikeRacks: true
+        hasBikeRacks: true,
+        floorPlans: {
+            '1': ve1Svg,
+            '2': ve2Svg
+        }
     }
 ];
