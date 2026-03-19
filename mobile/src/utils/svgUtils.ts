@@ -12,7 +12,7 @@ export function highlightRoomInSvg(
         let modified = svg;
         
         // Escape special regex characters in room label
-        const escapedLabel = roomLabel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const escapedLabel = roomLabel.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
         
         // Method 1: Try to find by inkscape:label (old format)
         const labelRegex = new RegExp(
@@ -35,7 +35,7 @@ export function highlightRoomInSvg(
         // Use a negated character class to prevent matching another <rect or <path before the text
         // Match text that contains EXACTLY the room number (with optional whitespace)
         const textRegex = new RegExp(
-            `(<(?:rect|path)[^>]*?>)((?:(?!<(?:rect|path))[\\s\\S])*?<text[^>]*>\\s*${escapedLabel}\\s*</text>)`,
+            String.raw`(<(?:rect|path)[^>]*?>)((?:(?!<(?:rect|path))[\s\S])*?<text[^>]*>\s*${escapedLabel}\s*</text>)`,
             'gi'
         );
         modified = modified.replace(textRegex, (match, rectPart, restPart) => {

@@ -2,17 +2,12 @@ import { useMemo } from 'react';
 import { highlightRoomInSvg, generatePathElements } from '../utils/svgUtils';
 import { NavMeshNode } from '../types/building';
 
-// Coordinate transformation for Hall Building (must match Pathfinding.ts)
-function transformHallCoordinates(x: number, y: number): { x: number; y: number } {
-  const scaleX = 0.5;
-  const scaleY = 0.5;
-  const offsetX = 0;
-  const offsetY = 0;
-  
-  return {
-    x: x * scaleX + offsetX,
-    y: y * scaleY + offsetY,
-  };
+// Coordinate transformation for buildings with 2x scale navmesh
+// Hall, VE, and CC buildings all use navmesh at 2x scale compared to SVG
+// Scale 0.5 transforms navmesh coordinates to SVG coordinates
+function transformNavMeshCoordinates(x: number, y: number): { x: number; y: number } {
+  const scale = 0.5;
+  return { x: x * scale, y: y * scale };
 }
 
 export function useProcessedSvg(
@@ -42,14 +37,19 @@ export function useProcessedSvg(
       return highlighted;
     }
 
-    // Transform coordinates for Hall Building markers
-    const isHallBuilding = (startNode.data as { buildingId?: string }).buildingId === 'Hall';
-    const startCoord = isHallBuilding 
-      ? transformHallCoordinates(startNode.data.x, startNode.data.y)
-      : { x: startNode.data.x, y: startNode.data.y };
-    const endCoord = isHallBuilding
-      ? transformHallCoordinates(endNode.data.x, endNode.data.y)
-      : { x: endNode.data.x, y: endNode.data.y };
+    // Transform coordinates based on building
+    const buildingId = (startNode.data as { buildingId?: string }).buildingId;
+    
+    const transformCoord = (x: number, y: number, building: string | undefined): { x: number; y: number } => {
+      if (building === 'Hall' || building === 'VE' || building === 'CC') {
+        return transformNavMeshCoordinates(x, y);
+      }
+      // For VL and others - use coordinates directly
+      return { x, y };
+    };
+    
+    const startCoord = transformCoord(startNode.data.x, startNode.data.y, buildingId);
+    const endCoord = transformCoord(endNode.data.x, endNode.data.y, buildingId);
 
     console.log('[useProcessedSvg] Path coordinates:', {
       startX: startCoord.x,

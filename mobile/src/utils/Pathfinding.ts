@@ -69,6 +69,58 @@ function getRoomIndex(navMesh: NavMesh): Record<string, string> | null {
   return null;
 }
 
+// Building prefix configuration for room label lookup
+const BUILDING_PREFIXES: Record<string, string> = {
+  'Hall Building': 'H',
+  'Central Building': 'CC',
+  'Vanier Extension': 'VE',
+};
+
+/**
+ * Generate label variants to try for room lookup
+ */
+function generateLabelVariants(roomLabel: string, prefix: string): string[] {
+  const variants: string[] = [];
+  
+  // Basic variants with prefix
+  variants.push(`${prefix}-${roomLabel}`, `${prefix}-${roomLabel.replace('.', '-')}`);
+  
+  // Handle trailing zeros: 805.10 -> prefix-805-1 (remove trailing zeros after decimal)
+  if (roomLabel.includes('.')) {
+    const [base, decimal] = roomLabel.split('.');
+    const trimmedDecimal = decimal.replace(/0+$/, '');
+    if (trimmedDecimal) {
+      variants.push(`${prefix}-${base}-${trimmedDecimal}`);
+    } else {
+      variants.push(`${prefix}-${base}`);
+    }
+  }
+  
+  return variants;
+}
+
+/**
+ * Search for a room in the index using label variants
+ */
+function searchRoomInIndex(
+  roomIndex: Record<string, string>,
+  roomLabel: string,
+  prefix: string
+): string | null {
+  const variants = generateLabelVariants(roomLabel, prefix);
+  
+  for (const label of variants) {
+    const nodeId = roomIndex[label];
+    if (nodeId !== undefined) {
+      console.log(`[getRoomNodeId] Found "${roomLabel}" as "${label}" -> ${nodeId}`);
+      return nodeId;
+    }
+  }
+  
+  console.log(`[getRoomNodeId] Room "${roomLabel}" not found. Tried:`, variants);
+  return null;
+}
+
 /**
  * Get the navmesh node ID for a given room label
  * @param buildingId Building identifier (e.g., "Hall Building")
@@ -100,82 +152,10 @@ export function getRoomNodeId(
     return directNodeId;
   }
   
-  // For Hall Building, try with "H-" prefix
-  if (buildingId === 'Hall Building') {
-    const labelsToTry: string[] = [];
-    
-    // Original with H- prefix
-    labelsToTry.push(`H-${roomLabel}`);
-    
-    // Replace decimal with hyphen (862.5 -> H-862-5)
-    labelsToTry.push(`H-${roomLabel.replace('.', '-')}`);
-    
-    // Handle trailing zeros: 805.10 -> H-805-1 (remove trailing zeros after decimal)
-    if (roomLabel.includes('.')) {
-      const [base, decimal] = roomLabel.split('.');
-      const trimmedDecimal = decimal.replace(/0+$/, ''); // Remove trailing zeros
-      if (trimmedDecimal) {
-        labelsToTry.push(`H-${base}-${trimmedDecimal}`);
-      } else {
-        // If all zeros after decimal, just use base
-        labelsToTry.push(`H-${base}`);
-      }
-    }
-    
-    for (const label of labelsToTry) {
-      const nodeId = roomIndex[label];
-      if (nodeId !== undefined) {
-        console.log(`[getRoomNodeId] Found "${roomLabel}" as "${label}" -> ${nodeId}`);
-        return nodeId;
-      }
-    }
-    
-    console.log(`[getRoomNodeId] Room "${roomLabel}" not found. Tried:`, labelsToTry);
-    return null;
-  }
-  
-  // For Central Building (CC), try with "CC-" prefix
-  if (buildingId === 'Central Building') {
-    const labelsToTry: string[] = [];
-    
-    // Original with CC- prefix
-    labelsToTry.push(`CC-${roomLabel}`);
-    
-    // Replace decimal with hyphen (202.1 -> CC-202-1)
-    labelsToTry.push(`CC-${roomLabel.replace('.', '-')}`);
-    
-    for (const label of labelsToTry) {
-      const nodeId = roomIndex[label];
-      if (nodeId !== undefined) {
-        console.log(`[getRoomNodeId] Found "${roomLabel}" as "${label}" -> ${nodeId}`);
-        return nodeId;
-      }
-    }
-    
-    console.log(`[getRoomNodeId] Room "${roomLabel}" not found. Tried:`, labelsToTry);
-    return null;
-  }
-  
-  // For Vanier Extension (VE), try with "VE-" prefix
-  if (buildingId === 'Vanier Extension') {
-    const labelsToTry: string[] = [];
-    
-    // Original with VE- prefix
-    labelsToTry.push(`VE-${roomLabel}`);
-    
-    // Replace decimal with hyphen (202.1 -> VE-202-1)
-    labelsToTry.push(`VE-${roomLabel.replace('.', '-')}`);
-    
-    for (const label of labelsToTry) {
-      const nodeId = roomIndex[label];
-      if (nodeId !== undefined) {
-        console.log(`[getRoomNodeId] Found "${roomLabel}" as "${label}" -> ${nodeId}`);
-        return nodeId;
-      }
-    }
-    
-    console.log(`[getRoomNodeId] Room "${roomLabel}" not found. Tried:`, labelsToTry);
-    return null;
+  // Try building-specific prefix lookup
+  const prefix = BUILDING_PREFIXES[buildingId];
+  if (prefix) {
+    return searchRoomInIndex(roomIndex, roomLabel, prefix);
   }
   
   console.log(`[getRoomNodeId] Room "${roomLabel}" not found in building "${buildingId}"`);
@@ -236,6 +216,146 @@ function isEdgeTraversable(
 }
 
 /**
+ * Build node accessibility map from navmesh
+ */
+function buildNodeAccessibilityMap(navMesh: NavMesh): Map<string, boolean | undefined> {
+  const map = new Map<string, boolean | undefined>();
+  if ('nodes' in navMesh && navMesh.nodes) {
+    for (const node of navMesh.nodes) {
+      const nodeWithData = node as { id: string | number; data?: { accessible?: boolean } };
+      if (nodeWithData.data?.accessible !== undefined) {
+        map.set(String(node.id), nodeWithData.data.accessible);
+      }
+    }
+  }
+  return map;
+}
+
+/**
+ * Build edge direction map for escalator detection
+ */
+function buildEdgeDirectionMap(navMesh: NavMesh): Map<string, { fromFloor: number; toFloor: number }> {
+  const map = new Map<string, { fromFloor: number; toFloor: number }>();
+  if ('links' in navMesh && navMesh.links) {
+    for (const link of navMesh.links) {
+      const key = `${link.fromId}->${link.toId}`;
+      const fromFloor = getFloorFromNodeId(String(link.fromId));
+      const toFloor = getFloorFromNodeId(String(link.toId));
+      if (fromFloor !== null && toFloor !== null && fromFloor !== toFloor) {
+        map.set(key, { fromFloor, toFloor });
+      }
+    }
+  }
+  return map;
+}
+
+/**
+ * Build set of oriented edges (unidirectional)
+ * Oriented edges can only be traversed in the defined direction (fromId -> toId)
+ */
+function buildOrientedEdgesSet(navMesh: NavMesh): Set<string> {
+  const set = new Set<string>();
+  if ('links' in navMesh && navMesh.links) {
+    for (const link of navMesh.links) {
+      const linkWithData = link as { fromId: string | number; toId: string | number; data?: { oriented?: boolean } };
+      if (linkWithData.data?.oriented === true) {
+        const key = `${link.fromId}->${link.toId}`;
+        set.add(key);
+      }
+    }
+  }
+  return set;
+}
+
+/**
+ * Calculate distance between two nodes, considering accessibility and oriented edges
+ */
+function calculateNodeDistance(
+  from: { id: string | number; data?: { x: number; y: number } | null },
+  to: { id: string | number; data?: { x: number; y: number } | null },
+  nodeAccessibility: Map<string, boolean | undefined>,
+  edgeDirection: Map<string, { fromFloor: number; toFloor: number }>,
+  orientedEdges: Set<string>,
+  accessibleOnly: boolean
+): number {
+  const fromId = String(from.id);
+  const toId = String(to.id);
+  const fromFloor = getFloorFromNodeId(fromId);
+  const toFloor = getFloorFromNodeId(toId);
+  
+  // Check if this is a reverse traversal of an oriented edge
+  // Oriented edges can only be traversed in the defined direction (fromId -> toId)
+  const reverseEdgeKey = `${toId}->${fromId}`;
+  if (orientedEdges.has(reverseEdgeKey)) {
+    // Trying to traverse in reverse direction - blocked
+    return Infinity;
+  }
+  
+  const isFloorTransition = fromFloor !== null && toFloor !== null && fromFloor !== toFloor;
+  
+  if (isFloorTransition) {
+    const fromAccessible = nodeAccessibility.get(fromId);
+    const toAccessible = nodeAccessibility.get(toId);
+    
+    // Skip non-accessible floor transitions in accessibility mode
+    if (accessibleOnly && (fromAccessible === false || toAccessible === false)) {
+      return Infinity;
+    }
+    
+    // Check escalator direction (legacy support for accessible=false on nodes)
+    const edgeKey = `${fromId}->${toId}`;
+    const storedDirection = edgeDirection.get(edgeKey);
+    
+    if (storedDirection && (fromAccessible === false || toAccessible === false)) {
+      const isCorrectDirection = fromFloor === storedDirection.fromFloor && toFloor === storedDirection.toFloor;
+      if (!isCorrectDirection) {
+        return Infinity;
+      }
+    }
+  }
+  
+  if (from.data && to.data) {
+    return Math.hypot(from.data.x - to.data.x, from.data.y - to.data.y);
+  }
+  return 1;
+}
+
+/**
+ * Calculate heuristic for A* pathfinding
+ */
+function calculateHeuristic(
+  from: { id: string | number; data?: { x: number; y: number } | null },
+  to: { id: string | number; data?: { x: number; y: number } | null }
+): number {
+  if (!from.data || !to.data) {
+    return 0;
+  }
+  
+  const fromFloor = getFloorFromNodeId(String(from.id));
+  const toFloor = getFloorFromNodeId(String(to.id));
+  const floorDiff = (fromFloor !== null && toFloor !== null) 
+    ? Math.abs(fromFloor - toFloor) * 1000 
+    : 0;
+  
+  return Math.hypot(from.data.x - to.data.x, from.data.y - to.data.y) + floorDiff;
+}
+
+/**
+ * Convert path result to NavMeshNode array
+ */
+function convertPathToNodes(foundPath: Array<{ id: string | number; data?: any }>): NavMeshNode[] {
+  const result: NavMeshNode[] = [];
+  for (let i = foundPath.length - 1; i >= 0; i--) {
+    const node = foundPath[i];
+    result.push({
+      id: node.id,
+      data: node.data,
+    });
+  }
+  return result;
+}
+
+/**
  * A* pathfinding algorithm using ngraph - supports multi-floor paths with accessibility
  * @param buildingId Building identifier (e.g., "Hall Building" or "hall")
  * @param _floorLevel Floor level (e.g., "8") - not used for Hall Building since navmesh contains all floors
@@ -268,88 +388,14 @@ export function findPath(
     return null;
   }
 
-  // Build a map of node accessibility for quick lookup
-  // The accessible field is on nodes (stair_landing, elevator_door, etc.)
-  const nodeAccessibility = new Map<string, boolean | undefined>();
-  if ('nodes' in navMesh && navMesh.nodes) {
-    for (const node of navMesh.nodes) {
-      const nodeWithData = node as { id: string | number; data?: { accessible?: boolean; type?: string } };
-      if (nodeWithData.data?.accessible !== undefined) {
-        nodeAccessibility.set(String(node.id), nodeWithData.data.accessible);
-      }
-    }
-  }
-  
-  // Build a map of edge direction for escalator detection
-  // We need to know which direction the edge was defined to determine escalator direction
-  const edgeDirection = new Map<string, { fromFloor: number; toFloor: number }>();
-  if ('links' in navMesh && navMesh.links) {
-    for (const link of navMesh.links) {
-      const key = `${link.fromId}->${link.toId}`;
-      const fromFloor = getFloorFromNodeId(String(link.fromId));
-      const toFloor = getFloorFromNodeId(String(link.toId));
-      if (fromFloor !== null && toFloor !== null && fromFloor !== toFloor) {
-        edgeDirection.set(key, { fromFloor, toFloor });
-      }
-    }
-  }
+  const nodeAccessibility = buildNodeAccessibilityMap(navMesh);
+  const edgeDirection = buildEdgeDirectionMap(navMesh);
+  const orientedEdges = buildOrientedEdgesSet(navMesh);
 
   const pathfinder = path.aStar(graph, {
-    distance: (from, to, _link) => {
-      const fromId = String(from.id);
-      const toId = String(to.id);
-      const fromFloor = getFloorFromNodeId(fromId);
-      const toFloor = getFloorFromNodeId(toId);
-      
-      // Check if this is a floor transition
-      const isFloorTransition = fromFloor !== null && toFloor !== null && fromFloor !== toFloor;
-      
-      if (isFloorTransition) {
-        // For floor transitions, check node accessibility
-        // If either node is not accessible and we're in accessibility mode, skip
-        const fromAccessible = nodeAccessibility.get(fromId);
-        const toAccessible = nodeAccessibility.get(toId);
-        
-        if (accessibleOnly) {
-          // Skip non-accessible floor transitions (escalators, regular stairs)
-          if (fromAccessible === false || toAccessible === false) {
-            return Infinity;
-          }
-        }
-        
-        // Check escalator direction
-        // Escalators have accessible=false on the stair_landing nodes
-        const edgeKey = `${fromId}->${toId}`;
-        const storedDirection = edgeDirection.get(edgeKey);
-        
-        if (storedDirection && (fromAccessible === false || toAccessible === false)) {
-          // This is an escalator - only allow traversal in the defined direction
-          if (fromFloor === storedDirection.fromFloor && toFloor === storedDirection.toFloor) {
-            // Going in the same direction as the escalator - allowed
-          } else {
-            // Going against the escalator direction - not allowed
-            return Infinity;
-          }
-        }
-      }
-      
-      if (from.data && to.data) {
-        return Math.hypot(from.data.x - to.data.x, from.data.y - to.data.y);
-      }
-      return 1;
-    },
-    heuristic: (from, to) => {
-      if (from.data && to.data) {
-        // Add floor difference penalty to prefer same-floor paths when possible
-        const fromFloor = getFloorFromNodeId(String(from.id));
-        const toFloor = getFloorFromNodeId(String(to.id));
-        const floorDiff = (fromFloor !== null && toFloor !== null) 
-          ? Math.abs(fromFloor - toFloor) * 1000 
-          : 0;
-        return Math.hypot(from.data.x - to.data.x, from.data.y - to.data.y) + floorDiff;
-      }
-      return 0;
-    },
+    distance: (from, to, _link) => 
+      calculateNodeDistance(from, to, nodeAccessibility, edgeDirection, orientedEdges, accessibleOnly),
+    heuristic: (from, to) => calculateHeuristic(from, to),
   });
 
   const foundPath = pathfinder.find(startId, endId);
@@ -358,32 +404,15 @@ export function findPath(
     return null;
   }
 
-  // Convert graph nodes back to NavMeshNode format (reverse order - path comes end-to-start)
-  const result: NavMeshNode[] = [];
-  for (let i = foundPath.length - 1; i >= 0; i--) {
-    const node = foundPath[i];
-    result.push({
-      id: node.id,
-      data: node.data,
-    });
-  }
-
-  return result;
+  return convertPathToNodes(foundPath);
 }
 
-// Coordinate transformation for Hall Building
-// The navmesh uses a different coordinate system than the SVG
-// Scale 0.5 and offset 0 transforms navmesh coordinates to SVG coordinates
-function transformHallCoordinates(x: number, y: number, _floor: number): { x: number; y: number } {
-  const scaleX = 0.5;
-  const scaleY = 0.5;
-  const offsetX = 0;
-  const offsetY = 0;
-  
-  const svgX = x * scaleX + offsetX;
-  const svgY = y * scaleY + offsetY;
-  
-  return { x: svgX, y: svgY };
+// Coordinate transformation for buildings with 2x scale navmesh
+// Hall, VE, and CC buildings all use navmesh at 2x scale compared to SVG
+// Scale 0.5 transforms navmesh coordinates to SVG coordinates
+function transformNavMeshCoordinates(x: number, y: number): { x: number; y: number } {
+  const scale = 0.5;
+  return { x: x * scale, y: y * scale };
 }
 
 export function generateSvgPath(path: NavMeshNode[]): string {
@@ -404,15 +433,15 @@ export function generateSvgPath(path: NavMeshNode[]): string {
     label: (n.data as { label?: string })?.label,
   })));
 
-  // Transform coordinates for Hall Building only
-  // VE, CC, VL use the same coordinate system as their SVGs
-  const transformCoord = (node: { x: number; y: number; floor?: number; buildingId?: string; type?: string; label?: string }) => {
-    if (node.buildingId === 'Hall') {
-      const transformed = transformHallCoordinates(node.x, node.y, node.floor || 8);
-      console.log(`[transformCoord] ${node.type} ${node.label}: (${node.x}, ${node.y}) -> (${transformed.x.toFixed(1)}, ${transformed.y.toFixed(1)})`);
+  // Transform coordinates based on building
+  // Hall, VE, CC: scale 0.5, VL: no transformation needed
+  const transformCoord = (node: { x: number; y: number; buildingId?: string; type?: string; label?: string }) => {
+    if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
+      const transformed = transformNavMeshCoordinates(node.x, node.y);
+      console.log(`[transformCoord] ${node.buildingId} ${node.type} ${node.label}: (${node.x}, ${node.y}) -> (${transformed.x.toFixed(1)}, ${transformed.y.toFixed(1)})`);
       return transformed;
     }
-    // For VE, CC, VL - use coordinates directly (no transformation needed)
+    // For VL and others - use coordinates directly (no transformation needed)
     return { x: node.x, y: node.y };
   };
 
@@ -431,67 +460,101 @@ export function generateSvgPath(path: NavMeshNode[]): string {
   return pathString;
 }
 
+/**
+ * Filter POI by floor for Hall Building
+ */
+function shouldIncludePoi(poi: { floor: number }, buildingId: string, floorNum: number): boolean {
+  return buildingId !== 'Hall Building' || poi.floor === floorNum;
+}
+
+/**
+ * Get POIs from new format navmesh
+ */
+function getPOIsFromNewFormat(
+  poiIndex: Record<string, Array<{ nodeId: string; label: string; floor: number; x: number; y: number }>>,
+  poiType: POIType,
+  buildingId: string,
+  floorNum: number
+): (POIInfo & { label: string })[] {
+  const pois: (POIInfo & { label: string })[] = [];
+  const poiList = poiIndex[poiType];
+  
+  if (!poiList) {
+    return pois;
+  }
+  
+  for (const poi of poiList) {
+    if (shouldIncludePoi(poi, buildingId, floorNum)) {
+      pois.push({
+        nodeId: poi.nodeId,
+        type: poiType,
+        label: poi.label,
+      });
+    }
+  }
+  
+  return pois;
+}
+
+/**
+ * Get POIs from old format navmesh
+ */
+function getPOIsFromOldFormat(
+  poiToNode: Record<string, POIInfo>,
+  poiType: POIType
+): (POIInfo & { label: string })[] {
+  const pois: (POIInfo & { label: string })[] = [];
+  
+  for (const [poiLabel, poiInfo] of Object.entries(poiToNode)) {
+    if (poiInfo.type === poiType) {
+      pois.push({
+        ...poiInfo,
+        label: poiInfo.label || poiLabel,
+      });
+    }
+  }
+  
+  return pois;
+}
+
 export function getPOIsByType(
   buildingId: string,
   floorLevel: string,
   poiType: POIType
 ): (POIInfo & { label: string })[] {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  const floorNum = parseInt(floorLevel, 10);
+  if (!navMesh) {
+    return [];
+  }
+  
+  const floorNum = Number.parseInt(floorLevel, 10);
   
   // Handle new format with poiIndex
-  if (navMesh && 'poiIndex' in navMesh && navMesh.poiIndex) {
-    const pois: (POIInfo & { label: string })[] = [];
-    const poiList = navMesh.poiIndex[poiType];
-    if (poiList) {
-      for (const poi of poiList) {
-        // Filter by floor for Hall Building
-        if (buildingId === 'Hall Building' && poi.floor !== floorNum) {
-          continue;
-        }
-        pois.push({
-          nodeId: poi.nodeId,
-          type: poiType,
-          label: poi.label,
-        });
-      }
-    }
-    return pois;
+  if ('poiIndex' in navMesh && navMesh.poiIndex) {
+    return getPOIsFromNewFormat(navMesh.poiIndex, poiType, buildingId, floorNum);
   }
   
   // Handle old format with poiToNode
-  if (navMesh && 'poiToNode' in navMesh && navMesh.poiToNode) {
-    const pois: (POIInfo & { label: string })[] = [];
-    for (const [poiLabel, poiInfo] of Object.entries(navMesh.poiToNode)) {
-      if (poiInfo.type === poiType) {
-        pois.push({
-          ...poiInfo,
-          label: poiInfo.label || poiLabel,
-        });
-      }
-    }
-    return pois;
+  if ('poiToNode' in navMesh && navMesh.poiToNode) {
+    return getPOIsFromOldFormat(navMesh.poiToNode, poiType);
   }
 
   return [];
 }
 
-export function getAllPOIs(
+/**
+ * Get all POIs from new format navmesh
+ */
+function getAllPOIsFromNewFormat(
+  poiIndex: Record<string, Array<{ nodeId: string; label: string; floor: number; x: number; y: number }>>,
   buildingId: string,
-  floorLevel: string
+  floorNum: number
 ): Record<string, POIInfo> {
-  const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  const floorNum = parseInt(floorLevel, 10);
+  const result: Record<string, POIInfo> = {};
   
-  // Handle new format with poiIndex
-  if (navMesh && 'poiIndex' in navMesh && navMesh.poiIndex) {
-    const result: Record<string, POIInfo> = {};
-    for (const [poiType, poiList] of Object.entries(navMesh.poiIndex)) {
-      for (const poi of poiList) {
-        // Filter by floor for Hall Building
-        if (buildingId === 'Hall Building' && poi.floor !== floorNum) {
-          continue;
-        }
+  for (const [poiType, poiList] of Object.entries(poiIndex)) {
+    for (const poi of poiList) {
+      if (shouldIncludePoi(poi, buildingId, floorNum)) {
         result[poi.label] = {
           nodeId: poi.nodeId,
           type: poiType as POIType,
@@ -499,11 +562,29 @@ export function getAllPOIs(
         };
       }
     }
-    return result;
+  }
+  
+  return result;
+}
+
+export function getAllPOIs(
+  buildingId: string,
+  floorLevel: string
+): Record<string, POIInfo> {
+  const navMesh = getNavMeshByKey(buildingId, floorLevel);
+  if (!navMesh) {
+    return {};
+  }
+  
+  const floorNum = Number.parseInt(floorLevel, 10);
+  
+  // Handle new format with poiIndex
+  if ('poiIndex' in navMesh && navMesh.poiIndex) {
+    return getAllPOIsFromNewFormat(navMesh.poiIndex, buildingId, floorNum);
   }
   
   // Handle old format with poiToNode
-  if (navMesh && 'poiToNode' in navMesh && navMesh.poiToNode) {
+  if ('poiToNode' in navMesh && navMesh.poiToNode) {
     return navMesh.poiToNode;
   }
 
@@ -515,9 +596,9 @@ export function getAllPOIs(
  * Node IDs are like "Hall_F8_room_291" or "Hall_F9_stair_landing_21"
  */
 export function getFloorFromNodeId(nodeId: string): number | null {
-  const match = nodeId.match(/_F(\d+)_/);
+  const match = new RegExp(/_F(\d+)_/).exec(nodeId);
   if (match) {
-    return parseInt(match[1], 10);
+    return Number.parseInt(match[1], 10);
   }
   return null;
 }
@@ -604,10 +685,10 @@ export function generateSvgPathForFloor(path: NavMeshNode[], targetFloor: number
   
   if (floorNodes.length === 0) return '';
   
-  // Transform coordinates for Hall Building
-  const transformCoord = (node: { x: number; y: number; floor?: number; buildingId?: string }) => {
-    if (node.buildingId === 'Hall') {
-      return transformHallCoordinates(node.x, node.y, node.floor || targetFloor);
+  // Transform coordinates based on building
+  const transformCoord = (node: { x: number; y: number; buildingId?: string }) => {
+    if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
+      return transformNavMeshCoordinates(node.x, node.y);
     }
     return { x: node.x, y: node.y };
   };
@@ -629,37 +710,46 @@ export function generateSvgPathForFloor(path: NavMeshNode[], targetFloor: number
   return pathString;
 }
 
+/**
+ * Find POI node ID in new format navmesh
+ */
+function findPOIInNewFormat(
+  poiIndex: Record<string, Array<{ nodeId: string; label: string; floor: number; x: number; y: number }>>,
+  poiLabel: string,
+  buildingId: string,
+  floorNum: number
+): string | null {
+  for (const poiList of Object.values(poiIndex)) {
+    for (const poi of poiList) {
+      if (shouldIncludePoi(poi, buildingId, floorNum) && poi.label === poiLabel) {
+        return poi.nodeId;
+      }
+    }
+  }
+  return null;
+}
+
 export function getPOINodeId(
   buildingId: string,
   floorLevel: string,
   poiLabel: string
 ): string | null {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  const floorNum = parseInt(floorLevel, 10);
-  
-  // Handle new format with poiIndex
-  if (navMesh && 'poiIndex' in navMesh && navMesh.poiIndex) {
-    for (const [, poiList] of Object.entries(navMesh.poiIndex)) {
-      for (const poi of poiList) {
-        // Filter by floor for Hall Building
-        if (buildingId === 'Hall Building' && poi.floor !== floorNum) {
-          continue;
-        }
-        if (poi.label === poiLabel) {
-          return poi.nodeId;
-        }
-      }
-    }
+  if (!navMesh) {
     return null;
   }
   
+  const floorNum = Number.parseInt(floorLevel, 10);
+  
+  // Handle new format with poiIndex
+  if ('poiIndex' in navMesh && navMesh.poiIndex) {
+    return findPOIInNewFormat(navMesh.poiIndex, poiLabel, buildingId, floorNum);
+  }
+  
   // Handle old format with poiToNode
-  if (navMesh && 'poiToNode' in navMesh && navMesh.poiToNode) {
+  if ('poiToNode' in navMesh && navMesh.poiToNode) {
     const poiInfo = navMesh.poiToNode[poiLabel];
-    if (!poiInfo) {
-      return null;
-    }
-    return poiInfo.nodeId;
+    return poiInfo?.nodeId ?? null;
   }
 
   return null;

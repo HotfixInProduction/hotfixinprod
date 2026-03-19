@@ -14166,19 +14166,21 @@
         "accessible": true
       }
     },
-    {
-      "fromId": "Hall_F2_stair_landing_10",
-      "toId": "Hall_F8_stair_landing_29",
-      "data": {
+      {
+        "fromId": "Hall_F8_stair_landing_29",
+        "toId": "Hall_F2_stair_landing_10",
+        "data": {
+          "oriented": true,
         "type": "stair",
         "weight": 0,
         "accessible": true
       }
     },
     {
-      "fromId": "Hall_F2_stair_landing_9",
-      "toId": "Hall_F8_stair_landing_28",
+      "fromId": "Hall_F8_stair_landing_28",
+      "toId": "Hall_F2_stair_landing_9",
       "data": {
+        "oriented": true,
         "type": "stair",
         "weight": 0,
         "accessible": true

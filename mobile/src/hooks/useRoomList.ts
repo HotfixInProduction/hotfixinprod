@@ -75,7 +75,7 @@ function extractRoomsFromSvg(svgContent: string): string[] {
  */
 function extractRoomsFromNavMesh(buildingId: string, floor: string): string[] {
   const rooms = new Set<string>();
-  const floorNum = parseInt(floor, 10);
+  const floorNum = Number.parseInt(floor, 10);
   
   const navMesh = navMeshByBuilding[buildingId];
   const prefix = buildingPrefixes[buildingId] || '';
