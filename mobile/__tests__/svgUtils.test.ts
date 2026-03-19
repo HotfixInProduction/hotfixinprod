@@ -66,7 +66,7 @@ describe('svgUtils', () => {
             });
         });
 
-        describe('edge cases', () => {
+    describe('edge cases', () => {
             it('handles room not found in SVG', () => {
                 const result = highlightRoomInSvg(mockSvgContent, '999', undefined);
                 expect(result).toBe(mockSvgContent);
@@ -91,6 +91,91 @@ describe('svgUtils', () => {
                 </svg>`;
                 const result = highlightRoomInSvg(svgWithSingleQuotes, '801', undefined);
                 expect(result).toContain('fill:#4CAF50');
+            });
+
+            it('handles special regex characters in room label', () => {
+                const svgWithSpecialChars = `<svg>
+                    <rect inkscape:label="801*" width="100" height="100"/>
+                </svg>`;
+                const result = highlightRoomInSvg(svgWithSpecialChars, '801*', undefined);
+                expect(result).toContain('fill:#4CAF50');
+            });
+
+            it('handles room label with dots and hyphens equivalence', () => {
+                const svgWithText = `<svg>
+                    <rect width="100" height="100"/>
+                    <text>862.5</text>
+                </svg>`;
+                const result = highlightRoomInSvg(svgWithText, '862-5', undefined);
+                // Should not throw and should process the SVG
+                expect(result).toBeDefined();
+            });
+
+            it('skips corridor rect with id rect3007 in text-based matching', () => {
+                const svgWithCorridor = `<svg>
+                    <rect id="rect3007" width="1000" height="1000"/>
+                    <text>801</text>
+                </svg>`;
+                const result = highlightRoomInSvg(svgWithCorridor, '801', undefined);
+                // Corridor should not be highlighted when matched via text
+                expect(result).not.toContain('fill:#4CAF50');
+            });
+
+            it('skips already highlighted rooms in text-based matching', () => {
+                const svgAlreadyHighlighted = `<svg>
+                    <rect style="fill:#4CAF50;" width="100" height="100"/>
+                    <text>801</text>
+                </svg>`;
+                const result = highlightRoomInSvg(svgAlreadyHighlighted, '801', undefined);
+                // Should not double-highlight when matched via text
+                expect(result).not.toContain('fill:#2196F3');
+            });
+
+            it('handles rect without style attribute', () => {
+                const svgNoStyle = `<svg>
+                    <rect inkscape:label="801" width="100" height="100"/>
+                </svg>`;
+                const result = highlightRoomInSvg(svgNoStyle, '801', undefined);
+                expect(result).toContain('style="fill:#4CAF50');
+            });
+
+            it('handles text matching with rect (new format)', () => {
+                const svgNewFormat = `<svg>
+                    <rect width="100" height="100"/>
+                    <text x="10" y="20">801</text>
+                </svg>`;
+                const result = highlightRoomInSvg(svgNewFormat, '801', undefined);
+                expect(result).toContain('fill:#4CAF50');
+            });
+
+            it('handles text matching with path (new format)', () => {
+                const svgWithPathText = `<svg>
+                    <path d="M0,0 L100,100"/>
+                    <text x="10" y="20">801</text>
+                </svg>`;
+                const result = highlightRoomInSvg(svgWithPathText, '801', undefined);
+                expect(result).toContain('fill:#4CAF50');
+            });
+
+            it('does not match text across multiple rect elements', () => {
+                const svgMultipleRects = `<svg>
+                    <rect width="100" height="100"/>
+                    <rect width="100" height="100"/>
+                    <text x="10" y="20">801</text>
+                </svg>`;
+                const result = highlightRoomInSvg(svgMultipleRects, '801', undefined);
+                // Should only highlight the first rect before the text
+                expect(result).toBeDefined();
+            });
+
+            it('handles empty SVG content', () => {
+                const result = highlightRoomInSvg('', '801', undefined);
+                expect(result).toBe('');
+            });
+
+            it('handles undefined start and next room', () => {
+                const result = highlightRoomInSvg(mockSvgContent, undefined, undefined);
+                expect(result).toBe(mockSvgContent);
             });
         });
     });

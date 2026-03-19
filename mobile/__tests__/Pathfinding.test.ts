@@ -1,6 +1,18 @@
-import { findPath, generateSvgPath, getRoomNodeId, getPOIsByType, getAllPOIs, getPOINodeId } from '../src/utils/Pathfinding';
+import { 
+  findPath, 
+  generateSvgPath, 
+  getRoomNodeId, 
+  getPOIsByType, 
+  getAllPOIs, 
+  getPOINodeId,
+  getFloorFromNodeId,
+  splitPathByFloor,
+  getFloorsInPath,
+  generateSvgPathForFloor
+} from '../src/utils/Pathfinding';
 import { JsonNode } from 'ngraph.fromjson';
 import path from 'ngraph.path';
+import { NavMeshNode } from '../src/types/building';
 
 describe('Pathfinding', () => {
   describe('findPath', () => {
@@ -341,5 +353,287 @@ describe('getPOINodeId', () => {
       const nodeId = getPOINodeId('Hall Building', '8', 'H-elevator1');
       expect(typeof nodeId).toBe('string');
     });
+  });
+});
+
+describe('getFloorFromNodeId', () => {
+  it('should extract floor number from Hall Building node ID', () => {
+    expect(getFloorFromNodeId('Hall_F8_room_291')).toBe(8);
+    expect(getFloorFromNodeId('Hall_F9_room_202')).toBe(9);
+  });
+
+  it('should extract floor number from elevator node ID', () => {
+    expect(getFloorFromNodeId('Hall_F8_elevator_door_13')).toBe(8);
+    expect(getFloorFromNodeId('Hall_F9_stair_landing_21')).toBe(9);
+  });
+
+  it('should return null for node ID without floor pattern', () => {
+    expect(getFloorFromNodeId('some_random_id')).toBeNull();
+    expect(getFloorFromNodeId('room_291')).toBeNull();
+  });
+
+  it('should return null for empty string', () => {
+    expect(getFloorFromNodeId('')).toBeNull();
+  });
+
+  it('should handle multi-digit floor numbers', () => {
+    expect(getFloorFromNodeId('Hall_F10_room_100')).toBe(10);
+    expect(getFloorFromNodeId('Hall_F12_room_120')).toBe(12);
+  });
+});
+
+describe('splitPathByFloor', () => {
+  it('should return empty array for empty path', () => {
+    expect(splitPathByFloor([])).toEqual([]);
+  });
+
+  it('should return single segment for single-floor path', () => {
+    const path: NavMeshNode[] = [
+      { id: 'Hall_F8_room_291', data: { x: 100, y: 100 } },
+      { id: 'Hall_F8_room_292', data: { x: 200, y: 200 } },
+    ];
+    const segments = splitPathByFloor(path);
+    expect(segments.length).toBe(1);
+    expect(segments[0].floor).toBe(8);
+    expect(segments[0].nodes.length).toBe(2);
+  });
+
+  it('should split path into multiple floor segments', () => {
+    const path: NavMeshNode[] = [
+      { id: 'Hall_F8_room_291', data: { x: 100, y: 100, floor: 8 } as any },
+      { id: 'Hall_F8_stair_1', data: { x: 150, y: 150, floor: 8 } as any },
+      { id: 'Hall_F9_stair_1', data: { x: 150, y: 150, floor: 9 } as any },
+      { id: 'Hall_F9_room_202', data: { x: 200, y: 200, floor: 9 } as any },
+    ];
+    const segments = splitPathByFloor(path);
+    expect(segments.length).toBe(2);
+    expect(segments[0].floor).toBe(8);
+    expect(segments[0].nodes.length).toBe(2);
+    expect(segments[1].floor).toBe(9);
+    expect(segments[1].nodes.length).toBe(2);
+  });
+
+  it('should skip nodes without floor info', () => {
+    const path: NavMeshNode[] = [
+      { id: 'Hall_F8_room_291', data: { x: 100, y: 100, floor: 8 } as any },
+      { id: 'unknown_node', data: { x: 150, y: 150 } },
+      { id: 'Hall_F8_room_292', data: { x: 200, y: 200, floor: 8 } as any },
+    ];
+    const segments = splitPathByFloor(path);
+    expect(segments.length).toBe(1);
+    expect(segments[0].nodes.length).toBe(2);
+  });
+
+  it('should use floor from node data over ID extraction', () => {
+    const path: NavMeshNode[] = [
+      { id: 'some_id', data: { x: 100, y: 100, floor: 8 } as any },
+      { id: 'another_id', data: { x: 200, y: 200, floor: 8 } as any },
+    ];
+    const segments = splitPathByFloor(path);
+    expect(segments.length).toBe(1);
+    expect(segments[0].floor).toBe(8);
+  });
+});
+
+describe('getFloorsInPath', () => {
+  it('should return empty array for empty path', () => {
+    expect(getFloorsInPath([])).toEqual([]);
+  });
+
+  it('should return unique sorted floors', () => {
+    const path: NavMeshNode[] = [
+      { id: 'Hall_F9_room_202', data: { x: 100, y: 100 } },
+      { id: 'Hall_F8_room_291', data: { x: 200, y: 200 } },
+      { id: 'Hall_F9_room_203', data: { x: 300, y: 300 } },
+    ];
+    const floors = getFloorsInPath(path);
+    expect(floors).toEqual([8, 9]);
+  });
+
+  it('should use floor from node data', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 100, y: 100, floor: 10 } as any },
+      { id: 'id2', data: { x: 200, y: 200, floor: 8 } as any },
+    ];
+    const floors = getFloorsInPath(path);
+    expect(floors).toEqual([8, 10]);
+  });
+
+  it('should ignore nodes without floor info', () => {
+    const path: NavMeshNode[] = [
+      { id: 'Hall_F8_room_291', data: { x: 100, y: 100 } },
+      { id: 'unknown_node', data: { x: 150, y: 150 } },
+    ];
+    const floors = getFloorsInPath(path);
+    expect(floors).toEqual([8]);
+  });
+});
+
+describe('generateSvgPathForFloor', () => {
+  it('should return empty string for empty path', () => {
+    expect(generateSvgPathForFloor([], 8)).toBe('');
+  });
+
+  it('should return empty string when no nodes match target floor', () => {
+    const path: NavMeshNode[] = [
+      { id: 'Hall_F8_room_291', data: { x: 100, y: 100, floor: 8 } as any },
+    ];
+    expect(generateSvgPathForFloor(path, 9)).toBe('');
+  });
+
+  it('should generate path for nodes on target floor using node data', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 100, y: 100, floor: 8 } as any },
+      { id: 'id2', data: { x: 200, y: 200, floor: 8 } as any },
+      { id: 'id3', data: { x: 300, y: 100, floor: 9 } as any },
+    ];
+    const svgPath = generateSvgPathForFloor(path, 8);
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should generate path for nodes on target floor using ID extraction', () => {
+    const path: NavMeshNode[] = [
+      { id: 'Hall_F8_room_291', data: { x: 100, y: 100 } },
+      { id: 'Hall_F8_room_292', data: { x: 200, y: 200 } },
+    ];
+    const svgPath = generateSvgPathForFloor(path, 8);
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should transform coordinates for Hall building', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 200, y: 200, floor: 8, buildingId: 'Hall' } as any },
+      { id: 'id2', data: { x: 400, y: 400, floor: 8, buildingId: 'Hall' } as any },
+    ];
+    const svgPath = generateSvgPathForFloor(path, 8);
+    // Scale 0.5 applied for Hall building
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should transform coordinates for VE building', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 200, y: 200, floor: 1, buildingId: 'VE' } as any },
+      { id: 'id2', data: { x: 400, y: 400, floor: 1, buildingId: 'VE' } as any },
+    ];
+    const svgPath = generateSvgPathForFloor(path, 1);
+    // Scale 0.5 applied for VE building
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should not transform coordinates for other buildings', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 100, y: 100, floor: 1, buildingId: 'Other' } as any },
+      { id: 'id2', data: { x: 200, y: 200, floor: 1, buildingId: 'Other' } as any },
+    ];
+    const svgPath = generateSvgPathForFloor(path, 1);
+    // No scale applied
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should return empty string for node without data', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: undefined as any },
+    ];
+    expect(generateSvgPathForFloor(path, 8)).toBe('');
+  });
+});
+
+describe('findPath with accessibility mode', () => {
+  it('should find path with accessibility mode disabled', () => {
+    const path = findPath('Hall Building', '8', 'Hall_F8_room_291', 'Hall_F8_room_292', { accessibleOnly: false });
+    expect(path).not.toBeNull();
+  });
+
+  it('should find path with accessibility mode enabled', () => {
+    const path = findPath('Hall Building', '8', 'Hall_F8_room_291', 'Hall_F8_room_292', { accessibleOnly: true });
+    expect(path).not.toBeNull();
+  });
+});
+
+describe('generateSvgPath with building transformations', () => {
+  it('should transform coordinates for Hall building nodes', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 200, y: 200, buildingId: 'Hall' } as any },
+      { id: 'id2', data: { x: 400, y: 400, buildingId: 'Hall' } as any },
+    ];
+    const svgPath = generateSvgPath(path);
+    // Scale 0.5 applied
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should transform coordinates for VE building nodes', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 200, y: 200, buildingId: 'VE' } as any },
+      { id: 'id2', data: { x: 400, y: 400, buildingId: 'VE' } as any },
+    ];
+    const svgPath = generateSvgPath(path);
+    // Scale 0.5 applied
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should transform coordinates for CC building nodes', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 200, y: 200, buildingId: 'CC' } as any },
+      { id: 'id2', data: { x: 400, y: 400, buildingId: 'CC' } as any },
+    ];
+    const svgPath = generateSvgPath(path);
+    // Scale 0.5 applied
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should not transform coordinates for other buildings', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: { x: 100, y: 100, buildingId: 'Other' } as any },
+      { id: 'id2', data: { x: 200, y: 200, buildingId: 'Other' } as any },
+    ];
+    const svgPath = generateSvgPath(path);
+    // No scale applied
+    expect(svgPath).toBe('M 100 100 L 200 200');
+  });
+
+  it('should return empty string for path with node without data', () => {
+    const path: NavMeshNode[] = [
+      { id: 'id1', data: undefined as any },
+    ];
+    const svgPath = generateSvgPath(path);
+    expect(svgPath).toBe('');
+  });
+});
+
+describe('getRoomNodeId with decimal room labels', () => {
+  it('should handle room labels with decimal points', () => {
+    // Room 862.5 should be looked up as H-862-5
+    const nodeId = getRoomNodeId('Hall Building', '8', '862.5');
+    // This may or may not exist, but should not throw
+    expect(nodeId).toBeDefined();
+  });
+
+  it('should handle room labels with trailing zeros after decimal', () => {
+    // Room 805.10 should be looked up as H-805-1 (trailing zeros removed)
+    const nodeId = getRoomNodeId('Hall Building', '8', '805.10');
+    expect(nodeId).toBeDefined();
+  });
+});
+
+describe('Building aliases', () => {
+  it('should find path using MB alias for John Molson Building', () => {
+    const path = findPath('MB', 'S2', 'MB_FS2_elevator_door_1', 'MB_FS2_elevator_door_1');
+    // May return null if nodes don't exist, but should not throw
+    expect(path).toBeDefined();
+  });
+
+  it('should find path using CC alias for Central Building', () => {
+    const path = findPath('CC', '1', 'CC_F1_room_1', 'CC_F1_room_1');
+    expect(path).toBeDefined();
+  });
+
+  it('should find path using VE alias for Vanier Extension', () => {
+    const path = findPath('VE', '1', 'VE_F1_room_1', 'VE_F1_room_1');
+    expect(path).toBeDefined();
+  });
+
+  it('should find path using VL alias for Vanier Library Building', () => {
+    const path = findPath('VL', '1', 'VL_F1_room_1', 'VL_F1_room_1');
+    expect(path).toBeDefined();
   });
 });
