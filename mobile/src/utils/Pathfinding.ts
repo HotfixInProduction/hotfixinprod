@@ -7,27 +7,18 @@ import vlNavMeshJson from '../data/navmesh/vl.json';
 import ccNavMeshJson from '../data/navmesh/cc.json';
 import { NavMeshNode, POIInfo, POIType } from '../types/building';
 
-// New navmesh format with poiIndex, roomIndex, and structured node IDs
-type NewNavMesh = JsonGraph<JsonNode<{ x: number; y: number; type?: string; buildingId?: string; floor?: number; label?: string; accessible?: boolean }>, { fromId: string | number; toId: string | number }> & {
-  roomIndex?: Record<string, string>;  // New format
-  roomToNode?: Record<string, string>;  // Legacy format (for backward compatibility)
+// Standard NavMesh format
+type NavMesh = JsonGraph<JsonNode<{ x: number; y: number; type?: string; buildingId?: string; floor?: number; label?: string; accessible?: boolean }>, { fromId: string | number; toId: string | number }> & {
+  roomIndex?: Record<string, string>;
   poiIndex?: Record<string, Array<{ nodeId: string; label: string; floor: number; x: number; y: number }>>;
 };
 
-// Old navmesh format (for John Molson building - legacy)
-type OldNavMesh = JsonGraph<JsonNode<{ x: number; y: number }>, { fromId: string | number; toId: string | number }> & {
-  roomToNode?: Record<string, string>;
-  poiToNode?: Record<string, POIInfo>;
-};
-
-type NavMesh = NewNavMesh | OldNavMesh;
-
 // Widen types at import time to satisfy TypeScript's lint rules
-const hallNavMesh: NewNavMesh = hallNavMeshJson as NewNavMesh;
-const mbNavMesh: NewNavMesh = mbNavMeshJson as NewNavMesh;
-const veNavMesh: NewNavMesh = veNavMeshJson as NewNavMesh;
-const vlNavMesh: NewNavMesh = vlNavMeshJson as NewNavMesh;
-const ccNavMesh: NewNavMesh = ccNavMeshJson as NewNavMesh;
+const hallNavMesh: NavMesh = hallNavMeshJson as NavMesh;
+const mbNavMesh: NavMesh = mbNavMeshJson as NavMesh;
+const veNavMesh: NavMesh = veNavMeshJson as NavMesh;
+const vlNavMesh: NavMesh = vlNavMeshJson as NavMesh;
+const ccNavMesh: NavMesh = ccNavMeshJson as NavMesh;
 
 // Map building IDs to their navmeshes
 const navMeshes: Map<string, NavMesh> = new Map([
@@ -62,9 +53,6 @@ function getNavMeshByKey(buildingId: string, _floorLevel?: string): NavMesh | un
 function getRoomIndex(navMesh: NavMesh): Record<string, string> | null {
   if ('roomIndex' in navMesh && navMesh.roomIndex) {
     return navMesh.roomIndex;
-  }
-  if ('roomToNode' in navMesh && navMesh.roomToNode) {
-    return navMesh.roomToNode;
   }
   return null;
 }
@@ -169,54 +157,49 @@ export function getRoomNodeId(
 
 
 /**
- * Build node accessibility map from navmesh
+ * Build node accessibility map from the parsed graph
  */
-function buildNodeAccessibilityMap(navMesh: NavMesh): Map<string, boolean | undefined> {
-  const map = new Map<string, boolean | undefined>();
-  if ('nodes' in navMesh && navMesh.nodes) {
-    for (const node of navMesh.nodes) {
-      const nodeWithData = node as { id: string | number; data?: { accessible?: boolean } };
-      if (nodeWithData.data?.accessible !== undefined) {
-        map.set(String(node.id), nodeWithData.data.accessible);
-      }
+function buildNodeAccessibilityMap(graph: any): Map<string, boolean> {
+  const map = new Map<string, boolean>();
+  graph.forEachNode((node: any) => {
+    if (node.data?.accessible !== undefined) {
+      map.set(String(node.id), node.data.accessible);
     }
-  }
+  });
   return map;
 }
 
 /**
- * Build edge direction map for escalator detection
+ * Build edge direction map for escalator detection from the parsed graph
  */
-function buildEdgeDirectionMap(navMesh: NavMesh): Map<string, { fromFloor: number; toFloor: number }> {
+function buildEdgeDirectionMap(graph: any): Map<string, { fromFloor: number; toFloor: number }> {
   const map = new Map<string, { fromFloor: number; toFloor: number }>();
-  if ('links' in navMesh && navMesh.links) {
-    for (const link of navMesh.links) {
-      const key = `${link.fromId}->${link.toId}`;
-      const fromFloor = getFloorFromNodeId(String(link.fromId));
-      const toFloor = getFloorFromNodeId(String(link.toId));
-      if (fromFloor !== null && toFloor !== null && fromFloor !== toFloor) {
-        map.set(key, { fromFloor, toFloor });
-      }
+  graph.forEachLink((link: any) => {
+    const fromId = String(link.fromId);
+    const toId = String(link.toId);
+    const key = `${fromId}->${toId}`;
+    
+    const fromFloor = getFloorFromNodeId(fromId);
+    const toFloor = getFloorFromNodeId(toId);
+    
+    if (fromFloor !== null && toFloor !== null && fromFloor !== toFloor) {
+      map.set(key, { fromFloor, toFloor });
     }
-  }
+  });
   return map;
 }
 
 /**
- * Build set of oriented edges (unidirectional)
- * Oriented edges can only be traversed in the defined direction (fromId -> toId)
+ * Build set of oriented edges (unidirectional) from the parsed graph
  */
-function buildOrientedEdgesSet(navMesh: NavMesh): Set<string> {
+function buildOrientedEdgesSet(graph: any): Set<string> {
   const set = new Set<string>();
-  if ('links' in navMesh && navMesh.links) {
-    for (const link of navMesh.links) {
-      const linkWithData = link as { fromId: string | number; toId: string | number; data?: { oriented?: boolean } };
-      if (linkWithData.data?.oriented === true) {
-        const key = `${link.fromId}->${link.toId}`;
-        set.add(key);
-      }
+  graph.forEachLink((link: any) => {
+    if (link.data?.oriented === true) {
+      const key = `${link.fromId}->${link.toId}`;
+      set.add(key);
     }
-  }
+  });
   return set;
 }
 
@@ -331,9 +314,9 @@ export function findPath(
     return null;
   }
 
-  const nodeAccessibility = buildNodeAccessibilityMap(navMesh);
-  const edgeDirection = buildEdgeDirectionMap(navMesh);
-  const orientedEdges = buildOrientedEdgesSet(navMesh);
+  const nodeAccessibility = buildNodeAccessibilityMap(graph);
+  const edgeDirection = buildEdgeDirectionMap(graph);
+  const orientedEdges = buildOrientedEdgesSet(graph);
 
   const pathfinder = path.aStar(graph, {
     distance: (from, to, _link) => 
@@ -439,50 +422,18 @@ function getPOIsFromNewFormat(
   return pois;
 }
 
-/**
- * Get POIs from old format navmesh
- */
-function getPOIsFromOldFormat(
-  poiToNode: Record<string, POIInfo>,
-  poiType: POIType
-): (POIInfo & { label: string })[] {
-  const pois: (POIInfo & { label: string })[] = [];
-  
-  for (const [poiLabel, poiInfo] of Object.entries(poiToNode)) {
-    if (poiInfo.type === poiType) {
-      pois.push({
-        ...poiInfo,
-        label: poiInfo.label || poiLabel,
-      });
-    }
-  }
-  
-  return pois;
-}
-
 export function getPOIsByType(
   buildingId: string,
   floorLevel: string,
   poiType: POIType
 ): (POIInfo & { label: string })[] {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  if (!navMesh) {
+  if (!navMesh || !navMesh.poiIndex) {
     return [];
   }
   
   const floorNum = Number.parseInt(floorLevel, 10);
-  
-  // Handle new format with poiIndex
-  if ('poiIndex' in navMesh && navMesh.poiIndex) {
-    return getPOIsFromNewFormat(navMesh.poiIndex, poiType, buildingId, floorNum);
-  }
-  
-  // Handle old format with poiToNode
-  if ('poiToNode' in navMesh && navMesh.poiToNode) {
-    return getPOIsFromOldFormat(navMesh.poiToNode, poiType);
-  }
-
-  return [];
+  return getPOIsFromNewFormat(navMesh.poiIndex, poiType, buildingId, floorNum);
 }
 
 /**
@@ -515,23 +466,12 @@ export function getAllPOIs(
   floorLevel: string
 ): Record<string, POIInfo> {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  if (!navMesh) {
+  if (!navMesh || !navMesh.poiIndex) {
     return {};
   }
   
   const floorNum = Number.parseInt(floorLevel, 10);
-  
-  // Handle new format with poiIndex
-  if ('poiIndex' in navMesh && navMesh.poiIndex) {
-    return getAllPOIsFromNewFormat(navMesh.poiIndex, buildingId, floorNum);
-  }
-  
-  // Handle old format with poiToNode
-  if ('poiToNode' in navMesh && navMesh.poiToNode) {
-    return navMesh.poiToNode;
-  }
-
-  return {};
+  return getAllPOIsFromNewFormat(navMesh.poiIndex, buildingId, floorNum);
 }
 
 /**
@@ -585,9 +525,7 @@ export function splitPathByFloor(path: NavMeshNode[]): Array<{ floor: number; no
       currentNodes.push(node);
     } else {
       // Floor changed - save current segment and start new one
-      if (currentNodes.length > 0) {
-        segments.push({ floor: currentFloor, nodes: currentNodes });
-      }
+      segments.push({ floor: currentFloor, nodes: currentNodes });
       currentFloor = nodeFloor;
       currentNodes = [node];
     }
@@ -678,22 +616,10 @@ export function getPOINodeId(
   poiLabel: string
 ): string | null {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  if (!navMesh) {
+  if (!navMesh || !navMesh.poiIndex) {
     return null;
   }
   
   const floorNum = Number.parseInt(floorLevel, 10);
-  
-  // Handle new format with poiIndex
-  if ('poiIndex' in navMesh && navMesh.poiIndex) {
-    return findPOIInNewFormat(navMesh.poiIndex, poiLabel, buildingId, floorNum);
-  }
-  
-  // Handle old format with poiToNode
-  if ('poiToNode' in navMesh && navMesh.poiToNode) {
-    const poiInfo = navMesh.poiToNode[poiLabel];
-    return poiInfo?.nodeId ?? null;
-  }
-
-  return null;
+  return findPOIInNewFormat(navMesh.poiIndex, poiLabel, buildingId, floorNum);
 }

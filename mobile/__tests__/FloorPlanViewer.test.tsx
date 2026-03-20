@@ -42,6 +42,13 @@ jest.mock('../src/utils/Pathfinding', () => ({
     findPath: jest.fn(() => null),
     generateSvgPath: jest.fn(() => ''),
     getRoomNodeId: jest.fn(() => null),
+    getFloorsInPath: jest.fn(() => []),
+}));
+
+jest.mock('../src/hooks/useIndoorPath', () => ({
+    useIndoorPath: jest.fn(() => null),
+    usePathFloors: jest.fn(() => []),
+    useSvgPathForFloor: jest.fn(() => ''),
 }));
 
 describe('FloorPlanViewer', () => {
@@ -766,6 +773,38 @@ describe('FloorPlanViewer', () => {
     });
 
     describe('PathStatus component', () => {
+        it('shows "Path found on this floor" when path exists and is on a single floor', async () => {
+            const { useIndoorPath, usePathFloors } = require('../src/hooks/useIndoorPath');
+            
+            // Mock a successful path that spans only 1 floor directly via the hooks
+            useIndoorPath.mockReturnValue(['node1', 'node2']);
+            usePathFloors.mockReturnValue([8]);
+
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    nextRoom="802"
+                />
+            );
+
+            await waitFor(() => {
+                expect(getByText('Path found on this floor')).toBeTruthy();
+            });
+
+            // Cleanup mocks for other tests
+            useIndoorPath.mockReturnValue(null);
+            usePathFloors.mockReturnValue([]);
+        });
+
         it('shows "No path found" when path is null but rooms are selected', () => {
             const mockFindPath = require('../src/utils/Pathfinding').findPath;
             mockFindPath.mockReturnValue(null);
@@ -817,6 +856,47 @@ describe('FloorPlanViewer', () => {
     });
 
     describe('MultiFloorIndicator component', () => {
+        it('shows multi-floor path text when path spans multiple floors', async () => {
+            const { useIndoorPath, usePathFloors } = require('../src/hooks/useIndoorPath');
+            
+            // Mock a successful path that spans 2 floors directly via the hooks
+            useIndoorPath.mockReturnValue(['node1', 'node2', 'node3']);
+            usePathFloors.mockReturnValue([8, 9]);
+
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                    '9': '<svg><rect inkscape:label="901" /></svg>',
+                },
+            });
+
+            const { getByText, getByTestId } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    nextRoom="901"
+                />
+            );
+
+            await waitFor(() => {
+                expect(getByText('Path spans 2 floors: 8 → 9')).toBeTruthy();
+            });
+
+            // Test accessibility toggle appending "(via elevator)"
+            const accessibilityToggle = getByTestId('accessibility-toggle');
+            fireEvent(accessibilityToggle, 'valueChange', true);
+
+            await waitFor(() => {
+                expect(getByText('Path spans 2 floors: 8 → 9 (via elevator)')).toBeTruthy();
+            });
+
+            // Cleanup mocks for other tests
+            useIndoorPath.mockReturnValue(null);
+            usePathFloors.mockReturnValue([]);
+        });
+
         it('renders accessibility toggle for multi-floor paths', () => {
             const buildingWithRooms = createMockBuilding({
                 floorPlans: {

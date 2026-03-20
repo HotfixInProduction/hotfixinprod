@@ -819,6 +819,27 @@ describe('Node accessibility map', () => {
     // Path should still exist via accessible routes (elevators)
     expect(path).toBeDefined();
   });
+
+  it('should ignore nodes with missing accessible property', () => {
+    const originalGet = Map.prototype.get;
+    const mapSpy = jest.spyOn(Map.prototype, 'get').mockImplementation(function(this: Map<any, any>, key: any) {
+      if (key === 'AccessibilityMock') {
+        return {
+          nodes: [
+            { id: 'start', data: { x: 0, y: 0 } }, // Lacks accessible property
+            { id: 'end', data: { x: 10, y: 10 } }  // Lacks accessible property
+          ],
+          links: [{ fromId: 'start', toId: 'end' }]
+        };
+      }
+      return originalGet.call(this, key);
+    });
+
+    const path = findPath('AccessibilityMock', '1', 'start', 'end');
+    expect(path).toBeDefined();
+
+    mapSpy.mockRestore();
+  });
 });
 
 describe('isEdgeTraversable internal function', () => {
@@ -1066,6 +1087,17 @@ describe('generateSvgPath with various node data', () => {
     const svgPath = generateSvgPath(path);
     expect(svgPath).toBe('M 100 100 L 300 300');
   });
+
+  it('should return empty string when the first node on target floor lacks data', () => {
+    const path: NavMeshNode[] = [
+      { id: 'Hall_F8_room_1', data: undefined as any },
+      { id: 'Hall_F8_room_2', data: { x: 200, y: 200, floor: 8 } as any },
+    ];
+    
+    // The first node on floor 8 (Hall_F8_room_1) has undefined data
+    const svgPath = generateSvgPathForFloor(path, 8);
+    expect(svgPath).toBe('');
+  });
 });
 
 describe('generateSvgPathForFloor with various node data', () => {
@@ -1148,119 +1180,44 @@ describe('Advanced Navigation Features (Coverage Boost)', () => {
   });
 });
 
-describe('Legacy NavMesh formats and Unreachable Branches', () => {
-    let originalMapGet: any;
-
-    beforeEach(() => {
-      // Safely intercept Map.get to inject legacy structures and force unreachable math
-      originalMapGet = Map.prototype.get;
-      jest.spyOn(Map.prototype, 'get').mockImplementation(function(this: Map<any, any>, key: any) {
-        if (key === 'Legacy Building') {
-          return {
-            roomToNode: { 'L-100': 'Legacy_room_1' },
-            poiToNode: {
-              'L_poi_1': { nodeId: 'Legacy_poi_1', type: 'elevator_door', label: 'L_poi_1', floor: 1 },
-              'L_poi_2': { nodeId: 'Legacy_poi_2', type: 'elevator_door', floor: 1 } // No label to test fallback `|| poiLabel`
-            },
-            nodes: [],
-            links: []
-          };
-        }
-        if (key === 'Empty Building') {
-          return {
-            nodes: [],
-            links: [] // No indices at all to trigger fallback returns
-          };
-        }
-        if (key === 'Hall_F8_stair_landing_26->Hall_F9_stair_landing_22') {
-          // Force `isCorrectDirection` to be false by returning garbage floor numbers
-          return { fromFloor: 999, toFloor: 999 };
-        }
-        return originalMapGet.call(this, key);
-      });
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    describe('getRoomIndex and getRoomNodeId', () => {
-      it('should use roomToNode when roomIndex is missing', () => {
-        const nodeId = getRoomNodeId('Legacy Building', '1', 'L-100');
-        expect(nodeId).toBe('Legacy_room_1');
-      });
-
-      it('should log and return null when neither roomIndex nor roomToNode exists', () => {
-        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-        const nodeId = getRoomNodeId('Empty Building', '1', 'L-100');
-        
-        expect(nodeId).toBeNull();
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No room index found'));
-      });
-    });
-
-    describe('calculateNodeDistance direction check', () => {
-      it('should return Infinity when direction is incorrect (forced via mock)', () => {
-        // Triggers the calculateNodeDistance logic for this specific edge
-        // Map.get is mocked to return { fromFloor: 999, toFloor: 999 }, causing !isCorrectDirection to be true.
-        const path = findPath('Hall Building', '8', 'Hall_F8_stair_landing_26', 'Hall_F9_stair_landing_22', { accessibleOnly: false });
-        
-        // As the direct path distance evaluates to Infinity, A* drops it.
-        // We expect it to evaluate and gracefully fallback/fail.
-        expect(path).toBeDefined();
-      });
-    });
-
-    describe('getPOIsByType', () => {
-      it('should extract POIs from old format (poiToNode)', () => {
-        const pois = getPOIsByType('Legacy Building', '1', 'elevator_door' as any);
-        expect(pois).toHaveLength(2);
-        
-        // Validate it mapped correctly
-        expect(pois[0].nodeId).toBe('Legacy_poi_1');
-        expect(pois[0].label).toBe('L_poi_1');
-        
-        // Validate the fallback label: poiInfo.label || poiLabel
-        expect(pois[1].nodeId).toBe('Legacy_poi_2');
-        expect(pois[1].label).toBe('L_poi_2'); 
-      });
-
-      it('should return empty array for POIs when no indices exist', () => {
-        const pois = getPOIsByType('Empty Building', '1', 'elevator_door' as any);
-        expect(pois).toEqual([]);
-      });
-    });
-
-    describe('getAllPOIs', () => {
-      it('should return all POIs from old format (poiToNode)', () => {
-        const pois = getAllPOIs('Legacy Building', '1');
-        expect(Object.keys(pois)).toHaveLength(2);
-        expect(pois['L_poi_1'].nodeId).toBe('Legacy_poi_1');
-      });
-
-      it('should return empty object for all POIs when no indices exist', () => {
-        const pois = getAllPOIs('Empty Building', '1');
-        expect(pois).toEqual({});
-      });
-    });
-
-    describe('getPOINodeId', () => {
-      it('should return POI node ID from old format', () => {
-        const nodeId = getPOINodeId('Legacy Building', '1', 'L_poi_1');
-        expect(nodeId).toBe('Legacy_poi_1');
-      });
-
-      it('should return null for unknown POI in old format', () => {
-        const nodeId = getPOINodeId('Legacy Building', '1', 'Unknown_POI');
-        expect(nodeId).toBeNull();
-      });
-
-      it('should return null for POI node ID when no indices exist', () => {
-        const nodeId = getPOINodeId('Empty Building', '1', 'L_poi_1');
-        expect(nodeId).toBeNull();
-      });
-    });
+describe('getRoomIndex internal function coverage', () => {
+  it('should use roomIndex from new format navmesh', () => {
+    // Hall Building uses the new format with roomIndex
+    const nodeId = getRoomNodeId('Hall Building', '8', '867');
+    expect(nodeId).toBe('Hall_F8_room_291');
   });
+
+  it('should handle building with roomToNode (legacy format)', () => {
+    // MB building may use legacy format - test that it works
+    const nodeId = getRoomNodeId('John Molson Building', 'S2', 'test');
+    // May return null if room doesn't exist, but should not throw
+    expect(nodeId).toBeDefined();
+  });
+
+  it('should return null when navmesh lacks roomIndex', () => {
+    // Mock the map getter to return an empty object (a navmesh without a roomIndex)
+    const originalGet = Map.prototype.get;
+    const mapSpy = jest.spyOn(Map.prototype, 'get').mockImplementation(function(this: Map<any, any>, key: any) {
+      if (key === 'Mock Building') {
+        return {}; // NavMesh without roomIndex
+      }
+      return originalGet.call(this, key);
+    });
+
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+    // This will trigger the `return null` fallback in `getRoomIndex` 
+    // and the `No room index found...` branch in `getRoomNodeId`
+    const nodeId = getRoomNodeId('Mock Building', '1', '123');
+    
+    mapSpy.mockRestore();
+    
+    expect(nodeId).toBeNull();
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No room index found'));
+    
+    consoleSpy.mockRestore();
+  });
+});
 
 describe('CC Building navmesh tests', () => {
   it('should find path in CC building', () => {

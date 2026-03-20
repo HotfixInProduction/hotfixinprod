@@ -76,6 +76,7 @@ export function useProcessedSvg(
       return highlighted.slice(0, lastSvgCloseIndex) + pathElements + highlighted.slice(lastSvgCloseIndex);
     }
     
-    return highlighted.replace('</svg>', `${pathElements}</svg>`);
+    // Fallback if no </svg> tag is found (e.g. malformed SVG)
+    return highlighted + pathElements;
   }, [rawSvgContent, path, pathString, startRoom, nextRoom]);
 }

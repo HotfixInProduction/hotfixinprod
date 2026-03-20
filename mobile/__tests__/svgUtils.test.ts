@@ -177,6 +177,47 @@ describe('svgUtils', () => {
                 const result = highlightRoomInSvg(mockSvgContent, undefined, undefined);
                 expect(result).toBe(mockSvgContent);
             });
+            
+            it('skips rect when a different text element appears before the matching one (mismatched text)', () => {
+                const svgMultipleText = `<svg>
+                    <rect width="100" height="100"/>
+                    <text>Other Text</text>
+                    <text>801</text>
+                </svg>`;
+                const result = highlightRoomInSvg(svgMultipleText, '801', undefined);
+                
+                // The regex captures from <rect> down to <text>801</text>. 
+                // However, the first text node evaluated inside that block is 'Other Text'.
+                // This forces `normalizedText !== normalizedLabel` to be true, hitting the skip return.
+                expect(result).toBe(svgMultipleText);
+                expect(result).not.toContain('fill:#4CAF50');
+            });
+
+            it('replaces existing style in rect when matching by text (new format)', () => {
+                const svgWithStyleAndText = `<svg>
+                    <rect style="fill:red; stroke:black;" width="100" height="100"/>
+                    <text>801</text>
+                </svg>`;
+                const result = highlightRoomInSvg(svgWithStyleAndText, '801', undefined);
+                
+                // Triggers the style replacement block inside the text matching method
+                expect(result).toContain('fill:#4CAF50');
+                expect(result).not.toContain('fill:red');
+            });
+
+            it('bypasses text verification if inner text contains a less-than sign (falsy textMatch)', () => {
+                const svgWithLessThan = `<svg>
+                    <rect width="100" height="100"/>
+                    <text>80<1</text>
+                </svg>`;
+                
+                const result = highlightRoomInSvg(svgWithLessThan, '80<1', undefined);
+                
+                // Outer regex successfully matches the <text> block.
+                // Inner regex /<text[^>]*>([^<]*)<\/text>/i fails because `[^<]*` rejects the `<` character.
+                // Therefore textMatch is null, taking the falsy branch, bypassing strict label verification, and highlighting the rect.
+                expect(result).toContain('fill:#4CAF50');
+            });
         });
     });
 

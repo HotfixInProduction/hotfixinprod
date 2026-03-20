@@ -192,6 +192,75 @@ describe('useRoomList', () => {
     });
 
     describe('extractRoomsFromNavMesh', () => {
+        it('uses roomToNode (legacy format) and handles labels without prefixes', () => {
+            // Require the actual JSON object loaded by the hook
+            const ccJson = require('../src/data/navmesh/cc.json');
+            
+            // Backup original state
+            const originalRoomIndex = ccJson.roomIndex;
+            const originalRoomToNode = ccJson.roomToNode;
+            
+            // Force legacy format and a room without the CC- prefix
+            delete ccJson.roomIndex;
+            ccJson.roomToNode = { '105': 'CC_F1_room_105' };
+
+            const { result } = renderHook(() => 
+                useRoomList('', 'Central Building', '1')
+            );
+
+            // This covers the false branch of the prefix ternary
+            expect(result.current).toContain('105');
+
+            // Restore state so we don't break other tests
+            ccJson.roomIndex = originalRoomIndex;
+            ccJson.roomToNode = originalRoomToNode;
+        });
+
+        it('returns empty array if navmesh has no index data', () => {
+            const vlJson = require('../src/data/navmesh/vl.json');
+            
+            // Backup
+            const originalRoomIndex = vlJson.roomIndex;
+            const originalRoomToNode = vlJson.roomToNode;
+            
+            // Delete both indices to cover the fallback || {}
+            delete vlJson.roomIndex;
+            delete vlJson.roomToNode;
+
+            const { result } = renderHook(() => 
+                useRoomList('', 'Vanier Library Building', '1')
+            );
+
+            // Should safely fallback to empty array without crashing
+            expect(result.current).toEqual([]);
+
+            // Restore
+            vlJson.roomIndex = originalRoomIndex;
+            vlJson.roomToNode = originalRoomToNode;
+        });
+        
+        it('sorts rooms from navmesh alphabetically when they are non-numeric', () => {
+            // Temporarily mock parseFloat to return NaN
+            // This forces the sorting algorithm to treat the rooms as text 
+            // and fall back to the localeCompare line we need to cover.
+            const parseFloatSpy = jest.spyOn(Number, 'parseFloat').mockReturnValue(Number.NaN);
+            
+            const { result } = renderHook(() => 
+                useRoomList('', 'Hall Building', '8')
+            );
+            
+            // Verify it extracted rooms (using the real navmesh data)
+            expect(result.current.length).toBeGreaterThan(0);
+            
+            // Because we forced parseFloat to fail, the hook sorted them alphabetically.
+            // Let's verify they match the expected alphabetical order.
+            const sortedAlphabetically = [...result.current].sort((a, b) => a.localeCompare(b));
+            expect(result.current).toEqual(sortedAlphabetically);
+            
+            // Important: Restore parseFloat so we don't break other tests!
+            parseFloatSpy.mockRestore();
+        });
+
         it('returns rooms from navmesh when SVG is empty', () => {
             const { result } = renderHook(() => 
                 useRoomList('', 'Hall Building', '8')
@@ -250,9 +319,9 @@ describe('useRoomList', () => {
             );
             const rooms = result.current;
             for (let i = 1; i < rooms.length; i++) {
-                const prev = parseFloat(rooms[i - 1]);
-                const curr = parseFloat(rooms[i]);
-                if (!isNaN(prev) && !isNaN(curr)) {
+                const prev = Number.parseFloat(rooms[i - 1]);
+                const curr = Number.parseFloat(rooms[i]);
+                if (!Number.isNaN(prev) && !Number.isNaN(curr)) {
                     expect(prev).toBeLessThanOrEqual(curr);
                 }
             }

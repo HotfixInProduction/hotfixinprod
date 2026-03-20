@@ -82,24 +82,20 @@ function extractRoomsFromNavMesh(buildingId: string, floor: string): string[] {
   const floorNum = Number.parseInt(floor, 10);
   
   const navMesh = navMeshByBuilding[buildingId];
-  const prefix = buildingPrefixes[buildingId] || '';
+  const prefix = buildingPrefixes[buildingId];
   
-  if (!navMesh) {
-    return [];
-  }
+  // Support both roomIndex (new) and roomToNode (legacy), fallback to empty object
+  const roomIndex = navMesh.roomIndex || navMesh.roomToNode || {};
   
-  // Support both roomIndex (new) and roomToNode (legacy)
-  const roomIndex = navMesh.roomIndex || navMesh.roomToNode;
-  
-  if (roomIndex) {
-    for (const [roomLabel, nodeId] of Object.entries(roomIndex)) {
-      // Check if this room belongs to the specified floor
-      // Node IDs are like "Hall_F8_room_291", "CC_F1_room_1", "VE_F1_room_242"
-      if (nodeId.includes(`_F${floorNum}_`)) {
-        // Remove building prefix from room label (e.g., "H-867" -> "867", "CC-124" -> "124")
-        const cleanLabel = roomLabel.startsWith(prefix) ? roomLabel.substring(prefix.length) : roomLabel;
-        rooms.add(cleanLabel);
-      }
+  for (const [roomLabel, nodeId] of Object.entries(roomIndex)) {
+    // Check if this room belongs to the specified floor
+    // Node IDs are like "Hall_F8_room_291", "CC_F1_room_1", "VE_F1_room_242"
+    if (nodeId.includes(`_F${floorNum}_`)) {
+      // Remove building prefix from room label (e.g., "H-867" -> "867", "CC-124" -> "124")
+      const cleanLabel = (prefix && roomLabel.startsWith(prefix)) 
+        ? roomLabel.substring(prefix.length) 
+        : roomLabel;
+      rooms.add(cleanLabel);
     }
   }
   

@@ -23,6 +23,23 @@ describe('useIndoorPath', () => {
   });
 
   describe('basic pathfinding', () => {
+    it('returns null when no path can be found between valid rooms', () => {
+      // Mock valid nodes so it gets past the early returns
+      (Pathfinding.getRoomNodeId as jest.Mock)
+        .mockReturnValueOnce('Hall_F8_room_291')
+        .mockReturnValueOnce('Hall_F8_room_292');
+        
+      // Mock findPath to return null (no route found)
+      (Pathfinding.findPath as jest.Mock).mockReturnValue(null);
+
+      const { result } = renderHook(() => 
+        useIndoorPath('Hall Building', '8', '801', '803')
+      );
+
+      // This ensures logAndReturnPath is called with null, covering the missing branch
+      expect(result.current).toBeNull();
+    });
+    
     it('returns null when buildingId is undefined', () => {
       const { result } = renderHook(() => 
         useIndoorPath(undefined, '8', '801', '803')
@@ -107,6 +124,35 @@ describe('useIndoorPath', () => {
   });
 
   describe('cross-building navigation', () => {
+    it('returns null when room node not found for entry path', () => {
+      // Simulate being in the destination building (Central Building)
+      (Pathfinding.getRoomNodeId as jest.Mock).mockReturnValue(null);
+
+      const { result } = renderHook(() => 
+        useIndoorPath('Central Building', '1', 'H-801', 'nonexistent', {
+          startBuildingId: 'Hall Building',
+          endBuildingId: 'Central Building'
+        })
+      );
+
+      expect(result.current).toBeNull();
+    });
+
+    it('returns null when no entry/exits found for entry path', () => {
+      // Simulate being in the destination building (Central Building)
+      (Pathfinding.getRoomNodeId as jest.Mock).mockReturnValue('CC_F1_room_1');
+      (Pathfinding.getPOIsByType as jest.Mock).mockReturnValue([]);
+
+      const { result } = renderHook(() => 
+        useIndoorPath('Central Building', '1', 'H-801', '101', {
+          startBuildingId: 'Hall Building',
+          endBuildingId: 'Central Building'
+        })
+      );
+
+      expect(result.current).toBeNull();
+    });
+
     it('finds path to exit when current building is start building', () => {
       (Pathfinding.getRoomNodeId as jest.Mock).mockReturnValue('Hall_F8_room_291');
       (Pathfinding.getPOIsByType as jest.Mock).mockReturnValue([
