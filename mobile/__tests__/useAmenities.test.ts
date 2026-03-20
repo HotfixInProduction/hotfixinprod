@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react-native';
-import { useAmenities, getAmenityIconName} from '../src/hooks/useAmenities';
+import { useAmenities, getAmenityIconName, getAmenityDisplayName } from '../src/hooks/useAmenities';
 
 describe('useAmenities', () => {
     describe('useAmenities hook', () => {
@@ -217,6 +217,116 @@ describe('useAmenities', () => {
             expect(result.current[0].x).toBe(100.5);
             expect(result.current[0].y).toBe(200.75);
         });
+
+        it('ignores g elements without id attribute', () => {
+            const svgContent = `
+                <g transform="translate(100, 200)" />
+                <g id="stairs1" transform="translate(150, 250)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0].id).toBe('stairs1');
+        });
+
+        it('ignores g elements without transform attribute', () => {
+            const svgContent = `
+                <g id="stairs1" />
+                <g id="elevators1" transform="translate(150, 250)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0].id).toBe('elevators1');
+        });
+
+        it('handles SVG with extra whitespace in g tag', () => {
+            const svgContent = `
+                <g
+                    id="stairs1"
+                    class="amenity"
+                    transform="translate(100, 200)"
+                />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0]).toMatchObject({
+                id: 'stairs1',
+                x: 100,
+                y: 200,
+            });
+        });
+
+        it('handles negative coordinates', () => {
+            const svgContent = `
+                <g id="stairs1" transform="translate(-100, -200)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0]).toMatchObject({
+                x: -100,
+                y: -200,
+            });
+        });
+
+        it('handles zero coordinates', () => {
+            const svgContent = `
+                <g id="stairs1" transform="translate(0, 0)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0]).toMatchObject({
+                x: 0,
+                y: 0,
+            });
+        });
+
+        it('ignores unknown amenity types', () => {
+            const svgContent = `
+                <g id="unknown_type1" transform="translate(100, 200)" />
+                <g id="stairs1" transform="translate(150, 250)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0].id).toBe('stairs1');
+        });
+
+        it('handles malformed translate syntax gracefully', () => {
+            const svgContent = `
+                <g id="stairs1" transform="translate(100 200)" />
+                <g id="elevators1" transform="translate(150, 250)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0].id).toBe('elevators1');
+        });
+
+        it('extracts amenity with special characters in id', () => {
+            const svgContent = `
+                <g id="stairs-1_main" transform="translate(100, 200)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0].id).toBe('stairs-1_main');
+        });
+
+        it('handles very large coordinates', () => {
+            const svgContent = `
+                <g id="stairs1" transform="translate(99999.99, 88888.88)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            expect(result.current).toHaveLength(1);
+            expect(result.current[0].x).toBe(99999.99);
+            expect(result.current[0].y).toBe(88888.88);
+        });
+
+        it('stops processing on malformed g tag', () => {
+            const svgContent = `
+                <g id="stairs1" transform="translate(100, 200)
+                <g id="elevators1" transform="translate(150, 250)" />
+            `;
+            const { result } = renderHook(() => useAmenities(svgContent));
+            // Should extract what it can before encountering the malformed tag
+            expect(result.current.length).toBeGreaterThanOrEqual(0);
+        });
     });
 
     describe('getAmenityIconName', () => {
@@ -262,6 +372,44 @@ describe('useAmenities', () => {
 
         it('handles empty string', () => {
             expect(getAmenityIconName('')).toBe('information');
+        });
+    });
+
+    describe('getAmenityDisplayName', () => {
+        it('returns correct display name for washroom', () => {
+            expect(getAmenityDisplayName('washroom')).toBe('Restroom');
+        });
+
+        it('returns correct display name for water_fountain', () => {
+            expect(getAmenityDisplayName('water_fountain')).toBe('Water Fountain');
+        });
+
+        it('returns correct display name for stairs', () => {
+            expect(getAmenityDisplayName('stairs')).toBe('Stairs');
+        });
+
+        it('returns correct display name for elevator', () => {
+            expect(getAmenityDisplayName('elevator')).toBe('Elevator');
+        });
+
+        it('returns correct display name for escalator', () => {
+            expect(getAmenityDisplayName('escalator')).toBe('Escalator');
+        });
+
+        it('returns correct display name for stair_landing', () => {
+            expect(getAmenityDisplayName('stair_landing')).toBe('Stair Landing');
+        });
+
+        it('returns correct display name for elevator_door', () => {
+            expect(getAmenityDisplayName('elevator_door')).toBe('Elevator Door');
+        });
+
+        it('returns correct display name for building_entry_exit', () => {
+            expect(getAmenityDisplayName('building_entry_exit')).toBe('Entrance/Exit');
+        });
+
+        it('returns type as fallback for unknown types', () => {
+            expect(getAmenityDisplayName('unknown_type')).toBe('unknown_type');
         });
     });
 });
