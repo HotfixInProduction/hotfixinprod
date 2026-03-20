@@ -718,6 +718,7 @@ export default function MapScreen() {
             <TouchableOpacity
               style={[styles.modalButton, styles.primaryButton]}
               onPress={() => setShowShuttleSchedule(false)}
+              testID="close-shuttle-schedule"
             >
               <Text style={styles.primaryButtonText}>Close schedule</Text>
             </TouchableOpacity>
