@@ -56,6 +56,43 @@ describe('useProcessedSvg', () => {
     });
 
     describe('path processing', () => {
+        it('appends path to the end if SVG has no closing tag (malformed)', () => {
+            // Provide malformed SVG content without an </svg> tag
+            const malformedSvg = '<svg><rect/>';
+            
+            const path: NavMeshNode[] = [
+                { id: 'start', data: { x: 10, y: 20 } },
+                { id: 'end', data: { x: 100, y: 200 } },
+            ];
+            const pathString = 'M 10 20 L 100 200';
+
+            const { result } = renderHook(() =>
+                useProcessedSvg(malformedSvg, path, pathString, undefined, undefined)
+            );
+
+            // Because lastIndexOf('</svg>') returns -1, it falls through to the new fallback
+            // which simply appends the <path> string to the end of the malformed SVG
+            expect(result.current).toBe(malformedSvg + `<path d="${pathString}" start="10,20" end="100,200"/>`);
+        });
+
+        it('transforms coordinates for buildings that require scaling (Hall, VE, CC)', () => {
+            const path: NavMeshNode[] = [
+                // Set buildingId to 'Hall' to trigger the transformNavMeshCoordinates branch
+                { id: 'start', data: { x: 100, y: 200, buildingId: 'Hall' } as any },
+                { id: 'end', data: { x: 300, y: 400, buildingId: 'Hall' } as any },
+            ];
+            const pathString = 'M 50 100 L 150 200';
+
+            const { result } = renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, pathString, undefined, undefined)
+            );
+
+            // Our mocked generatePathElements should receive the transformed coordinates (x * 0.5, y * 0.5)
+            // 100 * 0.5 = 50, 200 * 0.5 = 100, etc.
+            expect(result.current).toContain('start="50,100"');
+            expect(result.current).toContain('end="150,200"');
+        });
+
         it('processes path with valid start and end nodes', () => {
             const path: NavMeshNode[] = [
                 { id: 'start', data: { x: 10, y: 20 } },
