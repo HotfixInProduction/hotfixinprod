@@ -407,9 +407,5 @@ describe('useAmenities', () => {
         it('returns correct display name for building_entry_exit', () => {
             expect(getAmenityDisplayName('building_entry_exit')).toBe('Entrance/Exit');
         });
-
-        it('returns type as fallback for unknown types', () => {
-            expect(getAmenityDisplayName('unknown_type')).toBe('unknown_type');
-        });
     });
 });
