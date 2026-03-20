@@ -39,6 +39,33 @@ jest.mock('expo-constants', () => {
     ...mockConstants,
   };
 });
+jest.mock('../src/data/buildings', () => ({
+  buildings: [
+    {
+      id: 'mock-building-id',
+      name: 'Mock Building',
+      address: '123 Mock St',
+      labelCoord: { latitude: 45.123, longitude: -73.123 },
+    }
+  ]
+}));
+jest.mock('../src/components/FloorPlanViewer', () => {
+  const React = require('react');
+  const { View, Button, Text } = require('react-native');
+  return function MockFloorPlanViewer(props: any) {
+    return (
+      <View testID="floor-plan-viewer-mock">
+        <Text>Hall Building - Floor 8</Text>
+        <Button testID="floor-plan-close" title="Close" onPress={props.onClose} />
+        {/* Updated buildingId to match our mocked data */}
+        <Button testID="trigger-start-room" title="Start" onPress={() => props.onStartRoomChange({ buildingId: 'mock-building-id', floorId: '8', roomId: '820' })} />
+        <Button testID="trigger-dest-room" title="Dest" onPress={() => props.onDestinationRoomChange({ buildingId: 'mock-building-id', floorId: '8', roomId: '820' })} />
+        <Button testID="trigger-invalid-start" title="Inv Start" onPress={() => props.onStartRoomChange({ buildingId: 'INVALID', floorId: '8', roomId: '999' })} />
+        <Button testID="trigger-invalid-dest" title="Inv Dest" onPress={() => props.onDestinationRoomChange({ buildingId: 'INVALID', floorId: '8', roomId: '999' })} />
+      </View>
+    );
+  };
+});
 jest.spyOn(Alert, 'alert');
 
 suppressActWarnings();
@@ -623,6 +650,94 @@ describe('MapScreen', () => {
     });
   });
 });
+
+describe('Room Selection Syncing', () => {
+    it('syncs start room selection to start place', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('select-building'));
+      await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+      await waitFor(() => expect(getByTestId('trigger-start-room')).toBeTruthy());
+
+      // Trigger the room selection
+      fireEvent.press(getByTestId('trigger-start-room'));
+
+      // Verify that start building was populated from the room selection
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Start building selected:',
+          expect.objectContaining({ name: 'mock-building-id' })
+        );
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('syncs destination room selection to destination place', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('select-building'));
+      await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+      await waitFor(() => expect(getByTestId('trigger-dest-room')).toBeTruthy());
+
+      // Trigger the room selection
+      fireEvent.press(getByTestId('trigger-dest-room'));
+
+      // Verify that destination building was populated from the room selection
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Destination building selected:',
+          expect.objectContaining({ name: 'mock-building-id' })
+        );
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('does not sync start if building is not found', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('select-building'));
+      await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+      await waitFor(() => expect(getByTestId('trigger-invalid-start')).toBeTruthy());
+
+      fireEvent.press(getByTestId('trigger-invalid-start'));
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      expect(consoleSpy).not.toHaveBeenCalledWith(
+        'Start building selected:',
+        expect.anything()
+      );
+      consoleSpy.mockRestore();
+    });
+
+    it('does not sync destination if building is not found', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const { getByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('select-building'));
+      await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+
+      fireEvent.press(getByTestId('view-floor-plan-button'));
+      await waitFor(() => expect(getByTestId('trigger-invalid-dest')).toBeTruthy());
+
+      fireEvent.press(getByTestId('trigger-invalid-dest'));
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      expect(consoleSpy).not.toHaveBeenCalledWith(
+        'Destination building selected:',
+        expect.anything()
+      );
+      consoleSpy.mockRestore();
+    });
+  });
 
 describe('Auto-zoom Map', () => {
   beforeEach(() => {
