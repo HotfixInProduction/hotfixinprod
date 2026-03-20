@@ -46,18 +46,40 @@ export function useAmenities(svgContent: string | undefined): AmenityElement[] {
         
         const amenities: AmenityElement[] = [];
         
-        // Find all grouping elements with transform attributes
-        // Pattern: <g id="..." transform="translate(x, y)">
-        // Using bounded quantifier {0,200} instead of unbounded [^>]*? to prevent ReDoS
-        const groupPattern = /<g\s+id="([^"]+)"[^>]{0,200}transform="translate\(([^,]+),\s*([^)]+)\)"/g;
-        
-        let match;
-        while ((match = groupPattern.exec(svgContent)) !== null) {
-            const elementId = match[1];
-            const x = parseFloat(match[2]);
-            const y = parseFloat(match[3]);
+        // Parse amenity positions from SVG without regex to prevent ReDoS
+        // Find all <g> elements and extract id and translate(x, y) values
+        let searchIndex = 0;
+        while (true) {
+            const gStart = svgContent.indexOf('<g', searchIndex);
+            if (gStart === -1) break;
             
-            if (isNaN(x) || isNaN(y)) continue;
+            const gEnd = svgContent.indexOf('>', gStart);
+            if (gEnd === -1) break;
+            
+            const gTag = svgContent.substring(gStart, gEnd + 1);
+            
+            // Extract id
+            const idMatch = gTag.match(/id="([^"]{1,100})"/);
+            if (!idMatch) {
+                searchIndex = gEnd + 1;
+                continue;
+            }
+            const elementId = idMatch[1];
+            
+            // Extract transform translate values
+            const transformMatch = gTag.match(/transform="translate\(([^,)]{1,50}),\s*([^)]{1,50})\)"/);
+            if (!transformMatch) {
+                searchIndex = gEnd + 1;
+                continue;
+            }
+            
+            const x = parseFloat(transformMatch[1]);
+            const y = parseFloat(transformMatch[2]);
+            
+            if (isNaN(x) || isNaN(y)) {
+                searchIndex = gEnd + 1;
+                continue;
+            }
             
             // Try to match the element ID to amenity type
             for (const [key, info] of Object.entries(AMENITY_TYPE_MAP)) {
@@ -74,6 +96,8 @@ export function useAmenities(svgContent: string | undefined): AmenityElement[] {
                     break;
                 }
             }
+            
+            searchIndex = gEnd + 1;
         }
         
         return amenities;
