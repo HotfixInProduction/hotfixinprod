@@ -48,7 +48,7 @@ export function useAmenities(svgContent: string | undefined): AmenityElement[] {
         
         // Find all grouping elements with transform attributes
         // Pattern: <g id="..." transform="translate(x, y)">
-        const groupPattern = /<g\s+id="([^"]+)"[^>]*transform="translate\(([^,]+),\s*([^)]+)\)"/g;
+        const groupPattern = /<g\s+id="([^"]+)"[^>]*?\s*transform="translate\(([^,]+),\s*([^)]+)\)"/g;
         
         let match;
         while ((match = groupPattern.exec(svgContent)) !== null) {
