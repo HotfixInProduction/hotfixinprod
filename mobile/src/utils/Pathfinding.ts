@@ -91,7 +91,7 @@ function generateLabelVariants(roomLabel: string, prefix: string): string[] {
     // Use string manipulation instead of regex to avoid ReDoS
     // Remove trailing zeros by finding the last non-zero position
     let trimmedDecimal = decimal;
-    while (trimmedDecimal.length > 0 && trimmedDecimal[trimmedDecimal.length - 1] === '0') {
+    while (trimmedDecimal.length > 0 && trimmedDecimal.endsWith('0')) {
       trimmedDecimal = trimmedDecimal.slice(0, -1);
     }
     if (trimmedDecimal) {
@@ -167,58 +167,6 @@ export function getRoomNodeId(
   return null;
 }
 
-/**
- * Check if an edge is traversable based on accessibility and direction
- * @param fromFloor Floor number of the source node
- * @param toFloor Floor number of the target node
- * @param edgeAccessible The accessible flag from the edge data
- * @param accessibleOnly Whether we're in accessibility mode
- * @param edgeDefinedDirection The direction the edge was defined in the navmesh (from edge key)
- * @returns true if the edge can be traversed
- */
-function isEdgeTraversable(
-  fromFloor: number | null,
-  toFloor: number | null,
-  edgeAccessible: boolean | undefined,
-  accessibleOnly: boolean,
-  edgeDefinedDirection: { fromFloor: number; toFloor: number } | null
-): boolean {
-  // If accessibility mode is on and edge is not accessible, skip it
-  if (accessibleOnly && edgeAccessible === false) {
-    return false;
-  }
-  
-  // If not a floor transition, allow it
-  if (fromFloor === null || toFloor === null || fromFloor === toFloor) {
-    return true;
-  }
-  
-  // For floor transitions with accessible=false, it's an escalator
-  // Escalators only work in one direction (up or down, not both)
-  // We infer direction from the edge definition in the navmesh
-  // If the edge is defined as F8 -> F9 with accessible=false, it means "up" escalator
-  // If the edge is defined as F9 -> F8 with accessible=false, it means "down" escalator
-  
-  if (edgeAccessible === false && edgeDefinedDirection) {
-    // This is an escalator - check if we're going in the defined direction
-    const definedFromFloor = edgeDefinedDirection.fromFloor;
-    const definedToFloor = edgeDefinedDirection.toFloor;
-    
-    // The edge was defined as definedFromFloor -> definedToFloor
-    // We can only traverse it if we're going from definedFromFloor to definedToFloor
-    // (i.e., the same direction as the escalator)
-    
-    if (fromFloor === definedFromFloor && toFloor === definedToFloor) {
-      // Going in the same direction as the escalator - allowed
-      return true;
-    } else {
-      // Going against the escalator direction - not allowed
-      return false;
-    }
-  }
-  
-  return true;
-}
 
 /**
  * Build node accessibility map from navmesh
@@ -307,16 +255,6 @@ function calculateNodeDistance(
       return Infinity;
     }
     
-    // Check escalator direction (legacy support for accessible=false on nodes)
-    const edgeKey = `${fromId}->${toId}`;
-    const storedDirection = edgeDirection.get(edgeKey);
-    
-    if (storedDirection && (fromAccessible === false || toAccessible === false)) {
-      const isCorrectDirection = fromFloor === storedDirection.fromFloor && toFloor === storedDirection.toFloor;
-      if (!isCorrectDirection) {
-        return Infinity;
-      }
-    }
   }
   
   if (from.data && to.data) {
