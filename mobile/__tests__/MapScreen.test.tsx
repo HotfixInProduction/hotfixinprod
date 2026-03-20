@@ -25,7 +25,20 @@ jest.mock('react-native-config', () => ({ GOOGLE_MAPS_ANDROID_API_KEY: 'mock-goo
 jest.mock('react-native-maps-directions', () => require('./utils/testUtils').createMapDirectionsMock());
 jest.mock('../src/components/RouteInfo', () => require('./utils/testUtils').createRouteInfoMock());
 jest.mock('../src/components/RouteInstructions', () => require('./utils/testUtils').createRouteInstructionsMock());
-
+jest.mock('expo-constants', () => {
+  const mockConstants = {
+    expoConfig: {
+      extra: {
+        googleApiKey: 'mock-google-maps-key',
+      },
+    },
+  };
+  return {
+    __esModule: true,
+    default: mockConstants,
+    ...mockConstants,
+  };
+});
 jest.spyOn(Alert, 'alert');
 
 suppressActWarnings();
