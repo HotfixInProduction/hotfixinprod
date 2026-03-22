@@ -10,6 +10,7 @@ import { useRoomList } from '../hooks/useRoomList';
 import { useIndoorPath, useSvgPathForFloor, usePathFloors } from '../hooks/useIndoorPath';
 import { useProcessedSvg } from '../hooks/useProcessedSvg';
 import RoomPickerModal from './RoomPickerModal';
+import CrossBuildingRoomPicker from './CrossBuildingRoomPicker';
 import { Building, RoomSelection } from '../types/building';
 
 type Props = Readonly<{
@@ -187,25 +188,19 @@ export default function FloorPlanViewer({
     const [accessibleOnly, setAccessibleOnly] = useState(false);
     
     // Handle room selection with external state persistence
-    const handleStartRoomSelect = (svgLabel: string) => {
-        setStartRoom(svgLabel);
+    const handleStartRoomSelect = (selection: RoomSelection) => {
+        setStartRoom(selection.room);
+        setCurrentFloor(selection.floor);
         if (onStartRoomChange && building) {
-            onStartRoomChange({
-                buildingId: building.id,
-                floor: currentFloor,
-                room: svgLabel,
-            });
+            onStartRoomChange(selection);
         }
     };
     
-    const handleDestinationRoomSelect = (svgLabel: string) => {
-        setNextRoom(svgLabel);
+    const handleDestinationRoomSelect = (selection: RoomSelection) => {
+        setNextRoom(selection.room);
+        setCurrentFloor(selection.floor);
         if (onDestinationRoomChange && building) {
-            onDestinationRoomChange({
-                buildingId: building.id,
-                floor: currentFloor,
-                room: svgLabel,
-            });
+            onDestinationRoomChange(selection);
         }
     };
     
@@ -334,6 +329,14 @@ export default function FloorPlanViewer({
                             />
                         </View>
 
+                        {/* ── Cross-building hint ── */}
+                        <View style={styles.crossBuildingHintRow}>
+                            <MaterialCommunityIcons name="information" size={14} color="#888" />
+                            <Text style={styles.crossBuildingHintText}>
+                                Tap to select any room on any floor
+                            </Text>
+                        </View>
+
                         {/* ── Accessibility toggle ── */}
                         <View style={styles.accessibilityRow}>
                             <View style={styles.accessibilityLabel}>
@@ -398,26 +401,26 @@ export default function FloorPlanViewer({
             </Modal>
 
             {/* Start-room picker */}
-            <RoomPickerModal
-                visible={roomPickerOpen === 'start'}
-                title="Select start room"
-                rooms={roomList}
-                prefix={buildingPrefix}
-                selectedRoom={effectiveStartRoom}
-                onSelect={handleStartRoomSelect}
-                onClose={() => setRoomPickerOpen(null)}
-            />
+            {building && (
+                <CrossBuildingRoomPicker
+                    visible={roomPickerOpen === 'start'}
+                    title={`Select start room - ${building.id}`}
+                    buildingId={building.id}
+                    onSelect={handleStartRoomSelect}
+                    onClose={() => setRoomPickerOpen(null)}
+                />
+            )}
 
             {/* Destination-room picker */}
-            <RoomPickerModal
-                visible={roomPickerOpen === 'end'}
-                title="Select destination room"
-                rooms={roomList}
-                prefix={buildingPrefix}
-                selectedRoom={effectiveDestRoom}
-                onSelect={handleDestinationRoomSelect}
-                onClose={() => setRoomPickerOpen(null)}
-            />
+            {building && (
+                <CrossBuildingRoomPicker
+                    visible={roomPickerOpen === 'end'}
+                    title={`Select destination room - ${building.id}`}
+                    buildingId={building.id}
+                    onSelect={handleDestinationRoomSelect}
+                    onClose={() => setRoomPickerOpen(null)}
+                />
+            )}
         </>
     );
 }
@@ -562,6 +565,21 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '700',
         color: '#912338',
+    },
+
+    // Cross-building hint
+    crossBuildingHintRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#F5F5F5',
+        gap: 6,
+    },
+    crossBuildingHintText: {
+        fontSize: 12,
+        color: '#888',
+        fontWeight: '500',
     },
 
     // Accessibility toggle
