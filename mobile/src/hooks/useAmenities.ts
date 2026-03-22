@@ -41,16 +41,16 @@ const AMENITY_TYPE_MAP: Record<string, { type: POIType; amenityKind: string; lab
  * Parses a <g> tag to extract element id and position
  */
 function parseGTag(gTag: string): { elementId: string; x: number; y: number } | null {
-    const idMatch = gTag.match(/id="([^"]{1,100})"/);
+    const idMatch = new RegExp(/id="([^"]{1,100})"/).exec(gTag);
     if (!idMatch) return null;
 
-    const transformMatch = gTag.match(/transform="translate\(([^,)]{1,50}),\s*([^)]{1,50})\)"/);
+    const transformMatch = new RegExp(/transform="translate\(([^,)]{1,50}),\s*([^)]{1,50})\)"/).exec(gTag);
     if (!transformMatch) return null;
 
-    const x = parseFloat(transformMatch[1]);
-    const y = parseFloat(transformMatch[2]);
+    const x = Number.parseFloat(transformMatch[1]);
+    const y = Number.parseFloat(transformMatch[2]);
 
-    return isNaN(x) || isNaN(y) ? null : { elementId: idMatch[1], x, y };
+    return Number.isNaN(x) || Number.isNaN(y) ? null : { elementId: idMatch[1], x, y };
 }
 
 /**
