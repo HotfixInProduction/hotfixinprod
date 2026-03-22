@@ -1006,7 +1006,8 @@ describe('FloorPlanViewer', () => {
 
             const { queryByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '801' }}
