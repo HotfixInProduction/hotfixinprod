@@ -407,6 +407,7 @@ export default function MapScreen() {
           currentDelta={currentDelta}
           startBuildingId={start?.name || null}
           destinationBuildingId={destination?.name || null}
+          disabled={selectedBuilding !== null}
         />
 
         {start && destination && googleMapsApiKey && (
@@ -659,7 +660,7 @@ export default function MapScreen() {
             onViewFloorPlan={selectedBuilding?.floorPlans ? () => setShowFloorPlan(true) : undefined}
           />
         </Animated.View>
-      )}
+      )}}
 
       {activeModal === 'routeInstructions' && (
         <RouteInstructions
