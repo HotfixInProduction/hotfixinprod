@@ -173,7 +173,7 @@ describe('FloorPlanViewer', () => {
 
         it('renders room selector buttons', () => {
             const { getByText } = render(
-                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+                <FloorPlanViewer building={buildingWithRooms} destBuildingId="Hall Building" floorLevel="8" onClose={mockOnClose} />
             );
 
             expect(getByText('FROM')).toBeTruthy();
@@ -188,7 +188,7 @@ describe('FloorPlanViewer', () => {
             });
 
             const { getByText } = render(
-                <FloorPlanViewer building={buildingWithDefaults} floorLevel="8" onClose={mockOnClose} />
+                <FloorPlanViewer building={buildingWithDefaults} destBuildingId="Hall Building" floorLevel="8" onClose={mockOnClose} />
             );
 
             // Default startRoom is 829, nextRoom is 862
@@ -198,7 +198,7 @@ describe('FloorPlanViewer', () => {
 
         it('opens start room picker when FROM button is pressed', async () => {
             const { getByTestId, getByText } = render(
-                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+                <FloorPlanViewer building={buildingWithRooms} destBuildingId="Hall Building" floorLevel="8" onClose={mockOnClose} />
             );
 
             const startBtn = getByTestId('room-picker-start');
@@ -211,7 +211,7 @@ describe('FloorPlanViewer', () => {
 
         it('opens destination room picker when TO button is pressed', async () => {
             const { getByTestId, getByText } = render(
-                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+                <FloorPlanViewer building={buildingWithRooms} destBuildingId="Hall Building" floorLevel="8" onClose={mockOnClose} />
             );
 
             const endBtn = getByTestId('room-picker-end');
@@ -230,7 +230,7 @@ describe('FloorPlanViewer', () => {
             });
 
             const { queryAllByText } = render(
-                <FloorPlanViewer building={buildingNoRooms} floorLevel="8" onClose={mockOnClose} />
+                <FloorPlanViewer building={buildingNoRooms} destBuildingId="Hall Building" floorLevel="8" onClose={mockOnClose} />
             );
 
             const selectRoomElements = queryAllByText('Select room');
@@ -259,7 +259,7 @@ describe('FloorPlanViewer', () => {
 
         it('selects a destination room via RoomPickerModal onSelect callback', async () => {
             const { getByTestId, getByText } = render(
-                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+                <FloorPlanViewer building={buildingWithRooms} destBuildingId="Hall Building" floorLevel="8" onClose={mockOnClose} />
             );
 
             const endBtn = getByTestId('room-picker-end');
@@ -299,7 +299,7 @@ describe('FloorPlanViewer', () => {
 
         it('closes destination room picker and resets roomPickerOpen state', async () => {
             const { getByTestId, getByText } = render(
-                <FloorPlanViewer building={buildingWithRooms} floorLevel="8" onClose={mockOnClose} />
+                <FloorPlanViewer building={buildingWithRooms} destBuildingId="Hall Building" floorLevel="8" onClose={mockOnClose} />
             );
 
             const endBtn = getByTestId('room-picker-end');
@@ -332,7 +332,8 @@ describe('FloorPlanViewer', () => {
 
             const { getAllByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithLabel} 
+                    building={buildingWithLabel}
+                    destBuildingId="Hall Building"
                     floorLevel="1" 
                     onClose={mockOnClose}
                     startRoom="101"
@@ -388,7 +389,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     startRoom="803"
@@ -409,7 +411,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     nextRoom="805"
@@ -430,7 +433,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     startRoom="803"
@@ -456,7 +460,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithDuplicateLabels} 
+                    building={buildingWithDuplicateLabels}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     startRoom="829"
@@ -479,7 +484,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithDuplicateLabels} 
+                    building={buildingWithDuplicateLabels}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     nextRoom="829"
@@ -502,7 +508,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     startRoom={undefined}
@@ -525,7 +532,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     startRoom="999"
@@ -546,7 +554,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     nextRoom="999"
@@ -567,7 +576,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     startRoom="803"
@@ -588,7 +598,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     nextRoom="805"
@@ -609,7 +620,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId, getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithSvg} 
+                    building={buildingWithSvg}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                 />
@@ -694,7 +706,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     startRoomSelection={{ buildingId: 'MB', floor: '1', room: '101' }}
@@ -715,7 +728,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     destinationRoomSelection={{ buildingId: 'VL', floor: '1', room: '105' }}
@@ -736,7 +750,8 @@ describe('FloorPlanViewer', () => {
 
             const { queryByText, getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '801' }}
@@ -758,7 +773,8 @@ describe('FloorPlanViewer', () => {
 
             const { queryAllByText } = render(
                 <FloorPlanViewer 
-                    building={buildingNoRooms} 
+                    building={buildingNoRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     startRoom=""
@@ -1072,7 +1088,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId, getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     onStartRoomChange={mockOnStartRoomChange}
@@ -1108,7 +1125,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByTestId, getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     onDestinationRoomChange={mockOnDestinationRoomChange}
@@ -1139,7 +1157,8 @@ describe('FloorPlanViewer', () => {
 
             const { queryByText } = render(
                 <FloorPlanViewer 
-                    building={null} 
+                    building={null}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     onStartRoomChange={mockOnStartRoomChange}
@@ -1161,7 +1180,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     startRoom="801"
@@ -1182,7 +1202,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     nextRoom="801"
@@ -1203,7 +1224,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     startRoom="801"
@@ -1223,7 +1245,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="Hall Building"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     nextRoom="802"
