@@ -14,6 +14,7 @@ import { Building, RoomSelection } from '../types/building';
 
 type Props = Readonly<{
     building: Building | null;
+    destBuildingId?: string | null;
     floorLevel?: string;
     onClose: () => void;
     startRoom?: string;
