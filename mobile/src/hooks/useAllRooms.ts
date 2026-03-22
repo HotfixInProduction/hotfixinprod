@@ -10,31 +10,21 @@ type NavMesh = {
   roomToNode?: Record<string, string>;
 };
 
-const hallNavMesh: NavMesh = hallNavMeshJson as NavMesh;
-const ccNavMesh: NavMesh = ccNavMeshJson as NavMesh;
-const veNavMesh: NavMesh = veNavMeshJson as NavMesh;
-const vlNavMesh: NavMesh = vlNavMeshJson as NavMesh;
-
-// Map building IDs to their navmeshes
-const navMeshByBuilding: Record<string, NavMesh> = {
-  'Hall Building': hallNavMesh,
-  'Central Building': ccNavMesh,
-  'CC': ccNavMesh,
-  'Vanier Extension': veNavMesh,
-  'VE': veNavMesh,
-  'Vanier Library Building': vlNavMesh,
-  'VL': vlNavMesh,
+// Building configuration combining navmesh and prefix
+type BuildingConfig = {
+  navMesh: NavMesh;
+  prefix: string;
 };
 
-// Map building IDs to their room label prefixes
-const buildingPrefixes: Record<string, string> = {
-  'Hall Building': 'H-',
-  'Central Building': 'CC-',
-  'CC': 'CC-',
-  'Vanier Extension': 'VE-',
-  'VE': 'VE-',
-  'Vanier Library Building': 'VL-',
-  'VL': 'VL-',
+// Consolidated building configurations
+const buildingConfigs: Record<string, BuildingConfig> = {
+  'Hall Building': { navMesh: hallNavMeshJson as NavMesh, prefix: 'H-' },
+  'Central Building': { navMesh: ccNavMeshJson as NavMesh, prefix: 'CC-' },
+  'CC': { navMesh: ccNavMeshJson as NavMesh, prefix: 'CC-' },
+  'Vanier Extension': { navMesh: veNavMeshJson as NavMesh, prefix: 'VE-' },
+  'VE': { navMesh: veNavMeshJson as NavMesh, prefix: 'VE-' },
+  'Vanier Library Building': { navMesh: vlNavMeshJson as NavMesh, prefix: 'VL-' },
+  'VL': { navMesh: vlNavMeshJson as NavMesh, prefix: 'VL-' },
 };
 
 export interface RoomWithBuilding {
@@ -46,20 +36,31 @@ export interface RoomWithBuilding {
 }
 
 /**
+ * Compare rooms by floor and room number for sorting
+ */
+function compareRooms(a: RoomWithBuilding, b: RoomWithBuilding): number {
+  const floorA = Number.parseInt(a.floor, 10);
+  const floorB = Number.parseInt(b.floor, 10);
+  if (floorA !== floorB) {
+    return floorA - floorB;
+  }
+  const numA = Number.parseFloat(a.room);
+  const numB = Number.parseFloat(b.room);
+  if (!Number.isNaN(numA) && !Number.isNaN(numB)) return numA - numB;
+  return a.room.localeCompare(b.room);
+}
+
+/**
  * Get all rooms for a specific building across all floors
  */
 function getRoomsForBuildingFromNavMesh(buildingId: string): RoomWithBuilding[] {
-  const rooms: RoomWithBuilding[] = [];
-  const navMesh = navMeshByBuilding[buildingId];
-  
-  if (!navMesh) {
+  const config = buildingConfigs[buildingId];
+  if (!config) {
     return [];
   }
 
-  const prefix = buildingPrefixes[buildingId] || '';
-  const roomIndex = navMesh.roomIndex || navMesh.roomToNode || {};
-
-  // Extract unique room-floor combinations
+  const rooms: RoomWithBuilding[] = [];
+  const roomIndex = config.navMesh.roomIndex || config.navMesh.roomToNode || {};
   const roomFloorSet = new Set<string>();
 
   for (const [roomLabel, nodeId] of Object.entries(roomIndex)) {
@@ -74,33 +75,22 @@ function getRoomsForBuildingFromNavMesh(buildingId: string): RoomWithBuilding[] 
 
         // Remove building prefix from room label
         const cleanLabel =
-          prefix && roomLabel.startsWith(prefix)
-            ? roomLabel.substring(prefix.length)
+          config.prefix && roomLabel.startsWith(config.prefix)
+            ? roomLabel.substring(config.prefix.length)
             : roomLabel;
 
         rooms.push({
           room: cleanLabel,
-          prefix,
+          prefix: config.prefix,
           buildingId,
           floor,
-          displayLabel: `${prefix}${cleanLabel} (Floor ${floor})`,
+          displayLabel: `${config.prefix}${cleanLabel} (Floor ${floor})`,
         });
       }
     }
   }
 
-  // Sort by floor, then room number
-  return rooms.sort((a, b) => {
-    const floorA = Number.parseInt(a.floor, 10);
-    const floorB = Number.parseInt(b.floor, 10);
-    if (floorA !== floorB) {
-      return floorA - floorB;
-    }
-    const numA = Number.parseFloat(a.room);
-    const numB = Number.parseFloat(b.room);
-    if (!Number.isNaN(numA) && !Number.isNaN(numB)) return numA - numB;
-    return a.room.localeCompare(b.room);
-  });
+  return rooms.sort(compareRooms);
 }
 
 /**

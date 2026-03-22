@@ -71,25 +71,28 @@ const RoomItem = React.memo(function RoomItem({ item, isSelected, onSelect }: Ro
 
 const ItemSeparator = () => <View style={styles.separator} />;
 
+// Helper to filter rooms based on query
+const filterRooms = (query: string, rooms: RoomWithBuilding[]): RoomWithBuilding[] => {
+    const q = query.trim().toUpperCase();
+    if (!q) return rooms;
+    return rooms.filter((room) => {
+        const roomLabel = `${room.prefix}${room.room}`.toUpperCase();
+        const floorLabel = `FLOOR ${room.floor}`;
+        return (
+            roomLabel.includes(q) ||
+            room.room.toUpperCase().includes(q) ||
+            floorLabel.includes(q)
+        );
+    });
+};
+
 export default function CrossBuildingRoomPicker({
     visible, title, buildingId, onSelect, onClose,
 }: CrossBuildingRoomPickerProps) {
     const [query, setQuery] = useState('');
     const allRoomsInBuilding = useRoomsForBuilding(buildingId);
 
-    const filtered = useMemo(() => {
-        const q = query.trim().toUpperCase();
-        if (!q) return allRoomsInBuilding;
-        return allRoomsInBuilding.filter((room) => {
-            const roomLabel = `${room.prefix}${room.room}`.toUpperCase();
-            const floorLabel = `FLOOR ${room.floor}`;
-            return (
-                roomLabel.includes(q) ||
-                room.room.toUpperCase().includes(q) ||
-                floorLabel.includes(q)
-            );
-        });
-    }, [query, allRoomsInBuilding]);
+    const filtered = useMemo(() => filterRooms(query, allRoomsInBuilding), [query, allRoomsInBuilding]);
 
     const handleSelect = useCallback(
         (selection: RoomSelection) => {
