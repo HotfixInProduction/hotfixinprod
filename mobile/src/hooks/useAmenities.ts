@@ -38,6 +38,29 @@ const AMENITY_TYPE_MAP: Record<string, { type: POIType; amenityKind: string; lab
 };
 
 /**
+ * Parses a <g> tag to extract element id and position
+ */
+function parseGTag(gTag: string): { elementId: string; x: number; y: number } | null {
+    const idMatch = gTag.match(/id="([^"]{1,100})"/);
+    if (!idMatch) return null;
+
+    const transformMatch = gTag.match(/transform="translate\(([^,)]{1,50}),\s*([^)]{1,50})\)"/);
+    if (!transformMatch) return null;
+
+    const x = parseFloat(transformMatch[1]);
+    const y = parseFloat(transformMatch[2]);
+
+    return isNaN(x) || isNaN(y) ? null : { elementId: idMatch[1], x, y };
+}
+
+/**
+ * Finds matching amenity type info for an element id
+ */
+function findAmenityInfo(elementId: string) {
+    return Object.values(AMENITY_TYPE_MAP).find(info => elementId.startsWith(Object.keys(AMENITY_TYPE_MAP).find(key => elementId.startsWith(key)) || ''));
+}
+
+/**
  * Extracts amenity positions from SVG content
  */
 export function useAmenities(svgContent: string | undefined): AmenityElement[] {
@@ -45,10 +68,8 @@ export function useAmenities(svgContent: string | undefined): AmenityElement[] {
         if (!svgContent) return [];
         
         const amenities: AmenityElement[] = [];
-        
-        // Parse amenity positions from SVG without regex to prevent ReDoS
-        // Find all <g> elements and extract id and translate(x, y) values
         let searchIndex = 0;
+        
         while (true) {
             const gStart = svgContent.indexOf('<g', searchIndex);
             if (gStart === -1) break;
@@ -57,43 +78,22 @@ export function useAmenities(svgContent: string | undefined): AmenityElement[] {
             if (gEnd === -1) break;
             
             const gTag = svgContent.substring(gStart, gEnd + 1);
+            const parsed = parseGTag(gTag);
             
-            // Extract id
-            const idMatch = gTag.match(/id="([^"]{1,100})"/);
-            if (!idMatch) {
-                searchIndex = gEnd + 1;
-                continue;
-            }
-            const elementId = idMatch[1];
-            
-            // Extract transform translate values
-            const transformMatch = gTag.match(/transform="translate\(([^,)]{1,50}),\s*([^)]{1,50})\)"/);
-            if (!transformMatch) {
-                searchIndex = gEnd + 1;
-                continue;
-            }
-            
-            const x = parseFloat(transformMatch[1]);
-            const y = parseFloat(transformMatch[2]);
-            
-            if (isNaN(x) || isNaN(y)) {
-                searchIndex = gEnd + 1;
-                continue;
-            }
-            
-            // Try to match the element ID to amenity type
-            for (const [key, info] of Object.entries(AMENITY_TYPE_MAP)) {
-                if (elementId.startsWith(key)) {
-                    amenities.push({
-                        id: elementId,
-                        type: info.type,
-                        amenityKind: info.amenityKind,
-                        x,
-                        y,
-                        label: info.label,
-                        description: info.description,
-                    });
-                    break;
+            if (parsed) {
+                for (const [key, info] of Object.entries(AMENITY_TYPE_MAP)) {
+                    if (parsed.elementId.startsWith(key)) {
+                        amenities.push({
+                            id: parsed.elementId,
+                            type: info.type,
+                            amenityKind: info.amenityKind,
+                            x: parsed.x,
+                            y: parsed.y,
+                            label: info.label,
+                            description: info.description,
+                        });
+                        break;
+                    }
                 }
             }
             
