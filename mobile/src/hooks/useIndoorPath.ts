@@ -159,13 +159,15 @@ export function useIndoorPath(
     
     // Cross-building or same-building navigation
     if (startBuildingId !== endBuildingId) {
-      return findCrossBuildingPath(
-        buildingId, _floorLevel, startRoom, endRoom,
-        startBuildingId, endBuildingId, accessibleOnly
-      );
+        console.log(`[useIndoorPath] Cross-building navigation requested: ${startBuildingId} -> ${endBuildingId}`);
+        return findCrossBuildingPath(
+            buildingId, _floorLevel, startRoom, endRoom,
+            startBuildingId, endBuildingId, accessibleOnly
+        );
+    } else {
+        console.log(`[useIndoorPath] Same building navigation requested: ${startBuildingId} -> ${endBuildingId}`);
+        return findPathBetweenRooms(buildingId, _floorLevel, startRoom, endRoom, accessibleOnly);
     }
-    
-    return findPathBetweenRooms(buildingId, _floorLevel, startRoom, endRoom, accessibleOnly);
   }, [buildingId, _floorLevel, startRoom, endRoom, options?.accessibleOnly, options?.startBuildingId, options?.endBuildingId]);
 }
 

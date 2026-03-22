@@ -158,6 +158,7 @@ function CrossBuildingIndicator({
 
 export default function FloorPlanViewer({
     building,
+    destBuildingId,
     floorLevel,
     onClose,
     startRoom: startRoomProp = '829',
@@ -224,7 +225,6 @@ export default function FloorPlanViewer({
 
     // Determine building IDs for cross-building navigation
     const startBuildingId = startRoomSelection?.buildingId ?? building?.id;
-    const destBuildingId = destinationRoomSelection?.buildingId ?? building?.id;
     
     // Find path (supports multi-floor for Hall Building and cross-building navigation)
     const path = useIndoorPath(

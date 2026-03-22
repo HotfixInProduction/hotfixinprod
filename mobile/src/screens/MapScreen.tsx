@@ -581,6 +581,7 @@ export default function MapScreen() {
       {showFloorPlan && (
         <FloorPlanViewer
           building={selectedBuilding}
+          destBuildingId={destination?.name}
           onClose={() => setShowFloorPlan(false)}
           startRoomSelection={startRoomSelection}
           destinationRoomSelection={destinationRoomSelection}
