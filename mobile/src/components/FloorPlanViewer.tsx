@@ -9,7 +9,6 @@ import { useFloorPlanState } from '../hooks/useFloorPlanState';
 import { useRoomList } from '../hooks/useRoomList';
 import { useIndoorPath, useSvgPathForFloor, usePathFloors } from '../hooks/useIndoorPath';
 import { useProcessedSvg } from '../hooks/useProcessedSvg';
-import RoomPickerModal from './RoomPickerModal';
 import CrossBuildingRoomPicker from './CrossBuildingRoomPicker';
 import { Building, RoomSelection } from '../types/building';
 

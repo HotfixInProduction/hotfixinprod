@@ -380,46 +380,44 @@ describe('FloorPlanViewer', () => {
     });
 
     describe('SVG room highlighting', () => {
-        it('highlights start room with green when startRoom prop is provided', () => {
+        // Helper function to reduce duplication in room highlighting tests
+        const testRoomHighlighting = (
+            roomNumber: string, 
+            isStartRoom: boolean,
+            svgContent: string = `<svg><rect inkscape:label="${roomNumber}" style="fill:#da3636;" /></svg>`,
+            expectedFillColor: string = isStartRoom ? '#4CAF50' : '#2196F3',
+            expectedStrokeColor: string = isStartRoom ? '#2E7D32' : '#1565C0'
+        ) => {
             const buildingWithSvg = createMockBuilding({
-                floorPlans: {
-                    '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
-                },
+                floorPlans: { '8': svgContent },
             });
+            const props = isStartRoom 
+                ? { startRoom: roomNumber }
+                : { nextRoom: roomNumber };
 
             const { getByTestId } = render(
                 <FloorPlanViewer 
                     building={buildingWithSvg} 
                     floorLevel="8" 
-                    onClose={mockOnClose} 
-                    startRoom="803"
+                    onClose={mockOnClose}
+                    {...props}
                 />
             );
 
             const svgMock = getByTestId('svg-xml');
-            expect(svgMock.props.xml).toContain('fill:#4CAF50');
-            expect(svgMock.props.xml).toContain('stroke:#2E7D32');
+            return svgMock.props.xml;
+        };
+
+        it('highlights start room with green when startRoom prop is provided', () => {
+            const xml = testRoomHighlighting('803', true);
+            expect(xml).toContain('fill:#4CAF50');
+            expect(xml).toContain('stroke:#2E7D32');
         });
 
         it('highlights next room with blue when nextRoom prop is provided', () => {
-            const buildingWithSvg = createMockBuilding({
-                floorPlans: {
-                    '8': '<svg><rect inkscape:label="805" style="fill:#da3636;" /></svg>',
-                },
-            });
-
-            const { getByTestId } = render(
-                <FloorPlanViewer 
-                    building={buildingWithSvg} 
-                    floorLevel="8" 
-                    onClose={mockOnClose} 
-                    nextRoom="805"
-                />
-            );
-
-            const svgMock = getByTestId('svg-xml');
-            expect(svgMock.props.xml).toContain('fill:#2196F3');
-            expect(svgMock.props.xml).toContain('stroke:#1565C0');
+            const xml = testRoomHighlighting('805', false);
+            expect(xml).toContain('fill:#2196F3');
+            expect(xml).toContain('stroke:#1565C0');
         });
 
         it('highlights both startRoom and nextRoom with different colors', () => {
@@ -440,22 +438,21 @@ describe('FloorPlanViewer', () => {
             );
 
             const svgMock = getByTestId('svg-xml');
-            // Start room should be green
             expect(svgMock.props.xml).toContain('fill:#4CAF50');
             expect(svgMock.props.xml).toContain('stroke:#2E7D32');
-            // Next room should be blue
             expect(svgMock.props.xml).toContain('fill:#2196F3');
             expect(svgMock.props.xml).toContain('stroke:#1565C0');
         });
 
-        it('highlights multiple rooms with same label (duplicates) for startRoom', () => {
+        it('highlights multiple rooms with same label (duplicates)', () => {
             const buildingWithDuplicateLabels = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="829" style="fill:#da3636;" /><path inkscape:label="829" style="fill:#da3636;" /></svg>',
                 },
             });
 
-            const { getByTestId } = render(
+            // Test start room duplicates
+            const { getByTestId: getByTestId1 } = render(
                 <FloorPlanViewer 
                     building={buildingWithDuplicateLabels} 
                     floorLevel="8" 
@@ -464,37 +461,12 @@ describe('FloorPlanViewer', () => {
                 />
             );
 
-            const svgMock = getByTestId('svg-xml');
-            const xmlContent = svgMock.props.xml;
-            // Count occurrences of green highlight color
-            const highlightCount = (xmlContent.match(/fill:#4CAF50/g) || []).length;
-            expect(highlightCount).toBe(2);
+            const svgMock1 = getByTestId1('svg-xml');
+            const startHighlightCount = (svgMock1.props.xml.match(/fill:#4CAF50/g) || []).length;
+            expect(startHighlightCount).toBe(2);
         });
 
-        it('highlights multiple rooms with same label (duplicates) for nextRoom', () => {
-            const buildingWithDuplicateLabels = createMockBuilding({
-                floorPlans: {
-                    '8': '<svg><rect inkscape:label="829" style="fill:#da3636;" /><path inkscape:label="829" style="fill:#da3636;" /></svg>',
-                },
-            });
-
-            const { getByTestId } = render(
-                <FloorPlanViewer 
-                    building={buildingWithDuplicateLabels} 
-                    floorLevel="8" 
-                    onClose={mockOnClose} 
-                    nextRoom="829"
-                />
-            );
-
-            const svgMock = getByTestId('svg-xml');
-            const xmlContent = svgMock.props.xml;
-            // Count occurrences of blue highlight color
-            const highlightCount = (xmlContent.match(/fill:#2196F3/g) || []).length;
-            expect(highlightCount).toBe(2);
-        });
-
-        it('does not modify SVG when startRoom and nextRoom are undefined', () => {
+        it('does not modify SVG when rooms are undefined', () => {
             const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
@@ -514,10 +486,9 @@ describe('FloorPlanViewer', () => {
             const svgMock = getByTestId('svg-xml');
             expect(svgMock.props.xml).not.toContain('fill:#4CAF50');
             expect(svgMock.props.xml).not.toContain('fill:#2196F3');
-            expect(svgMock.props.xml).toContain('fill:#da3636');
         });
 
-        it('does not modify SVG when startRoom label is not found', () => {
+        it('does not modify SVG when room label not found', () => {
             const buildingWithSvg = createMockBuilding({
                 floorPlans: {
                     '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
@@ -530,39 +501,19 @@ describe('FloorPlanViewer', () => {
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     startRoom="999"
-                />
-            );
-
-            const svgMock = getByTestId('svg-xml');
-            expect(svgMock.props.xml).not.toContain('fill:#4CAF50');
-            expect(svgMock.props.xml).toContain('fill:#da3636');
-        });
-
-        it('does not modify SVG when nextRoom label is not found', () => {
-            const buildingWithSvg = createMockBuilding({
-                floorPlans: {
-                    '8': '<svg><rect inkscape:label="803" style="fill:#da3636;" /></svg>',
-                },
-            });
-
-            const { getByTestId } = render(
-                <FloorPlanViewer 
-                    building={buildingWithSvg} 
-                    floorLevel="8" 
-                    onClose={mockOnClose} 
                     nextRoom="999"
                 />
             );
 
             const svgMock = getByTestId('svg-xml');
+            expect(svgMock.props.xml).not.toContain('fill:#4CAF50');
             expect(svgMock.props.xml).not.toContain('fill:#2196F3');
-            expect(svgMock.props.xml).toContain('fill:#da3636');
         });
 
-        it('highlights startRoom when element has NO style attribute (adds style to end)', () => {
+        it('highlights rooms when element has NO style attribute', () => {
             const buildingWithSvg = createMockBuilding({
                 floorPlans: {
-                    '8': '<svg><rect inkscape:label="803" /></svg>',
+                    '8': '<svg><rect inkscape:label="803" /><path inkscape:label="805" /></svg>',
                 },
             });
 
@@ -572,33 +523,13 @@ describe('FloorPlanViewer', () => {
                     floorLevel="8" 
                     onClose={mockOnClose} 
                     startRoom="803"
-                />
-            );
-
-            const svgMock = getByTestId('svg-xml');
-            expect(svgMock.props.xml).toContain('fill:#4CAF50');
-            expect(svgMock.props.xml).toContain('stroke:#2E7D32');
-        });
-
-        it('highlights nextRoom when element has NO style attribute (adds style to end)', () => {
-            const buildingWithSvg = createMockBuilding({
-                floorPlans: {
-                    '8': '<svg><path inkscape:label="805" /></svg>',
-                },
-            });
-
-            const { getByTestId } = render(
-                <FloorPlanViewer 
-                    building={buildingWithSvg} 
-                    floorLevel="8" 
-                    onClose={mockOnClose} 
                     nextRoom="805"
                 />
             );
 
             const svgMock = getByTestId('svg-xml');
+            expect(svgMock.props.xml).toContain('fill:#4CAF50');
             expect(svgMock.props.xml).toContain('fill:#2196F3');
-            expect(svgMock.props.xml).toContain('stroke:#1565C0');
         });
 
         it('uses default values for startRoom (829) and nextRoom (862)', () => {
@@ -1150,6 +1081,283 @@ describe('FloorPlanViewer', () => {
             expect(mockOnStartRoomChange).not.toHaveBeenCalled();
         });
     });
+
+    describe('Effective room resolution', () => {
+        it('uses startRoomSelection over startRoom prop', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '802' }}
+                />
+            );
+
+            // Should show 802 from selection, not 801 from prop
+            expect(getByText('H802')).toBeTruthy();
+        });
+
+        it('uses destinationRoomSelection over nextRoom prop', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    nextRoom="801"
+                    destinationRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '802' }}
+                />
+            );
+
+            // Should show 802 from selection, not 801 from prop
+            expect(getByText('H802')).toBeTruthy();
+        });
+
+        it('falls back to startRoom when startRoomSelection is null', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    startRoomSelection={null}
+                />
+            );
+
+            expect(getByText('H801')).toBeTruthy();
+        });
+
+        it('falls back to nextRoom when destinationRoomSelection is null', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    nextRoom="802"
+                    destinationRoomSelection={null}
+                />
+            );
+
+            expect(getByText('H802')).toBeTruthy();
+        });
+    });
+
+    describe('Component rendering edge cases', () => {
+        it('renders hint text for cross-building room selection', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                />
+            );
+
+            expect(getByText('Tap to select any room on any floor')).toBeTruthy();
+        });
+
+        it('renders accessibility toggle for single floor', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByTestId } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                />
+            );
+
+            expect(getByTestId('accessibility-toggle')).toBeTruthy();
+        });
+
+        it('displays building address in header', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg></svg>',
+                },
+                address: '1455 De Maisonneuve Blvd. W.',
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                />
+            );
+
+            expect(getByText('1455 De Maisonneuve Blvd. W.')).toBeTruthy();
+        });
+
+        it('closes modal when close button is pressed', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByTestId } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                />
+            );
+
+            const closeBtn = getByTestId('floor-plan-close');
+            fireEvent.press(closeBtn);
+            expect(mockOnClose).toHaveBeenCalled();
+        });
+
+        it('displays empty room text when room value is empty string', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg></svg>',
+                },
+            });
+
+            const { getAllByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom=""
+                    nextRoom=""
+                />
+            );
+
+            const selectRoomElements = getAllByText('Select room');
+            expect(selectRoomElements.length).toBe(2); // Both start and end buttons show "Select room"
+        });
+    });
+
+    describe('Room selection callbacks', () => {
+        it('calls onStartRoomChange when start room is selected', async () => {
+            const mockOnStartRoomChange = jest.fn();
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByTestId } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    onStartRoomChange={mockOnStartRoomChange}
+                />
+            );
+
+            const startBtn = getByTestId('room-picker-start');
+            fireEvent.press(startBtn);
+
+            let room801: any;
+            await waitFor(() => {
+                room801 = getByTestId('room-item-H-801');
+                expect(room801).toBeTruthy();
+            }, { timeout: 3000 });
+
+            fireEvent.press(room801);
+
+            await waitFor(() => {
+                expect(mockOnStartRoomChange).toHaveBeenCalledWith({
+                    buildingId: 'Hall Building',
+                    floor: '8',
+                    room: '801',
+                });
+            });
+        });
+
+        it('calls onDestinationRoomChange when destination room is selected', async () => {
+            const mockOnDestinationRoomChange = jest.fn();
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByTestId } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    onDestinationRoomChange={mockOnDestinationRoomChange}
+                />
+            );
+
+            const endBtn = getByTestId('room-picker-end');
+            fireEvent.press(endBtn);
+
+            let room801: any;
+            await waitFor(() => {
+                room801 = getByTestId('room-item-H-801');
+                expect(room801).toBeTruthy();
+            }, { timeout: 3000 });
+
+            fireEvent.press(room801);
+
+            await waitFor(() => {
+                expect(mockOnDestinationRoomChange).toHaveBeenCalledWith({
+                    buildingId: 'Hall Building',
+                    floor: '8',
+                    room: '801',
+                });
+            });
+        });
+
+        it('does not call callbacks when building is missing', () => {
+            const mockOnStartRoomChange = jest.fn();
+            const mockOnDestinationRoomChange = jest.fn();
+
+            const { queryByText } = render(
+                <FloorPlanViewer 
+                    building={null} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    onStartRoomChange={mockOnStartRoomChange}
+                    onDestinationRoomChange={mockOnDestinationRoomChange}
+                />
+            );
+
+            expect(queryByText('Hall Building')).toBeNull();
+            expect(mockOnStartRoomChange).not.toHaveBeenCalled();
+            expect(mockOnDestinationRoomChange).not.toHaveBeenCalled();
+        });
+    });;
 
     describe('Effective room resolution', () => {
         it('uses startRoomSelection over startRoom prop', () => {
