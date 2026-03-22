@@ -958,7 +958,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="MB"
                     floorLevel="8" 
                     onClose={mockOnClose}
                     startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '801' }}
@@ -983,7 +984,8 @@ describe('FloorPlanViewer', () => {
 
             const { getByText } = render(
                 <FloorPlanViewer 
-                    building={buildingWithRooms} 
+                    building={buildingWithRooms}
+                    destBuildingId="MB"
                     floorLevel="1" 
                     onClose={mockOnClose}
                     startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '801' }}
