@@ -660,7 +660,7 @@ export default function MapScreen() {
             onViewFloorPlan={selectedBuilding?.floorPlans ? () => setShowFloorPlan(true) : undefined}
           />
         </Animated.View>
-      )}}
+      )}
 
       {activeModal === 'routeInstructions' && (
         <RouteInstructions

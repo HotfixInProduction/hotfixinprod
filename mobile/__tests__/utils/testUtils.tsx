@@ -88,18 +88,19 @@ export const createVectorIconsMock = () => {
 
 export const createBuildingPolygonMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ onSelectBuilding, currentDelta, startBuildingId, destinationBuildingId }: any) => (
+  return ({ onSelectBuilding, currentDelta, startBuildingId, destinationBuildingId, disabled }: any) => (
     <View>
       <Text testID="building-polygon-current-delta">{currentDelta}</Text>
+      <Text testID="building-polygon-disabled">{String(disabled ?? false)}</Text>
       {startBuildingId && <Text testID="building-polygon-start">{startBuildingId}</Text>}
       {destinationBuildingId && <Text testID="building-polygon-destination">{destinationBuildingId}</Text>}
-      <TouchableOpacity testID="select-building" onPress={() => onSelectBuilding(mockBuilding)}>
+      <TouchableOpacity testID="select-building" onPress={() => !disabled && onSelectBuilding(mockBuilding)}>
         <Text>Select With Plan</Text>
       </TouchableOpacity>
-      <TouchableOpacity testID="select-building-no-plans" onPress={() => onSelectBuilding(mockBuildingNoPlans)}>
+      <TouchableOpacity testID="select-building-no-plans" onPress={() => !disabled && onSelectBuilding(mockBuildingNoPlans)}>
         <Text>Select No Plans</Text>
       </TouchableOpacity>
-      <TouchableOpacity testID="select-building-only-id" onPress={() => onSelectBuilding({ id: 'Only-ID-Building', name: '', location: { lat: 45.497, lng: -73.579 } } as any)}>
+      <TouchableOpacity testID="select-building-only-id" onPress={() => !disabled && onSelectBuilding({ id: 'Only-ID-Building', name: '', location: { lat: 45.497, lng: -73.579 } } as any)}>
         <Text>Select Only ID</Text>
       </TouchableOpacity>
     </View>
