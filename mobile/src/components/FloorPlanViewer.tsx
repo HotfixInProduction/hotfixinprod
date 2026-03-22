@@ -256,12 +256,6 @@ export default function FloorPlanViewer({
     const isCrossBuilding = startBuildingId !== destBuildingId;
     const isStartBuilding = building?.id === startBuildingId;
 
-    const displayDestRoom = isCrossBuilding && !destRoomBuildingLabel
-        ? 'Exit' // show "Exit" when destination is in another building
-        : effectiveDestRoom;
-
-    const displayDestPrefix = isCrossBuilding ? '' : buildingPrefix;
-
     if (!building || !rawSvgContent || !svgWithPaths) return null;
 
     return (
@@ -334,8 +328,8 @@ export default function FloorPlanViewer({
 
                             <RoomButton
                                 type="end"
-                                buildingPrefix={displayDestPrefix}
-                                effectiveRoom={displayDestRoom}
+                                buildingPrefix={buildingPrefix}
+                                effectiveRoom={effectiveDestRoom}
                                 buildingLabel={destRoomBuildingLabel}
                                 onPress={() => setRoomPickerOpen('end')}
                             />
