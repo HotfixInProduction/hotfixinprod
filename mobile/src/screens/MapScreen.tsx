@@ -386,12 +386,7 @@ export default function MapScreen() {
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
 
-const handleDirectionsViewFloorPlan = (buildingId: string, floor?: string) => {
-  const building = buildings.find(b => b.id === buildingId);
-  if (!building) return; // safety check
 
-  setDirectionsFloorPlan({ building, floor });
-};
 
   const activeModal = (() => {
     if (selectedBuilding) return 'buildingInfo';
@@ -683,7 +678,7 @@ const handleDirectionsViewFloorPlan = (buildingId: string, floor?: string) => {
           onClose={() => setShowInstructions(false)}
           onViewFloorPlan={(buildingId, floor) => {
             const building = buildings.find(b => b.id === buildingId);
-                console.log(buildingId, building, floor, 'BUILDING INFOOOO');
+
             if (!building) return;
             setDirectionsFloorPlan({ building, floor });
           }}
