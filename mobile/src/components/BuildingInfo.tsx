@@ -3,19 +3,36 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { Building } from '../types/building';
+import type { Place } from './BuildingSelector/StartDestinationPicker';
 
 type Props = Readonly<{
     building: Building | null;
     onClose: () => void;
     onViewFloorPlan?: () => void;
+    onSetAsDestination?: (destination: Place) => void;
+    hasUserLocation?: boolean;
 }>;
 
-export default function BuildingInfo({ building, onClose, onViewFloorPlan }: Props) {
+export default function BuildingInfo({ building, onClose, onViewFloorPlan, onSetAsDestination, hasUserLocation = false }: Props) {
     if (!building) return null;
 
     const hasDepartments = (building.departments?.length ?? 0) > 0;
     const hasServices = (building.services?.length ?? 0) > 0;
     const hasFloorPlans = (building.floorPlans && Object.keys(building.floorPlans).length > 0);
+
+    const handleSetAsDestination = () => {
+        if (onSetAsDestination) {
+            const destination: Place = {
+                name: building.id,
+                address: building.address || building.id,
+                location: {
+                    lat: building.labelCoord.latitude,
+                    lng: building.labelCoord.longitude,
+                },
+            };
+            onSetAsDestination(destination);
+        }
+    };
 
     return (
         <View style={styles.buildingModal}>
@@ -56,6 +73,18 @@ export default function BuildingInfo({ building, onClose, onViewFloorPlan }: Pro
                 >
                     <MaterialCommunityIcons name="floor-plan" size={18} color="#fff" style={{ marginRight: 6 }} />
                     <Text style={styles.floorPlanButtonText}>View Floor Plan</Text>
+                </TouchableOpacity>
+            )}
+
+            {onSetAsDestination && hasUserLocation && (
+                <TouchableOpacity
+                    style={styles.directionsButton}
+                    onPress={handleSetAsDestination}
+                    activeOpacity={0.85}
+                    testID="building-set-destination-button"
+                >
+                    <MaterialIcons name="directions" size={20} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.directionsButtonText}>Set as Destination</Text>
                 </TouchableOpacity>
             )}
 
@@ -164,6 +193,21 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     floorPlanButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    directionsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#912338',
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        marginBottom: 12,
+    },
+    directionsButtonText: {
         color: '#fff',
         fontSize: 14,
         fontWeight: '600',

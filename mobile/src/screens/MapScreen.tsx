@@ -18,6 +18,13 @@ import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
 import { RoomSelection } from '../types/building';
 import { buildings } from '../data/buildings';
+import { outdoorPOIs } from '../data/outdoorPOI';
+import type { OutdoorPOI } from '../data/outdoorPOI';
+import POIInfoPanel from '../components/POIInfoPanel';
+import POIFilter from '../components/POIFilter';
+import NearestPOIBanner from '../components/NearestPOIBanner';
+import { findNearestPOI } from '../utils/distanceUtils';
+import { getPOICategoryIcon, getPOICategoryLabel, getPOICategoryColor } from '../utils/poiMarkerUtils';
 import {
   CAMPUSES,
   INITIAL_REGION,
@@ -62,6 +69,15 @@ export default function MapScreen() {
   const [directionsGoogle, setDirectionsGoogle] = useState<any>(null);
   const processedSteps = useRouteProcessor(directionsGoogle);
   const googleMapsApiKey = Constants.expoConfig?.extra?.googleApiKey as string | undefined;
+  
+  // POI state
+  const [selectedPOI, setSelectedPOI] = useState<OutdoorPOI | null>(null);
+  const [showPOIFilter, setShowPOIFilter] = useState(false);
+  const [poiFilters, setPoiFilters] = useState<Set<OutdoorPOI['category']>>(
+    new Set(['food', 'cafe', 'restroom', 'parking', 'bike_rack', 'emergency'])
+  );
+  const [nearestPOI, setNearestPOI] = useState<(OutdoorPOI & { distance: number }) | null>(null);
+  const poiInfoSlideAnim = useRef(new Animated.Value(400)).current;
   
   // Room selection state for cross-building persistence
   const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
@@ -236,6 +252,35 @@ export default function MapScreen() {
     }
   }, [buildingSelectorVisible]);
 
+  // Handle POI info panel animation
+  useEffect(() => {
+    if (selectedPOI) {
+      Animated.spring(poiInfoSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 10,
+      }).start();
+    } else {
+      Animated.timing(poiInfoSlideAnim, {
+        toValue: 400,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [selectedPOI]);
+
+  // Calculate nearest POI when user location changes
+  useEffect(() => {
+    const filteredPOIsForCampus = getFilteredPOIs();
+    const nearest = findNearestPOI(userLocation, filteredPOIsForCampus, 500);
+    if (nearest) {
+      setNearestPOI(nearest as OutdoorPOI & { distance: number });
+    } else {
+      setNearestPOI(null);
+    }
+  }, [userLocation, selectedCampus, poiFilters]);
+
   // auto-fit map to show both start and destination
   useEffect(() => {
     if (!mapRef.current) return;
@@ -380,6 +425,74 @@ export default function MapScreen() {
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
 
+  // Helper function to get POIs for current campus and active filters
+  const getFilteredPOIs = useCallback(() => {
+    return outdoorPOIs.filter(
+      poi => poi.campus === selectedCampus && poiFilters.has(poi.category)
+    );
+  }, [selectedCampus, poiFilters]);
+
+  // Helper function to get POI color based on category
+  const getPOIMarkerColor = useCallback((category: OutdoorPOI['category'], isNearest: boolean = false): string => {
+    return getPOICategoryColor(category, isNearest);
+  }, []);
+
+  const handlePOISelect = useCallback((poi: OutdoorPOI) => {
+    setSelectedPOI(poi);
+  }, []);
+
+  const handleClosePOI = useCallback(() => {
+    setSelectedPOI(null);
+  }, []);
+
+  const handleSetPOIAsDestination = useCallback((poi: OutdoorPOI) => {
+    if (!userLocation) return;
+
+    // Set current location as start
+    const startPlace: Place = {
+      name: 'Current Location',
+      address: 'Your Location',
+      location: {
+        lat: userLocation.latitude,
+        lng: userLocation.longitude,
+      },
+    };
+    setStart(startPlace);
+
+    // Set POI as destination
+    const destinationPlace: Place = {
+      name: poi.name,
+      address: poi.address || poi.name,
+      location: {
+        lat: poi.coordinates.latitude,
+        lng: poi.coordinates.longitude,
+      },
+    };
+    setDestination(destinationPlace);
+
+    // Close POI panel
+    setSelectedPOI(null);
+  }, [userLocation]);
+
+  const handleSetBuildingAsDestination = useCallback((destination: Place) => {
+    if (!userLocation) return;
+
+    // Set current location as start
+    const startPlace: Place = {
+      name: 'Current Location',
+      address: 'Your Location',
+      location: {
+        lat: userLocation.latitude,
+        lng: userLocation.longitude,
+      },
+    };
+    setStart(startPlace);
+    setDestination(destination);
+
+    // Close building panel
+    setSelectedBuilding(null);
+  }, [userLocation]);
+
   const activeModal = (() => {
     if (selectedBuilding) return 'buildingInfo';
     if (showInstructions) return 'routeInstructions';
@@ -407,7 +520,7 @@ export default function MapScreen() {
           currentDelta={currentDelta}
           startBuildingId={start?.name || null}
           destinationBuildingId={destination?.name || null}
-          disabled={selectedBuilding !== null}
+          disabled={selectedBuilding !== null || activeModal === 'routeInfo'}
         />
 
         {start && destination && googleMapsApiKey && (
@@ -458,6 +571,25 @@ export default function MapScreen() {
             )}
           </>
         )}
+
+        {/* POI Markers */}
+        {getFilteredPOIs().map((poi) => {
+          const isNearest = nearestPOI?.id === poi.id;
+          const icon = getPOICategoryIcon(poi.category);
+          const label = getPOICategoryLabel(poi.category);
+          return (
+            <Marker
+              key={poi.id}
+              coordinate={poi.coordinates}
+              title={`${icon} ${poi.name}`}
+              description={`${label}${isNearest ? ' - Nearest!' : ''}`}
+              pinColor={getPOIMarkerColor(poi.category, isNearest)}
+              onPress={() => handlePOISelect(poi)}
+              testID={`poi-marker-${poi.id}`}
+              opacity={1}
+            />
+          );
+        })}
 
         {start && (
           <Marker coordinate={getCoordinates(start)!} title="Start" pinColor="blue" testID="start-marker" />
@@ -515,19 +647,40 @@ export default function MapScreen() {
           </View>
         </View>
 
+        {/* Nearest POI Banner */}
+        <NearestPOIBanner
+          poi={nearestPOI}
+          onPress={() => {
+            if (nearestPOI) {
+              handlePOISelect(nearestPOI);
+            }
+          }}
+        />
+
         {!showCompactRouteHeader && (
-          <TouchableOpacity
-            style={styles.buildingSelectorToggleButton}
-            onPress={toggleBuildingSelector}
-            activeOpacity={0.7}
-            testID="building-selector-toggle"
-          >
-            <MaterialIcons
-              name={buildingSelectorVisible ? 'close' : 'directions'}
-              size={24}
-              color="#fff"
-            />
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.buildingSelectorToggleButton}
+              onPress={toggleBuildingSelector}
+              activeOpacity={0.7}
+              testID="building-selector-toggle"
+            >
+              <MaterialIcons
+                name={buildingSelectorVisible ? 'close' : 'directions'}
+                size={24}
+                color="#fff"
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.poiFilterButton}
+              onPress={() => setShowPOIFilter(true)}
+              activeOpacity={0.7}
+              testID="poi-filter-toggle"
+            >
+              <MaterialIcons name="filter-list" size={24} color="#fff" />
+            </TouchableOpacity>
+          </>
         )}
       </SafeAreaView>
 
@@ -658,6 +811,8 @@ export default function MapScreen() {
             building={selectedBuilding}
             onClose={handleCloseBuilding}
             onViewFloorPlan={selectedBuilding?.floorPlans ? () => setShowFloorPlan(true) : undefined}
+            onSetAsDestination={handleSetBuildingAsDestination}
+            hasUserLocation={userLocation !== null}
           />
         </Animated.View>
       )}
@@ -766,6 +921,24 @@ export default function MapScreen() {
         </View>
       </Modal>
 
+      {/* POI Info Panel */}
+      <POIInfoPanel
+        poi={selectedPOI}
+        onClose={handleClosePOI}
+        slideAnim={poiInfoSlideAnim}
+        isVisible={selectedPOI !== null}
+        onSetAsDestination={handleSetPOIAsDestination}
+        hasUserLocation={userLocation !== null}
+      />
+
+      {/* POI Filter Modal */}
+      <POIFilter
+        visible={showPOIFilter}
+        onClose={() => setShowPOIFilter(false)}
+        selectedFilters={poiFilters}
+        onFilterChange={setPoiFilters}
+      />
+
       <StatusBar style="auto" />
     </View>
   );
@@ -796,6 +969,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 10, // Adjusted to align horizontally with the campus selector
     top: 55, // Same vertical alignment as campus selector
+    backgroundColor: '#912338',
+    borderRadius: 24,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 10,
+  },
+  poiFilterButton: {
+    position: 'absolute',
+    right: 10,
+    top: 55,
     backgroundColor: '#912338',
     borderRadius: 24,
     width: 48,
