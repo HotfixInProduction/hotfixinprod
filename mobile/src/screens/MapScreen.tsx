@@ -387,7 +387,7 @@ export default function MapScreen() {
   }
 
 const handleDirectionsViewFloorPlan = (buildingId: string, floor?: string) => {
-  const building = allBuildings.find(b => b.id === buildingId);
+  const building = buildings.find(b => b.id === buildingId);
   if (!building) return; // safety check
 
   setDirectionsFloorPlan({ building, floor });
