@@ -36,23 +36,24 @@ describe('RouteInstructions Component', () => {
     }
   ];
 
-  const mockStart = { name: 'Hall Building', buildingId: 'hall', floor: '1' };
-  const mockDestination = { name: 'Vanier Extension', buildingId: 'vanier', floor: '2' };
+
 
   it('formats and displays route instructions', () => {
     render(
-      <RouteInstructions 
+      <RouteInstructions
         instructions={mockInstructions}
-        start={mockStart}
-        destination={mockDestination}
+        start={start}
+        destination={destination}
         onClose={mockOnClose}
         onViewFloorPlan={mockOnViewFloorPlan}
       />
     );
-    expect(screen.getByText(/Exit Hall Building/)).toBeTruthy();
+
+    expect(screen.getByText(/Library/)).toBeTruthy();
+    expect(screen.getByText(/Science Hall/)).toBeTruthy();
+
     expect(screen.getByText(/Head north on Rue Guy/)).toBeTruthy();
     expect(screen.getByText(/Turn right onto Rue Sainte-Catherine/)).toBeTruthy();
     expect(screen.getByText(/Destination will be on the left/)).toBeTruthy();
-    expect(screen.getByText(/Enter Vanier Extension/)).toBeTruthy();
   });
 });
