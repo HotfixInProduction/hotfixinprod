@@ -25,6 +25,74 @@ jest.mock('react-native-config', () => ({ GOOGLE_MAPS_ANDROID_API_KEY: 'mock-goo
 jest.mock('react-native-maps-directions', () => require('./utils/testUtils').createMapDirectionsMock());
 jest.mock('../src/components/RouteInfo', () => require('./utils/testUtils').createRouteInfoMock());
 jest.mock('../src/components/RouteInstructions', () => require('./utils/testUtils').createRouteInstructionsMock());
+jest.mock('../src/components/POIInfoPanel', () => {
+  const React = require('react');
+  const { View, Button, Text } = require('react-native');
+  return function MockPOIInfoPanel(props: any) {
+    return props.poi ? (
+      <View testID="poi-info-panel">
+        <Text>{props.poi.name}</Text>
+        <Button testID="poi-close-button" title="Close" onPress={props.onClose} />
+        {props.onSetAsDestination && props.hasUserLocation && (
+          <Button testID="poi-set-destination-button" title="Set Destination" onPress={() => props.onSetAsDestination(props.poi)} />
+        )}
+      </View>
+    ) : null;
+  };
+});
+jest.mock('../src/components/POIFilter', () => {
+  const React = require('react');
+  const { View, Button, Text, TouchableOpacity } = require('react-native');
+  return function MockPOIFilter(props: any) {
+    return (
+      <View testID="poi-filter-panel">
+        <Button testID="poi-filter-overlay" title="Overlay" onPress={props.onClose} />
+        <View testID="poi-filter-food">
+          <TouchableOpacity testID="poi-filter-toggle-food" onPress={() => props.onFilterChange('food')}>
+            <Text>Food</Text>
+          </TouchableOpacity>
+        </View>
+        <View testID="poi-filter-cafe">
+          <TouchableOpacity testID="poi-filter-toggle-cafe" onPress={() => props.onFilterChange('cafe')}>
+            <Text>Cafe</Text>
+          </TouchableOpacity>
+        </View>
+        <View testID="poi-filter-restroom">
+          <TouchableOpacity testID="poi-filter-toggle-restroom" onPress={() => props.onFilterChange('restroom')}>
+            <Text>Restroom</Text>
+          </TouchableOpacity>
+        </View>
+        <View testID="poi-filter-parking">
+          <TouchableOpacity testID="poi-filter-toggle-parking" onPress={() => props.onFilterChange('parking')}>
+            <Text>Parking</Text>
+          </TouchableOpacity>
+        </View>
+        <View testID="poi-filter-bike_rack">
+          <TouchableOpacity testID="poi-filter-toggle-bike_rack" onPress={() => props.onFilterChange('bike_rack')}>
+            <Text>Bike Rack</Text>
+          </TouchableOpacity>
+        </View>
+        <View testID="poi-filter-emergency">
+          <TouchableOpacity testID="poi-filter-toggle-emergency" onPress={() => props.onFilterChange('emergency')}>
+            <Text>Emergency</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+});
+jest.mock('../src/components/NearestPOIBanner', () => {
+  const React = require('react');
+  const { View, Button, Text } = require('react-native');
+  return function MockNearestPOIBanner(props: any) {
+    return props.poi ? (
+      <View testID="nearest-poi-banner">
+        <Button title="Nearest POI" onPress={props.onPress} />
+        <Text>{props.poi.name}</Text>
+      </View>
+    ) : null;
+  };
+});
 jest.mock('expo-constants', () => {
   const mockConstants = {
     expoConfig: {
@@ -54,6 +122,37 @@ jest.mock('../src/data/buildings', () => ({
     }
   ]
 }));
+jest.mock('../src/data/outdoorPOI', () => ({
+  outdoorPOIs: [
+    {
+      id: 'poi_food_1',
+      name: 'Thai Express',
+      category: 'food',
+      coordinates: { latitude: 45.497, longitude: -73.579 },
+      address: '1240 De Maisonneuve Blvd W',
+      description: 'Thai cuisine and quick service',
+      campus: 'downtown',
+      hours: 'Mon-Fri 11am-9pm, Sat 12pm-9pm',
+      phone: '(514) 555-0100'
+    },
+    {
+      id: 'poi_cafe_1',
+      name: 'Starbucks',
+      category: 'cafe',
+      coordinates: { latitude: 45.498, longitude: -73.580 },
+      address: '1250 De Maisonneuve Blvd W',
+      description: 'Coffee shop',
+      campus: 'downtown',
+    },
+    {
+      id: 'poi_rest_1',
+      name: 'Restroom - Hall',
+      category: 'restroom',
+      coordinates: { latitude: 45.496, longitude: -73.578 },
+      campus: 'downtown',
+    }
+  ]
+}));
 jest.mock('../src/components/FloorPlanViewer', () => {
   const React = require('react');
   const { View, Button, Text } = require('react-native');
@@ -72,6 +171,27 @@ jest.mock('../src/components/FloorPlanViewer', () => {
     );
   };
 });
+
+// Mock for POI filter button - will be added to the MapScreen mock
+const createMapMockWithPOI = () => {
+  const mapMock = require('./utils/testUtils').createMapMock();
+  return (props: any) => {
+    const View = require('react-native').View;
+    const Button = require('react-native').Button;
+    const Text = require('react-native').Text;
+    const React = require('react');
+    const MapComponent = mapMock;
+    
+    return (
+      <View>
+        <MapComponent {...props} />
+        <Button testID="poi-filter-button" title="Filter POI" onPress={() => {}} />
+        <Button testID="poi-marker-0" title="POI 0" onPress={() => {}} />
+        <Button testID="poi-marker-food-0" title="Food POI" onPress={() => {}} />
+      </View>
+    );
+  };
+};
 jest.spyOn(Alert, 'alert');
 
 suppressActWarnings();
@@ -1348,5 +1468,123 @@ describe('Building Polygon Click Prevention', () => {
     await waitFor(() => {
       expect(getByTestId('building-polygon-disabled')).toHaveTextContent('false');
     });
+  });
+});
+
+describe('Outdoor POI Functionality', () => {
+  it('renders POI filter button', () => {
+    const { getByTestId } = render(<MapScreen />);
+    expect(getByTestId('poi-filter-toggle')).toBeTruthy();
+  });
+
+  it('selects POI when marker is pressed', async () => {
+    const { getByTestId } = render(<MapScreen />);
+    
+    fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+    
+    await waitFor(() => {
+      expect(getByTestId('poi-info-panel')).toBeTruthy();
+    });
+  });
+
+  it('displays POI info panel with correct details', async () => {
+    const { getByTestId, getByText } = render(<MapScreen />);
+    
+    fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+    
+    await waitFor(() => {
+      expect(getByText('Thai Express')).toBeTruthy();
+    });
+  });
+
+  it('closes POI info panel when close button is pressed', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    
+    fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+    
+    await waitFor(() => {
+      expect(getByTestId('poi-info-panel')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('poi-close-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('poi-info-panel')).toBeNull();
+    });
+  });
+
+  it('sets POI as destination when button is tapped', async () => {
+    mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+    mockGetCurrentPosition.mockResolvedValue({
+      coords: { latitude: 45.5, longitude: -73.58 },
+    });
+
+    const { getByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(getByTestId('poi-marker-poi_food_1')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+
+    await waitFor(() => {
+      expect(getByTestId('poi-info-panel')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('poi-set-destination-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+  });
+
+  it('shows nearest POI banner when user has location', async () => {
+    mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+    mockGetCurrentPosition.mockResolvedValue({
+      coords: { latitude: 45.497, longitude: -73.579 },
+    });
+
+    const { getByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(getByTestId('nearest-poi-banner')).toBeTruthy();
+    });
+  });
+
+  it('opens POI info panel when nearest POI banner is tapped', async () => {
+    mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+    mockGetCurrentPosition.mockResolvedValue({
+      coords: { latitude: 45.497, longitude: -73.579 },
+    });
+
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(getByTestId('nearest-poi-banner')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('nearest-poi-banner'));
+
+    await waitFor(() => {
+      expect(getByTestId('poi-info-panel')).toBeTruthy();
+    });
+  });
+
+  it('does not show set as destination button without user location', async () => {
+    mockRequestForegroundPermissions.mockResolvedValue({ status: 'denied' });
+
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(getByTestId('poi-marker-poi_food_1')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+
+    await waitFor(() => {
+      expect(getByTestId('poi-info-panel')).toBeTruthy();
+    });
+
+    expect(queryByTestId('poi-set-destination-button')).toBeNull();
   });
 });

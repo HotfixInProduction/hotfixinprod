@@ -140,4 +140,149 @@ describe('POIInfoPanel', () => {
     );
     expect(queryByTestId('poi-set-destination-button')).toBeNull();
   });
+
+  describe('Optional POI fields', () => {
+    it('renders without address', () => {
+      const poiNoAddress = { ...mockPOIWithDistance, address: undefined };
+      const { queryByText } = render(
+        <POIInfoPanel 
+          poi={poiNoAddress} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={true}
+        />
+      );
+      expect(queryByText('1240 De Maisonneuve Blvd W')).toBeNull();
+    });
+
+    it('renders without description', () => {
+      const poiNoDescription = { ...mockPOIWithDistance, description: undefined };
+      const { queryByText, getByText } = render(
+        <POIInfoPanel 
+          poi={poiNoDescription} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={true}
+        />
+      );
+      expect(queryByText('Thai cuisine and quick service')).toBeNull();
+      expect(getByText('Thai Express')).toBeTruthy();
+    });
+
+    it('renders without hours', () => {
+      const poiNoHours = { ...mockPOIWithDistance, hours: undefined };
+      const { queryByText } = render(
+        <POIInfoPanel 
+          poi={poiNoHours} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={true}
+        />
+      );
+      expect(queryByText('Mon-Fri 11am-9pm, Sat 12pm-9pm')).toBeNull();
+    });
+
+    it('renders without phone', () => {
+      const poiNoPhone = { ...mockPOIWithDistance, phone: undefined };
+      const { queryByText } = render(
+        <POIInfoPanel 
+          poi={poiNoPhone} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={true}
+        />
+      );
+      expect(queryByText('(514) 555-0100')).toBeNull();
+    });
+
+    it('renders with all optional fields', () => {
+      const { getByText } = render(
+        <POIInfoPanel 
+          poi={mockPOIWithDistance} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={true}
+        />
+      );
+      expect(getByText('1240 De Maisonneuve Blvd W')).toBeTruthy();
+      expect(getByText('Thai cuisine and quick service')).toBeTruthy();
+      expect(getByText('Mon-Fri 11am-9pm, Sat 12pm-9pm')).toBeTruthy();
+      expect(getByText('(514) 555-0100')).toBeTruthy();
+    });
+
+    it('renders minimal POI with only required fields', () => {
+      const minimalPOI: OutdoorPOI & { distance?: number } = {
+        id: 'poi_min_1',
+        name: 'Minimal POI',
+        category: 'food',
+        coordinates: { latitude: 45.5, longitude: -73.5 },
+        campus: 'downtown',
+      };
+
+      const { getByText, queryByTestId } = render(
+        <POIInfoPanel 
+          poi={minimalPOI} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={true}
+        />
+      );
+      expect(getByText('Minimal POI')).toBeTruthy();
+      expect(getByText('FOOD')).toBeTruthy();
+      expect(queryByTestId('poi-info-panel')).toBeTruthy();
+    });
+  });
+
+  describe('POI category display', () => {
+    it.each([
+      ['food', 'FOOD'],
+      ['cafe', 'CAFE'],
+      ['restroom', 'RESTROOM'],
+      ['parking', 'PARKING'],
+      ['bike_rack', 'BIKE RACK'],
+      ['emergency', 'EMERGENCY'],
+    ])('displays %s category as %s', (category, expectedDisplay) => {
+      const poi: OutdoorPOI & { distance?: number } = {
+        ...mockPOIWithDistance,
+        category: category as any,
+      };
+      const { getByText } = render(
+        <POIInfoPanel 
+          poi={poi} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={true}
+        />
+      );
+      expect(getByText(expectedDisplay)).toBeTruthy();
+    });
+  });
+
+  describe('isVisible prop behavior', () => {
+    it('sets correct pointerEvents when isVisible is true', () => {
+      const { getByTestId } = render(
+        <POIInfoPanel 
+          poi={mockPOI} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={true}
+        />
+      );
+      const panel = getByTestId('poi-info-panel');
+      expect(panel.props.pointerEvents).toBe('auto');
+    });
+
+    it('sets correct pointerEvents when isVisible is false', () => {
+      const { getByTestId } = render(
+        <POIInfoPanel 
+          poi={mockPOI} 
+          onClose={() => {}} 
+          slideAnim={slideAnim}
+          isVisible={false}
+        />
+      );
+      const panel = getByTestId('poi-info-panel');
+      expect(panel.props.pointerEvents).toBe('none');
+    });
+  });
 });
