@@ -11,6 +11,18 @@ export const setupApp = async (permissions: any = { location: 'always' }, locati
     });
 };
 
+export const setupAppWithPersistence = async (permissions: any = { location: 'always' }, location?: { latitude: number, longitude: number }) => {
+    await device.disableSynchronization();
+    if (location) {
+        await device.setLocation(location.latitude, location.longitude);
+    }
+    await device.launchApp({
+        newInstance: true,
+        permissions,
+        delete: false,
+    });
+};
+
 export const navigateToMap = async () => {
     await waitFor(element(by.id('tab-map'))).toExist().withTimeout(15000);
     await element(by.id('tab-map')).tap();
