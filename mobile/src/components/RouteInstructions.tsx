@@ -92,7 +92,7 @@ const handleViewFloorPlan = (buildingId: string, floor?: string) => {
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        height: '30%',
+        height: '50%',
         bottom: 0,
         left: 0,
         right: 0,
