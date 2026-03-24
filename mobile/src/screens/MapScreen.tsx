@@ -16,8 +16,7 @@ import { useRouteProcessor } from '../hooks/useRouteProcessor';
 import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
-import { RoomSelection } from '../types/building';
-import type { Building } from '../data/buildings';
+import { RoomSelection, Building } from '../types/building';
 import { buildings } from '../data/buildings';
 import {
   CAMPUSES,
