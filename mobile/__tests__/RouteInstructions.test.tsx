@@ -6,6 +6,19 @@ import type { MapStep } from '../src/types/map';
 describe('RouteInstructions Component', () => {
   const mockOnClose = jest.fn();
   const mockOnViewFloorPlan = jest.fn();
+
+  const start: Place = {
+    name: "Library",
+    address: "123 Main St",
+    location: { lat: 45.497, lng: -73.579 },
+  };
+
+  const destination: Place = {
+    name: "Science Hall",
+    address: "456 University Ave",
+    location: { lat: 45.499, lng: -73.578 },
+  };
+
   const mockInstructions: MapStep[] = [
     {
       html_instructions: 'Head <b>north</b> on Rue Guy',
