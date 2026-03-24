@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import RouteInstructions from '../src/components/RouteInstructions';
 import type { MapStep } from '../src/types/map';
-import type { Place } from '../src/types/map';
+import type { Place } from '../src/components/BuildingSelector/StartDestinationPicker';
 
 describe('RouteInstructions Component', () => {
   const mockOnClose = jest.fn();
