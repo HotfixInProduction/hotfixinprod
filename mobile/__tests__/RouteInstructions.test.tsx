@@ -5,6 +5,7 @@ import type { MapStep } from '../src/types/map';
 
 describe('RouteInstructions Component', () => {
   const mockOnClose = jest.fn();
+  const mockOnViewFloorPlan = jest.fn();
   const mockInstructions: MapStep[] = [
     {
       html_instructions: 'Head <b>north</b> on Rue Guy',
@@ -30,7 +31,7 @@ describe('RouteInstructions Component', () => {
       <RouteInstructions 
         instructions={mockInstructions}
         start={mockStart}
-                destination={mockDestination}
+        destination={mockDestination}
         onClose={mockOnClose}
         onViewFloorPlan={mockOnViewFloorPlan}
       />
