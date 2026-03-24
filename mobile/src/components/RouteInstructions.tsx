@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import type { MapStep } from '../types/map';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import FloorPlanViewer from './FloorPlanViewer';
-import { buildings } from '../data/buildings';
 import type { Place } from './BuildingSelector/StartDestinationPicker';
 
 
