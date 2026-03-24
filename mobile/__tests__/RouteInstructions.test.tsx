@@ -2,20 +2,21 @@ import React from 'react';
 import { render, screen } from '@testing-library/react-native';
 import RouteInstructions from '../src/components/RouteInstructions';
 import type { MapStep } from '../src/types/map';
+import type { Place } from '../src/types/map';
 
 describe('RouteInstructions Component', () => {
   const mockOnClose = jest.fn();
   const mockOnViewFloorPlan = jest.fn();
 
   const start: Place = {
-    name: "Library",
-    address: "123 Main St",
+    name: 'Hall Building',
+    address: '123 University St',
     location: { lat: 45.497, lng: -73.579 },
   };
 
   const destination: Place = {
-    name: "Science Hall",
-    address: "456 University Ave",
+    name: 'Vanier Extension',
+    address: '456 University Ave',
     location: { lat: 45.499, lng: -73.578 },
   };
 
@@ -49,8 +50,8 @@ describe('RouteInstructions Component', () => {
       />
     );
 
-    expect(screen.getByText(/Library/)).toBeTruthy();
-    expect(screen.getByText(/Science Hall/)).toBeTruthy();
+    expect(screen.getByText(/Hall Building/)).toBeTruthy();
+    expect(screen.getByText(/Vanier Extension/)).toBeTruthy();
 
     expect(screen.getByText(/Head north on Rue Guy/)).toBeTruthy();
     expect(screen.getByText(/Turn right onto Rue Sainte-Catherine/)).toBeTruthy();
