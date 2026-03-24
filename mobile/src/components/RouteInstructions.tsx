@@ -5,6 +5,7 @@ import type { MapStep } from '../types/map';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import FloorPlanViewer from './FloorPlanViewer';
 import { buildings } from '../data/buildings';
+import type { Place } from './BuildingSelector/StartDestinationPicker';
 
 
 
@@ -29,11 +30,7 @@ const RouteInstructions = ({ instructions, start, destination, onClose, onViewFl
         return text;
     };
 
-const handleViewFloorPlan = (buildingId: string, floor?: string) => {
-  const building = buildings.find(b => b.id === buildingId); // you need `buildings` array
-  if (!building) return;
-  setFloorPlanOpenFor({ building, floor });
-};
+
 
     return (
         <View style={styles.container}>

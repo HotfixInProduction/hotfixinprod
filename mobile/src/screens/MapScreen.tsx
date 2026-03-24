@@ -17,6 +17,7 @@ import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
 import { RoomSelection } from '../types/building';
+import type { Building } from '../data/buildings';
 import { buildings } from '../data/buildings';
 import {
   CAMPUSES,
