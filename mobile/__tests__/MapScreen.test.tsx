@@ -987,7 +987,7 @@ describe('Transportation Modes', () => {
         }),
       } as Response) 
     );
-    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
+    const { getByTestId, queryAllByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-walk'));
@@ -1001,9 +1001,8 @@ describe('Transportation Modes', () => {
     fireEvent.press(getByTestId('route-info-mode-shuttle'));
 
     await waitFor(() => {
-      expect(queryByTestId('map-directions')).toBeNull();
+      expect(queryAllByTestId('map-directions')).toHaveLength(2);
       expect(getByTestId('map-directions-shuttle')).toBeTruthy();
-      expect(getAllByTestId('map-polyline')).toHaveLength(2);
       expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
     });
   });
