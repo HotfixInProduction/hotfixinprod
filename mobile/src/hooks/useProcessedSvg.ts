@@ -25,7 +25,7 @@ export function useProcessedSvg(
     const highlighted = highlightRoomInSvg(rawSvgContent, startRoom, nextRoom);
     
     if (!path || !pathString) {
-      console.log('[useProcessedSvg] No path or pathString', { path: path?.length, pathString });
+      if (__DEV__) console.log('[useProcessedSvg] No path or pathString', { path: path?.length, pathString });
       return highlighted;
     }
 
@@ -33,7 +33,7 @@ export function useProcessedSvg(
     const endNode = path.at(-1);
 
     if (!startNode?.data || !endNode?.data) {
-      console.log('[useProcessedSvg] Missing node data', { startNode, endNode });
+      if (__DEV__) console.log('[useProcessedSvg] Missing node data', { startNode, endNode });
       return highlighted;
     }
 
@@ -51,7 +51,7 @@ export function useProcessedSvg(
     const startCoord = transformCoord(startNode.data.x, startNode.data.y, buildingId);
     const endCoord = transformCoord(endNode.data.x, endNode.data.y, buildingId);
 
-    console.log('[useProcessedSvg] Path coordinates:', {
+    if (__DEV__) console.log('[useProcessedSvg] Path coordinates:', {
       startX: startCoord.x,
       startY: startCoord.y,
       endX: endCoord.x,
@@ -68,7 +68,7 @@ export function useProcessedSvg(
       endCoord.y
     );
 
-    console.log('[useProcessedSvg] Generated pathElements:', pathElements.substring(0, 200) + '...');
+    if (__DEV__) console.log('[useProcessedSvg] Generated pathElements:', pathElements.substring(0, 200) + '...');
 
     // Find the LAST </svg> tag to insert before (handles nested SVGs like icons)
     const lastSvgCloseIndex = highlighted.lastIndexOf('</svg>');
