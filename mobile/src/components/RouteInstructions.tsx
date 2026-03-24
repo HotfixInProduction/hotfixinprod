@@ -1,14 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import type { MapStep } from '../types/map';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import FloorPlanViewer from './FloorPlanViewer';
+import { buildings } from '../data/buildings';
+
+
 
 interface RouteInstructionsProps {
     instructions: MapStep[];
+    start: Place | null;
+    destination: Place | null;
     onClose: () => void;
+    onViewFloorPlan: (buildingId: string, floor?: string) => void;
 }
 
-const RouteInstructions = ({ instructions, onClose }: RouteInstructionsProps) => {
+const RouteInstructions = ({ instructions, start, destination, onClose, onViewFloorPlan, }: RouteInstructionsProps) => {
     // helper to strip HTML tags from Google's instructions (e.g., <b>Turn left</b>)
     const formatText = (html: string) => {
         let text = html.replaceAll(/<[^>]*>?/gm, '').replaceAll(/&nbsp;/g, ' ');
@@ -21,6 +29,12 @@ const RouteInstructions = ({ instructions, onClose }: RouteInstructionsProps) =>
         return text;
     };
 
+const handleViewFloorPlan = (buildingId: string, floor?: string) => {
+  const building = buildings.find(b => b.id === buildingId); // you need `buildings` array
+  if (!building) return;
+  setFloorPlanOpenFor({ building, floor });
+};
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -31,15 +45,46 @@ const RouteInstructions = ({ instructions, onClose }: RouteInstructionsProps) =>
             </View>
 
             <ScrollView style={styles.scrollArea}>
-                {instructions.map((step) => (
-                    <View key={step.html_instructions} style={styles.stepRow}>
+                {start && (
+                        <View style={styles.stepRow}>
+                            <View style={styles.textColumn}>
+                                <Text style={styles.instructionText}>
+                                    Exit {start.name}
+                                </Text>
+
+                                <TouchableOpacity style={styles.floorPlanBtn} onPress={() => onViewFloorPlan(start.name)}>
+                                  <MaterialCommunityIcons name="map" size={16} color="#fff" />
+                                  <Text style={styles.floorPlanBtnText}>Floor Plan</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+
+                {instructions.map((step, index) => (
+                    <View key={`${index}-${step.html_instructions}`} style={styles.stepRow}>
                         <View style={styles.textColumn}>
                             <Text style={styles.instructionText}>{formatText(step.html_instructions)}</Text>
                             <Text style={styles.distanceText}>{step.distance.text}</Text>
                         </View>
                     </View>
                 ))}
+
+            {destination && (
+                    <View style={styles.stepRow}>
+                        <View style={styles.textColumn}>
+                            <Text style={styles.instructionText}>
+                                Enter {destination.name}
+                            </Text>
+
+                            <TouchableOpacity style={styles.floorPlanBtn} onPress={() => onViewFloorPlan(destination.name)}>
+                              <MaterialCommunityIcons name="map" size={16} color="#fff" />
+                              <Text style={styles.floorPlanBtnText}>Floor Plan</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
             </ScrollView>
+
         </View>
     );
 };
@@ -101,6 +146,23 @@ const styles = StyleSheet.create({
         marginTop: 4,
         fontWeight: '600',
     },
+
+floorPlanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#912338',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    gap: 6,
+},
+floorPlanBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
+},
 });
 
 export default RouteInstructions;

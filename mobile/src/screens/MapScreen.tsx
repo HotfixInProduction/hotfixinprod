@@ -38,6 +38,10 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
 };
 
 export default function MapScreen() {
+    const [directionsFloorPlan, setDirectionsFloorPlan] = useState<{
+      building: Building;
+      floor?: string;
+    } | null>(null);
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
@@ -117,6 +121,8 @@ export default function MapScreen() {
     transportMode,
     onTransportModeChange: setTransportMode,
   });
+
+
 
   useEffect(() => {
     if (shuttleRouteInfo) {
@@ -379,6 +385,13 @@ export default function MapScreen() {
     setShowShuttleSchedule(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
+
+const handleDirectionsViewFloorPlan = (buildingId: string, floor?: string) => {
+  const building = allBuildings.find(b => b.id === buildingId);
+  if (!building) return; // safety check
+
+  setDirectionsFloorPlan({ building, floor });
+};
 
   const activeModal = (() => {
     if (selectedBuilding) return 'buildingInfo';
@@ -665,7 +678,15 @@ export default function MapScreen() {
       {activeModal === 'routeInstructions' && (
         <RouteInstructions
           instructions={instructions}
+          start={start}
+          destination={destination}
           onClose={() => setShowInstructions(false)}
+          onViewFloorPlan={(buildingId, floor) => {
+            const building = buildings.find(b => b.id === buildingId);
+                console.log(buildingId, building, floor, 'BUILDING INFOOOO');
+            if (!building) return;
+            setDirectionsFloorPlan({ building, floor });
+          }}
         />
       )}
 
@@ -767,7 +788,19 @@ export default function MapScreen() {
       </Modal>
 
       <StatusBar style="auto" />
+
+      {directionsFloorPlan && (
+            <FloorPlanViewer
+              building={directionsFloorPlan.building}
+              floorLevel={directionsFloorPlan.floor}
+              onClose={() => setDirectionsFloorPlan(null)}
+            />
+          )}
+
     </View>
+
+
+
   );
 }
 
