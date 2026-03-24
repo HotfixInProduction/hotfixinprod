@@ -554,6 +554,8 @@ describe('FloorPlanViewer', () => {
         });
     });
 
+    // TODO: Re-enable these tests once room extraction logic is implemented
+    // Currently skipped because room extraction from SVG labels is not yet integrated into FloorPlanViewer
     describe.skip('Room extraction from SVG', () => {
         it('extracts and sorts numeric room labels', async () => {
             const buildingWithNumericRooms = createMockBuilding({

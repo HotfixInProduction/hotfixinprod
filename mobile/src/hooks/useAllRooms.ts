@@ -65,7 +65,8 @@ function getRoomsForBuildingFromNavMesh(buildingId: string): RoomWithBuilding[] 
 
   for (const [roomLabel, nodeId] of Object.entries(roomIndex)) {
     // Parse node ID to get floor number: "Hall_F8_room_291" -> 8
-    const floorMatch = nodeId.match(/_F(\d+)_/);
+    const floorRegex = /_F(\d+)_/;
+    const floorMatch = floorRegex.exec(nodeId);
     if (floorMatch) {
       const floor = floorMatch[1];
       const roomFloorKey = `${roomLabel}|${floor}`;

@@ -6,11 +6,9 @@ import {
 import { SvgXml } from 'react-native-svg';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useFloorPlanState } from '../hooks/useFloorPlanState';
-import { useRoomList } from '../hooks/useRoomList';
 import { useIndoorPath, useSvgPathForFloor, usePathFloors } from '../hooks/useIndoorPath';
 import { useProcessedSvg } from '../hooks/useProcessedSvg';
 import { useAmenities, AmenityElement } from '../hooks/useAmenities';
-import RoomPickerModal from './RoomPickerModal';
 import AmenityInfoModal from './AmenityInfoModal';
 import AmenityOverlay from './AmenityOverlay';
 import CrossBuildingRoomPicker from './CrossBuildingRoomPicker';
@@ -185,8 +183,6 @@ export default function FloorPlanViewer({
         setRoomPickerOpen,
     } = useFloorPlanState(building, startRoomProp, nextRoomProp, floorLevel);
 
-    const roomList = useRoomList(rawSvgContent, building?.id, currentFloor);
-    
     // Accessibility mode state
     const [accessibleOnly, setAccessibleOnly] = useState(false);
     
