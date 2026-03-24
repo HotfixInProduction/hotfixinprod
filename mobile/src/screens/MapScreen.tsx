@@ -407,6 +407,7 @@ export default function MapScreen() {
           currentDelta={currentDelta}
           startBuildingId={start?.name || null}
           destinationBuildingId={destination?.name || null}
+          disabled={selectedBuilding !== null}
         />
 
         {start && destination && googleMapsApiKey && (

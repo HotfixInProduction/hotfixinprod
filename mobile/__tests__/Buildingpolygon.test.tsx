@@ -158,6 +158,90 @@ describe('BuildingPolygon', () => {
     expect(queryByTestId('building-marker-Hall Building')).toBeTruthy();
   });
 
+  it('does not call onSelectBuilding when disabled is true', () => {
+    const mockSelect = jest.fn();
+    const { UNSAFE_getAllByType } = render(
+      <BuildingPolygon 
+        onSelectBuilding={mockSelect} 
+        selectedBuildingId={null} 
+        currentDelta={0} 
+        disabled={true}
+      />
+    );
+
+    const polygons = UNSAFE_getAllByType(require('react-native-maps').Polygon);
+    const { fireEvent } = require('@testing-library/react-native');
+    
+    // Try to press a polygon
+    fireEvent(polygons[0], 'onPress');
+
+    // onSelectBuilding should NOT be called when disabled
+    expect(mockSelect).not.toHaveBeenCalled();
+  });
+
+  it('calls onSelectBuilding when disabled is false', () => {
+    const mockSelect = jest.fn();
+    const { UNSAFE_getAllByType } = render(
+      <BuildingPolygon 
+        onSelectBuilding={mockSelect} 
+        selectedBuildingId={null} 
+        currentDelta={0} 
+        disabled={false}
+      />
+    );
+
+    const polygons = UNSAFE_getAllByType(require('react-native-maps').Polygon);
+    const { fireEvent } = require('@testing-library/react-native');
+    
+    // Try to press a polygon
+    fireEvent(polygons[0], 'onPress');
+
+    // onSelectBuilding SHOULD be called when not disabled
+    expect(mockSelect).toHaveBeenCalled();
+  });
+
+  it('calls onSelectBuilding when disabled prop is not provided (defaults to false)', () => {
+    const mockSelect = jest.fn();
+    const { UNSAFE_getAllByType } = render(
+      <BuildingPolygon 
+        onSelectBuilding={mockSelect} 
+        selectedBuildingId={null} 
+        currentDelta={0}
+      />
+    );
+
+    const polygons = UNSAFE_getAllByType(require('react-native-maps').Polygon);
+    const { fireEvent } = require('@testing-library/react-native');
+    
+    // Try to press a polygon
+    fireEvent(polygons[0], 'onPress');
+
+    // onSelectBuilding SHOULD be called when disabled prop is not provided
+    expect(mockSelect).toHaveBeenCalled();
+  });
+
+  it('does not call onSelectBuilding on marker press when disabled is true', () => {
+    const mockSelect = jest.fn();
+    const { UNSAFE_getAllByType } = render(
+      <BuildingPolygon 
+        onSelectBuilding={mockSelect} 
+        selectedBuildingId={null} 
+        currentDelta={0.001} // Low delta to show labels/markers
+        disabled={true}
+      />
+    );
+
+    const markers = UNSAFE_getAllByType(require('react-native-maps').Marker);
+    const { fireEvent } = require('@testing-library/react-native');
+    
+    // Find and press a marker (label)
+    if (markers.length > 0) {
+      fireEvent(markers[0], 'onPress');
+      // onSelectBuilding should NOT be called when disabled
+      expect(mockSelect).not.toHaveBeenCalled();
+    }
+  });
+
   it('triggers onSelectBuilding when tapping labels or shadow markers', () => {
     const mockSelect = jest.fn();
     const { getByTestId } = render(

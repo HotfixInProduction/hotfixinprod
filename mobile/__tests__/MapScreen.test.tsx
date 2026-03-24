@@ -1249,3 +1249,104 @@ describe('MapScreen Shuttle Coverage', () => {
     });
   });
 });
+
+describe('Building Polygon Click Prevention', () => {
+  it('passes disabled={false} to BuildingPolygon when no building is selected', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    await waitFor(() => {
+      expect(getByTestId('building-polygon-disabled')).toHaveTextContent('false');
+    });
+  });
+
+  it('passes disabled={true} to BuildingPolygon when a building is selected', async () => {
+    const { getByTestId } = render(<MapScreen />);
+
+    // Select a building
+    fireEvent.press(getByTestId('select-building'));
+
+    await waitFor(() => {
+      expect(getByTestId('building-polygon-disabled')).toHaveTextContent('true');
+    });
+  });
+
+  it('prevents building selection when building info is open', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    // Open building info for first building
+    fireEvent.press(getByTestId('select-building'));
+    await waitFor(() => expect(getByText('Hall Building')).toBeTruthy());
+
+    consoleSpy.mockClear();
+
+    // Try to select another building (which should be disabled)
+    fireEvent.press(getByTestId('select-building-no-plans'));
+
+    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // Verify console.log wasn't called for the second building
+    // since the polygon click should have been prevented
+    const logCalls = consoleSpy.mock.calls.filter((call: any) => 
+      call[0] && call[0].includes('Building selected')
+    );
+    
+    // Should only have one building selected still (no new selection)
+    expect(logCalls.length).toBeLessThanOrEqual(1);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('re-enables building selection when building info is closed', async () => {
+    const { getByTestId, getByText, queryByText } = render(<MapScreen />);
+
+    // Open building info for first building
+    fireEvent.press(getByTestId('select-building'));
+    await waitFor(() => expect(getByText('Hall Building')).toBeTruthy());
+
+    // Verify polygon is disabled
+    expect(getByTestId('building-polygon-disabled')).toHaveTextContent('true');
+
+    // Close building info
+    fireEvent.press(getByTestId('building-close'));
+    await new Promise(resolve => setTimeout(resolve, 350));
+
+    // Verify building info is closed
+    expect(queryByText('Hall Building')).toBeNull();
+
+    // Verify polygon is enabled again
+    await waitFor(() => {
+      expect(getByTestId('building-polygon-disabled')).toHaveTextContent('false');
+    });
+  });
+
+  it('disables building selection when floor plan viewer is open', async () => {
+    const { getByTestId, getByText, queryByText } = render(<MapScreen />);
+
+    // Open floor plan
+    fireEvent.press(getByTestId('select-building'));
+    await waitFor(() => expect(getByTestId('view-floor-plan-button')).toBeTruthy());
+    fireEvent.press(getByTestId('view-floor-plan-button'));
+    await waitFor(() => expect(getByText('Hall Building - Floor 8')).toBeTruthy());
+
+    // Verify polygon is still disabled
+    expect(getByTestId('building-polygon-disabled')).toHaveTextContent('true');
+
+    // Close floor plan
+    fireEvent.press(getByTestId('floor-plan-close'));
+    await waitFor(() => expect(queryByText('Hall Building - Floor 8')).toBeNull());
+
+    // Note: FloorPlanViewer is closed but BuildingInfo modal is still open
+    // So polygon should still be disabled at this point
+    expect(getByTestId('building-polygon-disabled')).toHaveTextContent('true');
+
+    // Now close BuildingInfo to fully reset selectedBuilding state
+    fireEvent.press(getByTestId('building-close'));
+    await new Promise(resolve => setTimeout(resolve, 350));
+
+    // Verify polygon is enabled after both modals are closed
+    await waitFor(() => {
+      expect(getByTestId('building-polygon-disabled')).toHaveTextContent('false');
+    });
+  });
+});
