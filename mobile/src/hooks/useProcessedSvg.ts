@@ -25,6 +25,7 @@ export function useProcessedSvg(
     const highlighted = highlightRoomInSvg(rawSvgContent, startRoom, nextRoom);
     
     if (!path || !pathString) {
+      // istanbul ignore next - __DEV__ is removed in production builds
       if (__DEV__) console.log('[useProcessedSvg] No path or pathString', { path: path?.length, pathString });
       return highlighted;
     }
@@ -33,6 +34,7 @@ export function useProcessedSvg(
     const endNode = path.at(-1);
 
     if (!startNode?.data || !endNode?.data) {
+      // istanbul ignore next - __DEV__ is removed in production builds
       if (__DEV__) console.log('[useProcessedSvg] Missing node data', { startNode, endNode });
       return highlighted;
     }
@@ -51,6 +53,7 @@ export function useProcessedSvg(
     const startCoord = transformCoord(startNode.data.x, startNode.data.y, buildingId);
     const endCoord = transformCoord(endNode.data.x, endNode.data.y, buildingId);
 
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[useProcessedSvg] Path coordinates:', {
       startX: startCoord.x,
       startY: startCoord.y,
@@ -68,6 +71,7 @@ export function useProcessedSvg(
       endCoord.y
     );
 
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[useProcessedSvg] Generated pathElements:', pathElements.substring(0, 200) + '...');
 
     // Find the LAST </svg> tag to insert before (handles nested SVGs like icons)

@@ -9,10 +9,12 @@ function findNearestExit(buildingId: string): string | null {
   const exits = getPOIsByType(buildingId, '1', 'building_entry_exit');
   
   if (exits.length === 0) {
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[findNearestExit] No building exits found');
     return null;
   }
   
+  // istanbul ignore next - __DEV__ is removed in production builds
   if (__DEV__) console.log(`[findNearestExit] Found ${exits.length} exits, using: ${exits[0].nodeId}`);
   return exits[0].nodeId;
 }
@@ -23,6 +25,7 @@ function findNearestExit(buildingId: string): string | null {
 function logAndReturnPath(path: NavMeshNode[] | null, logPrefix: string): NavMeshNode[] | null {
   if (path) {
     const floors = getFloorsInPath(path);
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log(`[${logPrefix}] Path found with ${path.length} nodes across floors: ${floors.join(', ')}`);
   }
   return path;
@@ -39,16 +42,19 @@ function findPathToExit(
 ): NavMeshNode[] | null {
   const roomNodeId = getRoomNodeId(buildingId, floorLevel, roomLabel);
   if (roomNodeId === null) {
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log(`[findPathToExit] Could not find room node: ${roomLabel}`);
     return null;
   }
   
   const exitNodeId = findNearestExit(buildingId);
   if (exitNodeId === null) {
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[findPathToExit] Could not find building exit');
     return null;
   }
   
+  // istanbul ignore next - __DEV__ is removed in production builds
   if (__DEV__) console.log(`[findPathToExit] Finding path from ${roomNodeId} to exit ${exitNodeId}`);
   return logAndReturnPath(
     findPath(buildingId, floorLevel, roomNodeId, exitNodeId, { accessibleOnly }),
@@ -67,16 +73,19 @@ function findPathFromEntry(
 ): NavMeshNode[] | null {
   const roomNodeId = getRoomNodeId(buildingId, floorLevel, roomLabel);
   if (roomNodeId === null) {
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log(`[findPathFromEntry] Could not find room node: ${roomLabel}`);
     return null;
   }
   
   const entryNodeId = findNearestExit(buildingId);
   if (entryNodeId === null) {
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[findPathFromEntry] Could not find building entry');
     return null;
   }
   
+  // istanbul ignore next - __DEV__ is removed in production builds
   if (__DEV__) console.log(`[findPathFromEntry] Finding path from entry ${entryNodeId} to ${roomNodeId}`);
   return logAndReturnPath(
     findPath(buildingId, floorLevel, entryNodeId, roomNodeId, { accessibleOnly }),
@@ -98,10 +107,12 @@ function findPathBetweenRooms(
   const endNodeId = getRoomNodeId(buildingId, floorLevel, endRoom);
   
   if (startNodeId === null || endNodeId === null) {
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log(`[findPathBetweenRooms] Could not find node IDs: start=${startNodeId}, end=${endNodeId}`);
     return null;
   }
   
+  // istanbul ignore next - __DEV__ is removed in production builds
   if (__DEV__) console.log(`[findPathBetweenRooms] Finding path from ${startNodeId} to ${endNodeId} (accessibleOnly: ${accessibleOnly})`);
   return logAndReturnPath(
     findPath(buildingId, floorLevel, startNodeId, endNodeId, { accessibleOnly }),
@@ -121,18 +132,22 @@ function findCrossBuildingPath(
   endBuildingId: string,
   accessibleOnly: boolean
 ): NavMeshNode[] | null {
+  // istanbul ignore next - __DEV__ is removed in production builds
   if (__DEV__) console.log(`[findCrossBuildingPath] Cross-building navigation: ${startBuildingId} -> ${endBuildingId}`);
   
   if (currentBuildingId === startBuildingId) {
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[findCrossBuildingPath] Showing path from room to building exit');
     return findPathToExit(currentBuildingId, floorLevel, startRoom, accessibleOnly);
   }
   
   if (currentBuildingId === endBuildingId) {
+    // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[findCrossBuildingPath] Showing path from building entry to room');
     return findPathFromEntry(currentBuildingId, floorLevel, endRoom, accessibleOnly);
   }
   
+  // istanbul ignore next - __DEV__ is removed in production builds
   if (__DEV__) console.log('[findCrossBuildingPath] Building ID mismatch for cross-building navigation');
   return null;
 }
