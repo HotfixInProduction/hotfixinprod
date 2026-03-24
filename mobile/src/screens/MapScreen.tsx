@@ -414,44 +414,41 @@ export default function MapScreen() {
           <RoutePolylineSteps processedSteps={processedSteps} />
         )}
 
-        {shuttleRouteSegments && (
+        {shuttleRouteSegments && googleMapsApiKey && (
           <>
-            {googleMapsApiKey ? (
-              <MapViewDirections
-                key="map-directions-shuttle"
-                origin={shuttleRouteSegments.originTerminal}
-                destination={shuttleRouteSegments.destinationTerminal}
-                waypoints={SHUTTLE_SHERBROOKE_WAYPOINTS}
-                apikey={googleMapsApiKey}
-                strokeWidth={4}
-                strokeColor="#912338"
-                mode="DRIVING"
-              />
-            ) : (
-              <Polyline
-                key="map-directions-shuttle-fallback"
-                coordinates={[shuttleRouteSegments.originTerminal, shuttleRouteSegments.destinationTerminal]}
-                strokeWidth={4}
-                strokeColor="#912338"
-              />
-            )}
+            <MapViewDirections
+              key="map-directions-shuttle"
+              origin={shuttleRouteSegments.originTerminal}
+              destination={shuttleRouteSegments.destinationTerminal}
+              waypoints={SHUTTLE_SHERBROOKE_WAYPOINTS}
+              apikey={googleMapsApiKey}
+              strokeWidth={4}
+              strokeColor="#912338"
+              mode="DRIVING"
+            />
 
             {shuttleRouteSegments.startWalking && (
-              <Polyline
+              <MapViewDirections
                 key="map-directions-shuttle-start-walking"
-                coordinates={shuttleRouteSegments.startWalking}
+                origin={shuttleRouteSegments.startWalking[0]}
+                destination={shuttleRouteSegments.startWalking[1]}
+                apikey={googleMapsApiKey}
                 strokeWidth={3}
                 strokeColor="#555"
+                mode="WALKING"
                 lineDashPattern={[8, 8]}
               />
             )}
 
             {shuttleRouteSegments.destinationWalking && (
-              <Polyline
+              <MapViewDirections
                 key="map-directions-shuttle-destination-walking"
-                coordinates={shuttleRouteSegments.destinationWalking}
+                origin={shuttleRouteSegments.destinationWalking[0]}
+                destination={shuttleRouteSegments.destinationWalking[1]}
+                apikey={googleMapsApiKey}
                 strokeWidth={3}
                 strokeColor="#555"
+                mode="WALKING"
                 lineDashPattern={[8, 8]}
               />
             )}
