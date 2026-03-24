@@ -4,18 +4,20 @@ import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linki
 import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import StartDestinationPicker, { Place } from '../components/BuildingSelector/StartDestinationPicker';
 import { MaterialIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
-import Config from "react-native-config";
+import Constants from "expo-constants";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
 import { useRouteProcessor } from '../hooks/useRouteProcessor';
 import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
+import { RoomSelection } from '../types/building';
+import { buildings } from '../data/buildings';
 import {
   CAMPUSES,
   INITIAL_REGION,
@@ -59,7 +61,50 @@ export default function MapScreen() {
   const [mapSelectionTarget, setMapSelectionTarget] = useState<'start' | 'destination' | null>(null);
   const [directionsGoogle, setDirectionsGoogle] = useState<any>(null);
   const processedSteps = useRouteProcessor(directionsGoogle);
-  const googleMapsApiKey = Config.GOOGLE_MAPS_ANDROID_API_KEY;
+  const googleMapsApiKey = Constants.expoConfig?.extra?.googleApiKey as string | undefined;
+  
+  // Room selection state for cross-building persistence
+  const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
+  const [destinationRoomSelection, setDestinationRoomSelection] = useState<RoomSelection | null>(null);
+
+  // Helper function to find building by ID
+  const findBuildingById = useCallback((buildingId: string) => {
+    return buildings.find(b => b.id === buildingId);
+  }, []);
+
+  // Sync room selections to start/destination places for cross-building navigation
+  useEffect(() => {
+    if (startRoomSelection) {
+      const building = findBuildingById(startRoomSelection.buildingId);
+      if (building) {
+        const place: Place = {
+          name: building.id,
+          address: building.address || building.id,
+          location: {
+            lat: building.labelCoord.latitude,
+            lng: building.labelCoord.longitude,
+          },
+        };
+        setStart(place);
+      }
+    }
+
+    // Sync destination room selection
+    if (destinationRoomSelection) {
+      const destBuilding = findBuildingById(destinationRoomSelection.buildingId);
+      if (destBuilding) {
+        const place: Place = {
+          name: destBuilding.id,
+          address: destBuilding.address || destBuilding.id,
+          location: {
+            lat: destBuilding.labelCoord.latitude,
+            lng: destBuilding.labelCoord.longitude,
+          },
+        };
+        setDestination(place);
+      }
+    }
+  }, [startRoomSelection, destinationRoomSelection, findBuildingById]);
 
   const {
     isShuttleRoute,
@@ -227,51 +272,44 @@ export default function MapScreen() {
   }, [start, destination]);
 
   useEffect(() => {
-      const fetchDirections = async () => {
-        if (transportMode === 'SHUTTLE') {
-          setDirectionsGoogle(null);
-          setInstructions([]);
-          return;
-        }
-        
-        if (start && destination) {
-  
-          if (!googleMapsApiKey) {
-            return;
-          }
-          console.log("Fetching new route for mode:", transportMode);
-  
-          const params = new URLSearchParams({
-            origin: `${start.location.lat},${start.location.lng}`,
-            destination: `${destination.location.lat},${destination.location.lng}`,
-            key: googleMapsApiKey,
-            mode: GOOGLE_DIRECTIONS_MODE[transportMode],
-          });
-  
-          const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
-  
-          try {
-            const response = await fetch(url);
-            const data = await response.json();
-            if (data.routes.length > 0) {
-  
-              setDirectionsGoogle(data) // this sends data for route display
-              setInstructions(data.routes[0].legs[0].steps); // this sends data for instruction display
-              
-              setRouteInfo({
-                distance: data.routes[0].legs[0].distance.value / 1000, // convert meters to km
-                duration: Math.ceil(data.routes[0].legs[0].duration.value / 60), // convert seconds to mins
-              });
-  
-              console.log(data.routes[0].legs[0].steps)
-            }
-          } catch (error) {
-            console.error("Fetch failed", error);
-          }
-        }
+    const fetchDirections = async () => {
+      if (transportMode === 'SHUTTLE') {
+        setDirectionsGoogle(null);
+        setInstructions([]);
+        return;
       }
-      fetchDirections();
-    }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
+
+      if (!start || !destination || !googleMapsApiKey) return;
+
+      console.log("Fetching new route for mode:", transportMode);
+
+      const params = new URLSearchParams({
+        origin: `${start.location.lat},${start.location.lng}`,
+        destination: `${destination.location.lat},${destination.location.lng}`,
+        key: googleMapsApiKey,
+        mode: GOOGLE_DIRECTIONS_MODE[transportMode],
+      });
+
+      const url = `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.routes.length === 0) return;
+
+        setDirectionsGoogle(data);
+        setInstructions(data.routes[0].legs[0].steps);
+        setRouteInfo({
+          distance: data.routes[0].legs[0].distance.value / 1000,
+          duration: Math.ceil(data.routes[0].legs[0].duration.value / 60),
+        });
+        console.log(data.routes[0].legs[0].steps);
+      } catch (error) {
+        console.error("Fetch failed", error);
+      }
+    };
+    fetchDirections();
+  }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
   
 
   const handleCloseBuilding = () => {
@@ -349,8 +387,6 @@ export default function MapScreen() {
     return 'none';
   })();
   const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
-  const directionsMode: Exclude<TravelMode, 'SHUTTLE'> =
-    transportMode === 'SHUTTLE' ? 'TRANSIT' : transportMode;
 
   return (
     <View style={styles.container}>
@@ -371,6 +407,7 @@ export default function MapScreen() {
           currentDelta={currentDelta}
           startBuildingId={start?.name || null}
           destinationBuildingId={destination?.name || null}
+          disabled={selectedBuilding !== null}
         />
 
         {start && destination && googleMapsApiKey && (
@@ -546,6 +583,10 @@ export default function MapScreen() {
         <FloorPlanViewer
           building={selectedBuilding}
           onClose={() => setShowFloorPlan(false)}
+          startRoomSelection={startRoomSelection}
+          destinationRoomSelection={destinationRoomSelection}
+          onStartRoomChange={setStartRoomSelection}
+          onDestinationRoomChange={setDestinationRoomSelection}
         />
       )}
 

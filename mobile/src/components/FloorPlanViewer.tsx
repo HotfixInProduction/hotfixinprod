@@ -1,16 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View, Text, TouchableOpacity, StyleSheet, Modal,
-    ScrollView, Dimensions,
+    ScrollView, Dimensions, Switch,
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useFloorPlanState } from '../hooks/useFloorPlanState';
 import { useRoomList } from '../hooks/useRoomList';
-import { useIndoorPath, useSvgPathString } from '../hooks/useIndoorPath';
+import { useIndoorPath, useSvgPathForFloor, usePathFloors } from '../hooks/useIndoorPath';
 import { useProcessedSvg } from '../hooks/useProcessedSvg';
+import { useAmenities, AmenityElement } from '../hooks/useAmenities';
 import RoomPickerModal from './RoomPickerModal';
-import { Building } from '../types/building';
+import AmenityInfoModal from './AmenityInfoModal';
+import AmenityOverlay from './AmenityOverlay';
+import { Building, RoomSelection } from '../types/building';
 
 type Props = Readonly<{
     building: Building | null;
@@ -18,9 +21,143 @@ type Props = Readonly<{
     onClose: () => void;
     startRoom?: string;
     nextRoom?: string;
+    startRoomSelection?: RoomSelection | null;
+    destinationRoomSelection?: RoomSelection | null;
+    onStartRoomChange?: (selection: RoomSelection | null) => void;
+    onDestinationRoomChange?: (selection: RoomSelection | null) => void;
 }>;
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// Extracted helper types
+type RoomButtonType = 'start' | 'end';
+
+// Extracted RoomButton component to reduce complexity
+function RoomButton({
+    type,
+    buildingPrefix,
+    effectiveRoom,
+    buildingLabel,
+    onPress,
+}: Readonly<{
+    type: RoomButtonType;
+    buildingPrefix: string;
+    effectiveRoom: string;
+    buildingLabel: string | null;
+    onPress: () => void;
+}>) {
+    const isStart = type === 'start';
+    const dotColor = isStart ? '#4CAF50' : '#2196F3';
+    const styleType = isStart ? styles.roomBtnStart : styles.roomBtnEnd;
+    const hint = isStart ? 'FROM' : 'TO';
+    const testId = isStart ? 'room-picker-start' : 'room-picker-end';
+
+    return (
+        <TouchableOpacity
+            style={[styles.roomBtn, styleType, buildingLabel && styles.roomBtnExternal]}
+            onPress={onPress}
+            activeOpacity={0.8}
+            testID={testId}
+        >
+            <View style={[styles.roomBtnDot, { backgroundColor: dotColor }]} />
+            <View style={{ flex: 1 }}>
+                <Text style={styles.roomBtnHint}>{hint}</Text>
+                {buildingLabel ? (
+                    <Text style={styles.roomBtnValueExternal} numberOfLines={1}>
+                        {buildingLabel}: {effectiveRoom}
+                    </Text>
+                ) : (
+                    <Text style={styles.roomBtnValue} numberOfLines={1}>
+                        {effectiveRoom ? `${buildingPrefix}${effectiveRoom}` : 'Select room'}
+                    </Text>
+                )}
+            </View>
+            <MaterialCommunityIcons name="chevron-down" size={18} color="#555" />
+        </TouchableOpacity>
+    );
+}
+
+// Extracted PathStatus component
+function PathStatus({
+    path,
+    isMultiFloorPath,
+    startRoom,
+    nextRoom,
+}: Readonly<{
+    path: any;
+    isMultiFloorPath: boolean;
+    startRoom: string;
+    nextRoom: string;
+}>) {
+    if (path && !isMultiFloorPath) {
+        return (
+            <View style={styles.pathStatus}>
+                <MaterialCommunityIcons name="check-circle" size={16} color="#4CAF50" />
+                <Text style={styles.pathStatusText}>Path found on this floor</Text>
+            </View>
+        );
+    }
+    
+    if (!path && startRoom && nextRoom) {
+        return (
+            <View style={styles.pathStatus}>
+                <MaterialCommunityIcons name="alert-circle" size={16} color="#FF9800" />
+                <Text style={styles.pathStatusTextWarn}>No path found</Text>
+            </View>
+        );
+    }
+    
+    return null;
+}
+
+// Extracted MultiFloorIndicator component
+function MultiFloorIndicator({
+    pathFloors,
+    accessibleOnly,
+}: Readonly<{
+    pathFloors: number[];
+    accessibleOnly: boolean;
+}>) {
+    if (pathFloors.length <= 1) return null;
+    
+    return (
+        <View style={styles.multiFloorIndicator}>
+            <MaterialCommunityIcons
+                name={accessibleOnly ? "elevator" : "stairs"}
+                size={16}
+                color="#912338"
+            />
+            <Text style={styles.multiFloorText}>
+                Path spans {pathFloors.length} floors: {pathFloors.join(' → ')}
+                {accessibleOnly && ' (via elevator)'}
+            </Text>
+        </View>
+    );
+}
+
+// Extracted CrossBuildingIndicator component
+function CrossBuildingIndicator({
+    isStartBuilding,
+    otherBuildingId,
+}: Readonly<{
+    isStartBuilding: boolean;
+    otherBuildingId: string;
+}>) {
+    return (
+        <View style={styles.crossBuildingIndicator}>
+            <MaterialCommunityIcons
+                name="exit-run"
+                size={16}
+                color="#912338"
+            />
+            <Text style={styles.crossBuildingText}>
+                {isStartBuilding 
+                    ? `Exit to reach ${otherBuildingId}` 
+                    : `Enter from ${otherBuildingId}`}
+            </Text>
+        </View>
+    );
+}
 
 export default function FloorPlanViewer({
     building,
@@ -28,6 +165,10 @@ export default function FloorPlanViewer({
     onClose,
     startRoom: startRoomProp = '829',
     nextRoom: nextRoomProp = '862',
+    startRoomSelection,
+    destinationRoomSelection,
+    onStartRoomChange,
+    onDestinationRoomChange,
 }: Props) {
     const {
         currentFloor,
@@ -43,13 +184,89 @@ export default function FloorPlanViewer({
         setRoomPickerOpen,
     } = useFloorPlanState(building, startRoomProp, nextRoomProp, floorLevel);
 
-    const roomList = useRoomList(rawSvgContent);
+    const roomList = useRoomList(rawSvgContent, building?.id, currentFloor);
+    
+    // Accessibility mode state
+    const [accessibleOnly, setAccessibleOnly] = useState(false);
+    
+    // Amenity state
+    const [selectedAmenity, setSelectedAmenity] = useState<AmenityElement | null>(null);
+    const amenities = useAmenities(rawSvgContent);
+    
+    // Handle room selection with external state persistence
+    const handleStartRoomSelect = (svgLabel: string) => {
+        setStartRoom(svgLabel);
+        if (onStartRoomChange && building) {
+            onStartRoomChange({
+                buildingId: building.id,
+                floor: currentFloor,
+                room: svgLabel,
+            });
+        }
+    };
+    
+    const handleDestinationRoomSelect = (svgLabel: string) => {
+        setNextRoom(svgLabel);
+        if (onDestinationRoomChange && building) {
+            onDestinationRoomChange({
+                buildingId: building.id,
+                floor: currentFloor,
+                room: svgLabel,
+            });
+        }
+    };
+    
+    // Use external selection if available (even if from different building)
+    // Fall back to local state only if no external selection
+    const effectiveStartRoom = startRoomSelection ? startRoomSelection.room : startRoom;
+    const effectiveDestRoom = destinationRoomSelection ? destinationRoomSelection.room : nextRoom;
+    
+    // Get building label for display when selection is from different building
+    const startRoomBuildingLabel = startRoomSelection && startRoomSelection.buildingId !== building?.id 
+        ? startRoomSelection.buildingId 
+        : null;
+    const destRoomBuildingLabel = destinationRoomSelection && destinationRoomSelection.buildingId !== building?.id 
+        ? destinationRoomSelection.buildingId 
+        : null;
 
-    const path = useIndoorPath(building?.id, currentFloor, startRoom, nextRoom);
-
-    const pathString = useSvgPathString(path);
+    // Determine building IDs for cross-building navigation
+    const startBuildingId = startRoomSelection?.buildingId ?? building?.id;
+    const destBuildingId = destinationRoomSelection?.buildingId ?? building?.id;
+    
+    // Find path (supports multi-floor for Hall Building and cross-building navigation)
+    const path = useIndoorPath(
+        building?.id,
+        currentFloor,
+        effectiveStartRoom,
+        effectiveDestRoom,
+        { 
+            accessibleOnly,
+            startBuildingId,
+            endBuildingId: destBuildingId,
+        }
+    );
+    
+    // Get floors involved in the path
+    const pathFloors = usePathFloors(path);
+    
+    // Generate path string for the current floor only
+    const currentFloorNum = Number.parseInt(currentFloor, 10);
+    const pathString = useSvgPathForFloor(path, currentFloorNum);
 
     const svgWithPaths = useProcessedSvg(rawSvgContent, path, pathString, startRoom, nextRoom);
+    
+    // Check if this is a multi-floor path
+    const isMultiFloorPath = pathFloors.length > 1;
+    
+    // Check if this is cross-building navigation
+    const isCrossBuilding = startBuildingId !== destBuildingId;
+    const isStartBuilding = building?.id === startBuildingId;
+
+    // Calculate SVG scale factor
+    // SVG coordinate system is 1024x1024, displayed at (screenWidth - 40) x (screenWidth - 40)
+    const displaySvgSize = screenWidth - 40;
+    const originalSvgSize = 1024;
+    const svgScale = displaySvgSize / originalSvgSize;
 
     if (!building || !rawSvgContent || !svgWithPaths) return null;
 
@@ -109,42 +326,69 @@ export default function FloorPlanViewer({
 
                         {/* ── Room selectors ── */}
                         <View style={styles.roomSelectorRow}>
-                            <TouchableOpacity
-                                style={[styles.roomBtn, styles.roomBtnStart]}
+                            <RoomButton
+                                type="start"
+                                buildingPrefix={buildingPrefix}
+                                effectiveRoom={effectiveStartRoom}
+                                buildingLabel={startRoomBuildingLabel}
                                 onPress={() => setRoomPickerOpen('start')}
-                                activeOpacity={0.8}
-                                testID="room-picker-start"
-                            >
-                                <View style={[styles.roomBtnDot, { backgroundColor: '#4CAF50' }]} />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.roomBtnHint}>FROM</Text>
-                                    <Text style={styles.roomBtnValue} numberOfLines={1}>
-                                        {startRoom ? `${buildingPrefix}${startRoom}` : 'Select room'}
-                                    </Text>
-                                </View>
-                                <MaterialCommunityIcons name="chevron-down" size={18} color="#555" />
-                            </TouchableOpacity>
+                            />
 
                             <View style={styles.arrowDivider}>
                                 <MaterialCommunityIcons name="arrow-right" size={16} color="#AAA" />
                             </View>
 
-                            <TouchableOpacity
-                                style={[styles.roomBtn, styles.roomBtnEnd]}
+                            <RoomButton
+                                type="end"
+                                buildingPrefix={buildingPrefix}
+                                effectiveRoom={effectiveDestRoom}
+                                buildingLabel={destRoomBuildingLabel}
                                 onPress={() => setRoomPickerOpen('end')}
-                                activeOpacity={0.8}
-                                testID="room-picker-end"
-                            >
-                                <View style={[styles.roomBtnDot, { backgroundColor: '#2196F3' }]} />
-                                <View style={{ flex: 1 }}>
-                                    <Text style={styles.roomBtnHint}>TO</Text>
-                                    <Text style={styles.roomBtnValue} numberOfLines={1}>
-                                        {nextRoom ? `${buildingPrefix}${nextRoom}` : 'Select room'}
-                                    </Text>
-                                </View>
-                                <MaterialCommunityIcons name="chevron-down" size={18} color="#555" />
-                            </TouchableOpacity>
+                            />
                         </View>
+
+                        {/* ── Accessibility toggle ── */}
+                        <View style={styles.accessibilityRow}>
+                            <View style={styles.accessibilityLabel}>
+                                <MaterialCommunityIcons 
+                                    name="wheelchair-accessibility" 
+                                    size={18} 
+                                    color={accessibleOnly ? '#912338' : '#666'} 
+                                />
+                                <Text style={[styles.accessibilityText, accessibleOnly && styles.accessibilityTextActive]}>
+                                    Accessible route
+                                </Text>
+                            </View>
+                            <Switch
+                                value={accessibleOnly}
+                                onValueChange={setAccessibleOnly}
+                                trackColor={{ false: '#E0E0E0', true: '#F8BBD9' }}
+                                thumbColor={accessibleOnly ? '#912338' : '#BDBDBD'}
+                                testID="accessibility-toggle"
+                            />
+                        </View>
+
+                        {/* ── Cross-building indicator ── */}
+                        {isCrossBuilding && startBuildingId && destBuildingId && (
+                            <CrossBuildingIndicator
+                                isStartBuilding={isStartBuilding}
+                                otherBuildingId={isStartBuilding ? destBuildingId : startBuildingId}
+                            />
+                        )}
+                        
+                        {/* ── Multi-floor path indicator ── */}
+                        <MultiFloorIndicator
+                            pathFloors={pathFloors}
+                            accessibleOnly={accessibleOnly}
+                        />
+                        
+                        {/* ── Path status ── */}
+                        <PathStatus
+                            path={path}
+                            isMultiFloorPath={isMultiFloorPath}
+                            startRoom={startRoom}
+                            nextRoom={nextRoom}
+                        />
 
                         {/* ── SVG floor plan ── */}
                         <ScrollView
@@ -152,6 +396,7 @@ export default function FloorPlanViewer({
                             contentContainerStyle={styles.scrollContent}
                             showsVerticalScrollIndicator={true}
                             showsHorizontalScrollIndicator={true}
+                            scrollEnabled={true}
                         >
                             <View style={styles.svgContainer}>
                                 <SvgXml
@@ -159,6 +404,14 @@ export default function FloorPlanViewer({
                                     width={screenWidth - 40}
                                     height={screenWidth - 40}
                                     onError={(e) => console.log('SVG Error: ', e)}
+                                />
+                                {/* Amenity overlay on top of SVG */}
+                                <AmenityOverlay
+                                    amenities={amenities}
+                                    svgScale={svgScale}
+                                    svgOffsetX={0}
+                                    svgOffsetY={0}
+                                    onAmenityPress={setSelectedAmenity}
                                 />
                             </View>
                         </ScrollView>
@@ -172,8 +425,8 @@ export default function FloorPlanViewer({
                 title="Select start room"
                 rooms={roomList}
                 prefix={buildingPrefix}
-                selectedRoom={startRoom}
-                onSelect={(svgLabel) => setStartRoom(svgLabel)}
+                selectedRoom={effectiveStartRoom}
+                onSelect={handleStartRoomSelect}
                 onClose={() => setRoomPickerOpen(null)}
             />
 
@@ -183,9 +436,16 @@ export default function FloorPlanViewer({
                 title="Select destination room"
                 rooms={roomList}
                 prefix={buildingPrefix}
-                selectedRoom={nextRoom}
-                onSelect={(svgLabel) => setNextRoom(svgLabel)}
+                selectedRoom={effectiveDestRoom}
+                onSelect={handleDestinationRoomSelect}
                 onClose={() => setRoomPickerOpen(null)}
+            />
+
+            {/* Amenity info modal */}
+            <AmenityInfoModal
+                visible={!!selectedAmenity}
+                amenity={selectedAmenity}
+                onClose={() => setSelectedAmenity(null)}
             />
         </>
     );
@@ -323,6 +583,95 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#1f1f1f',
     },
+    roomBtnExternal: {
+        backgroundColor: '#FFF8E1',
+        borderColor: '#FFE082',
+    },
+    roomBtnValueExternal: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#912338',
+    },
+
+    // Accessibility toggle
+    accessibilityRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+        backgroundColor: '#FAFAFA',
+    },
+    accessibilityLabel: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    accessibilityText: {
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+    },
+    accessibilityTextActive: {
+        color: '#912338',
+        fontWeight: '600',
+    },
+
+    // Multi-floor path indicator
+    multiFloorIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#FFF3E0',
+        borderBottomWidth: 1,
+        borderBottomColor: '#FFE0B2',
+        gap: 8,
+    },
+    multiFloorText: {
+        fontSize: 13,
+        color: '#912338',
+        fontWeight: '600',
+    },
+    
+    // Cross-building indicator
+    crossBuildingIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#E3F2FD',
+        borderBottomWidth: 1,
+        borderBottomColor: '#BBDEFB',
+        gap: 8,
+    },
+    crossBuildingText: {
+        fontSize: 13,
+        color: '#1565C0',
+        fontWeight: '600',
+    },
+    
+    // Path status
+    pathStatus: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        backgroundColor: '#E8F5E9',
+        gap: 6,
+    },
+    pathStatusText: {
+        fontSize: 12,
+        color: '#4CAF50',
+        fontWeight: '500',
+    },
+    pathStatusTextWarn: {
+        fontSize: 12,
+        color: '#FF9800',
+        fontWeight: '500',
+    },
 
     // SVG
     scrollView: { flex: 0 },
@@ -338,5 +687,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
+        position: 'relative',
+        overflow: 'visible',
     },
 });

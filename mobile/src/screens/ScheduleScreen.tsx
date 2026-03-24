@@ -15,6 +15,7 @@ import {
 
 import CalendarConnectButton from '../components/GoogleCalendar/CalendarConnectButton';
 import ConnectedUserBar from '../components/GoogleCalendar/ConnectedUserBar';
+import CalendarPicker from '../components/GoogleCalendar/CalendarPicker';
 import NextClassCard from '../components/GoogleCalendar/NextClassCard';
 import WeekDayHeader from '../components/GoogleCalendar/WeekDayHeader';
 import TimeColumn from '../components/GoogleCalendar/TimeColumn';
@@ -23,7 +24,7 @@ import DayColumn from '../components/GoogleCalendar/DayColumn';
 const ScheduleScreen: React.FC = () => {
   // Compute once per mount so fake timers in tests control the dates.
   const [currentTime, setCurrentTime] = useState(new Date());
-  const { state, connect, disconnect } = useGoogleCalendar();
+  const { state, connect, disconnect, selectCalendar } = useGoogleCalendar();
   const { hourHeight, dayColWidth, setGridHeight, getMondayOfWeek, getEventStyle } = useWeekGrid();
 
   const displayClasses = state.isAuthenticated ? state.events : [];
@@ -53,7 +54,15 @@ const ScheduleScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       {state.isAuthenticated && state.user ? (
-        <ConnectedUserBar user={state.user} onDisconnect={disconnect} />
+        <>
+          <ConnectedUserBar user={state.user} onDisconnect={disconnect} />
+          <CalendarPicker
+            calendars={state.calendars}
+            selectedCalendarId={state.selectedCalendarId}
+            onSelect={selectCalendar}
+            isLoading={state.isLoading}
+          />
+        </>
       ) : (
         <CalendarConnectButton
           isLoading={state.isLoading}

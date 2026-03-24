@@ -9,7 +9,7 @@ interface Props {
   hourHeight: number;
 }
 
-export default function EventBlock({ cls, top, height, hourHeight }: Props) {
+export default function EventBlock({ cls, top, height, hourHeight }: Readonly<Props>) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}

@@ -21,7 +21,25 @@ export interface Building {
     floorPlans?: FloorPlanMap;
 }
 
+export type POIType = 'washroom' | 'water_fountain' | 'stairs' | 'elevator' | 'escalator' | 'stair_landing' | 'elevator_door' | 'building_entry_exit';
+
+export interface POIInfo {
+    nodeId: string;
+    type: POIType;
+    label?: string;
+}
+
 export interface NavMeshNode {
     id: string | number;
     data?: { x: number; y: number };
+}
+
+/**
+ * Represents a selected room with its building context
+ * Used for cross-building room selection persistence
+ */
+export interface RoomSelection {
+    buildingId: string;
+    floor: string;
+    room: string;
 }

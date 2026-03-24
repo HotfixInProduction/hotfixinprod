@@ -4,6 +4,10 @@ module.exports = {
     testPathIgnorePatterns: ["<rootDir>/e2e/", "<rootDir>/__tests__/utils/"],
     collectCoverage: true,
     testTimeout: 10000,
+    moduleNameMapper: {
+        "^../data/navmesh/hall.json$": "<rootDir>/__mocks__/hall.json.js",
+        "^../../data/navmesh/hall.json$": "<rootDir>/__mocks__/hall.json.js",
+    },
     transformIgnorePatterns: [
         "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)"
     ],

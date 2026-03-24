@@ -27,6 +27,13 @@ export interface GoogleCalendarEvent {
   end: { dateTime: string };
 }
 
+export interface GoogleCalendarListEntry {
+  id: string;
+  summary: string;       // calendar display name
+  backgroundColor: string;
+  primary?: boolean;
+}
+
 export interface GoogleUser {
   name: string;
   email: string;
@@ -39,5 +46,7 @@ export interface GoogleCalendarState {
   error: string | null;
   token: GoogleAuthToken | null;
   user: GoogleUser | null;
-  events: ClassEvent[]; // Already mapped from GoogleCalendarEvent[]
+  events: ClassEvent[];
+  calendars: GoogleCalendarListEntry[];
+  selectedCalendarId: string;
 }

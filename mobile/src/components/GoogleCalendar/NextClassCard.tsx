@@ -19,7 +19,7 @@ function getTimeUntilClass(start: Date): string {
   return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
 }
 
-export default function NextClassCard({ nextClass }: Props) {
+export default function NextClassCard({ nextClass }: Readonly<Props>) {
   return (
     <View style={styles.card}>
       <View style={styles.content}>

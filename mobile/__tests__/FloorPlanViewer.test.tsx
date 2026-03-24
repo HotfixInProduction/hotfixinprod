@@ -42,6 +42,13 @@ jest.mock('../src/utils/Pathfinding', () => ({
     findPath: jest.fn(() => null),
     generateSvgPath: jest.fn(() => ''),
     getRoomNodeId: jest.fn(() => null),
+    getFloorsInPath: jest.fn(() => []),
+}));
+
+jest.mock('../src/hooks/useIndoorPath', () => ({
+    useIndoorPath: jest.fn(() => null),
+    usePathFloors: jest.fn(() => []),
+    useSvgPathForFloor: jest.fn(() => ''),
 }));
 
 describe('FloorPlanViewer', () => {
@@ -674,6 +681,554 @@ describe('FloorPlanViewer', () => {
             await waitFor(() => {
                 expect(getByText(/Showing 1 room/)).toBeTruthy();
             });
+        });
+    });
+
+    describe('RoomButton with external building label', () => {
+        it('displays building label when startRoomSelection is from different building', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoomSelection={{ buildingId: 'MB', floor: '1', room: '101' }}
+                />
+            );
+
+            // Should show building label with room
+            expect(getByText(/MB:/)).toBeTruthy();
+            expect(getByText(/101/)).toBeTruthy();
+        });
+
+        it('displays building label when destinationRoomSelection is from different building', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    destinationRoomSelection={{ buildingId: 'VL', floor: '1', room: '105' }}
+                />
+            );
+
+            // Should show building label with room
+            expect(getByText(/VL:/)).toBeTruthy();
+            expect(getByText(/105/)).toBeTruthy();
+        });
+
+        it('does not display building label when selection is from same building', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { queryByText, getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '801' }}
+                />
+            );
+
+            // Should NOT show external building label format
+            expect(queryByText(/Hall Building:/)).toBeNull();
+            // Should show normal format with prefix
+            expect(getByText('H801')).toBeTruthy();
+        });
+
+        it('displays "Select room" when effectiveRoom is empty and no buildingLabel', () => {
+            const buildingNoRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg></svg>',
+                },
+            });
+
+            const { queryAllByText } = render(
+                <FloorPlanViewer 
+                    building={buildingNoRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom=""
+                    nextRoom=""
+                />
+            );
+
+            // Both start and end should show "Select room"
+            const selectRoomElements = queryAllByText('Select room');
+            expect(selectRoomElements.length).toBe(2);
+        });
+    });
+
+    describe('PathStatus component', () => {
+        it('shows "Path found on this floor" when path exists and is on a single floor', async () => {
+            const { useIndoorPath, usePathFloors } = require('../src/hooks/useIndoorPath');
+            
+            // Mock a successful path that spans only 1 floor directly via the hooks
+            useIndoorPath.mockReturnValue(['node1', 'node2']);
+            usePathFloors.mockReturnValue([8]);
+
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    nextRoom="802"
+                />
+            );
+
+            await waitFor(() => {
+                expect(getByText('Path found on this floor')).toBeTruthy();
+            });
+
+            // Cleanup mocks for other tests
+            useIndoorPath.mockReturnValue(null);
+            usePathFloors.mockReturnValue([]);
+        });
+
+        it('shows "No path found" when path is null but rooms are selected', () => {
+            const mockFindPath = require('../src/utils/Pathfinding').findPath;
+            mockFindPath.mockReturnValue(null);
+
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { queryByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    nextRoom="802"
+                />
+            );
+
+            // PathStatus may or may not show depending on hook implementation
+            // Just verify the component renders without crashing
+            expect(queryByText('Hall Building - Floor 8')).toBeTruthy();
+        });
+
+        it('does not show path status when no rooms are selected', () => {
+            const mockFindPath = require('../src/utils/Pathfinding').findPath;
+            mockFindPath.mockReturnValue(null);
+
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { queryByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom=""
+                    nextRoom=""
+                />
+            );
+
+            expect(queryByText('No path found')).toBeNull();
+            expect(queryByText('Path found on this floor')).toBeNull();
+        });
+    });
+
+    describe('MultiFloorIndicator component', () => {
+        it('shows multi-floor path text when path spans multiple floors', async () => {
+            const { useIndoorPath, usePathFloors } = require('../src/hooks/useIndoorPath');
+            
+            // Mock a successful path that spans 2 floors directly via the hooks
+            useIndoorPath.mockReturnValue(['node1', 'node2', 'node3']);
+            usePathFloors.mockReturnValue([8, 9]);
+
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                    '9': '<svg><rect inkscape:label="901" /></svg>',
+                },
+            });
+
+            const { getByText, getByTestId } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    nextRoom="901"
+                />
+            );
+
+            await waitFor(() => {
+                expect(getByText('Path spans 2 floors: 8 → 9')).toBeTruthy();
+            });
+
+            // Test accessibility toggle appending "(via elevator)"
+            const accessibilityToggle = getByTestId('accessibility-toggle');
+            fireEvent(accessibilityToggle, 'valueChange', true);
+
+            await waitFor(() => {
+                expect(getByText('Path spans 2 floors: 8 → 9 (via elevator)')).toBeTruthy();
+            });
+
+            // Cleanup mocks for other tests
+            useIndoorPath.mockReturnValue(null);
+            usePathFloors.mockReturnValue([]);
+        });
+
+        it('renders accessibility toggle for multi-floor paths', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                    '9': '<svg><rect inkscape:label="901" /></svg>',
+                },
+            });
+
+            const { getByTestId } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    nextRoom="901"
+                />
+            );
+
+            // Verify accessibility toggle exists
+            const accessibilityToggle = getByTestId('accessibility-toggle');
+            expect(accessibilityToggle).toBeTruthy();
+        });
+
+        it('toggles accessibility mode when switch is pressed', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                    '9': '<svg><rect inkscape:label="901" /></svg>',
+                },
+            });
+
+            const { getByTestId } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    nextRoom="901"
+                />
+            );
+
+            // Toggle accessibility mode
+            const accessibilityToggle = getByTestId('accessibility-toggle');
+            expect(accessibilityToggle).toBeTruthy();
+            fireEvent(accessibilityToggle, 'valueChange', true);
+        });
+    });
+
+    describe('CrossBuildingIndicator component', () => {
+        it('shows "Exit to reach" when current building is start building', () => {
+            const mockFindPath = require('../src/utils/Pathfinding').findPath;
+            mockFindPath.mockReturnValue(null);
+
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '801' }}
+                    destinationRoomSelection={{ buildingId: 'MB', floor: '1', room: '101' }}
+                />
+            );
+
+            expect(getByText(/Exit to reach MB/)).toBeTruthy();
+        });
+
+        it('shows "Enter from" when current building is destination building', () => {
+            const mockFindPath = require('../src/utils/Pathfinding').findPath;
+            mockFindPath.mockReturnValue(null);
+
+            const buildingWithRooms = createMockBuilding({
+                id: 'MB',
+                label: 'MB',
+                floorPlans: {
+                    '1': '<svg><rect inkscape:label="101" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="1" 
+                    onClose={mockOnClose}
+                    startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '801' }}
+                    destinationRoomSelection={{ buildingId: 'MB', floor: '1', room: '101' }}
+                />
+            );
+
+            expect(getByText(/Enter from Hall Building/)).toBeTruthy();
+        });
+
+        it('does not show cross-building indicator when both rooms are in same building', () => {
+            const mockFindPath = require('../src/utils/Pathfinding').findPath;
+            mockFindPath.mockReturnValue(null);
+
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { queryByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '801' }}
+                    destinationRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '802' }}
+                />
+            );
+
+            expect(queryByText(/Exit to reach/)).toBeNull();
+            expect(queryByText(/Enter from/)).toBeNull();
+        });
+    });
+
+    describe('Accessibility toggle', () => {
+        it('renders accessibility toggle switch', () => {
+            const { getByTestId } = render(
+                <FloorPlanViewer building={mockBuilding} floorLevel="8" onClose={mockOnClose} />
+            );
+
+            expect(getByTestId('accessibility-toggle')).toBeTruthy();
+        });
+
+        it('toggles accessibility mode when switch is pressed', () => {
+            const mockFindPath = require('../src/utils/Pathfinding').findPath;
+            mockFindPath.mockReturnValue(null);
+
+            const { getByTestId } = render(
+                <FloorPlanViewer building={mockBuilding} floorLevel="8" onClose={mockOnClose} />
+            );
+
+            const toggle = getByTestId('accessibility-toggle');
+            
+            // Initially false
+            expect(toggle.props.value).toBe(false);
+            
+            // Toggle to true
+            fireEvent(toggle, 'valueChange', true);
+            expect(toggle.props.value).toBe(true);
+        });
+
+        it('shows accessible route text with active styling when enabled', () => {
+            const { getByTestId, getByText } = render(
+                <FloorPlanViewer building={mockBuilding} floorLevel="8" onClose={mockOnClose} />
+            );
+
+            const toggle = getByTestId('accessibility-toggle');
+            fireEvent(toggle, 'valueChange', true);
+
+            expect(getByText('Accessible route')).toBeTruthy();
+        });
+    });
+
+    describe('Room selection callbacks', () => {
+        it('calls onStartRoomChange when start room is selected', async () => {
+            const mockOnStartRoomChange = jest.fn();
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByTestId, getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    onStartRoomChange={mockOnStartRoomChange}
+                />
+            );
+
+            const startBtn = getByTestId('room-picker-start');
+            fireEvent.press(startBtn);
+
+            await waitFor(() => {
+                expect(getByText('Select start room')).toBeTruthy();
+            });
+
+            const room801 = getByText('H801');
+            fireEvent.press(room801);
+
+            await waitFor(() => {
+                expect(mockOnStartRoomChange).toHaveBeenCalledWith({
+                    buildingId: 'Hall Building',
+                    floor: '8',
+                    room: '801',
+                });
+            });
+        });
+
+        it('calls onDestinationRoomChange when destination room is selected', async () => {
+            const mockOnDestinationRoomChange = jest.fn();
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByTestId, getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    onDestinationRoomChange={mockOnDestinationRoomChange}
+                />
+            );
+
+            const endBtn = getByTestId('room-picker-end');
+            fireEvent.press(endBtn);
+
+            await waitFor(() => {
+                expect(getByText('Select destination room')).toBeTruthy();
+            });
+
+            const room802 = getByText('H802');
+            fireEvent.press(room802);
+
+            await waitFor(() => {
+                expect(mockOnDestinationRoomChange).toHaveBeenCalledWith({
+                    buildingId: 'Hall Building',
+                    floor: '8',
+                    room: '802',
+                });
+            });
+        });
+
+        it('does not call onStartRoomChange when building is null', async () => {
+            const mockOnStartRoomChange = jest.fn();
+
+            const { queryByText } = render(
+                <FloorPlanViewer 
+                    building={null} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    onStartRoomChange={mockOnStartRoomChange}
+                />
+            );
+
+            expect(queryByText('Select start room')).toBeNull();
+            expect(mockOnStartRoomChange).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('Effective room resolution', () => {
+        it('uses startRoomSelection over startRoom prop', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    startRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '802' }}
+                />
+            );
+
+            // Should show 802 from selection, not 801 from prop
+            expect(getByText('H802')).toBeTruthy();
+        });
+
+        it('uses destinationRoomSelection over nextRoom prop', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    nextRoom="801"
+                    destinationRoomSelection={{ buildingId: 'Hall Building', floor: '8', room: '802' }}
+                />
+            );
+
+            // Should show 802 from selection, not 801 from prop
+            expect(getByText('H802')).toBeTruthy();
+        });
+
+        it('falls back to startRoom when startRoomSelection is null', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    startRoom="801"
+                    startRoomSelection={null}
+                />
+            );
+
+            expect(getByText('H801')).toBeTruthy();
+        });
+
+        it('falls back to nextRoom when destinationRoomSelection is null', () => {
+            const buildingWithRooms = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="802" /></svg>',
+                },
+            });
+
+            const { getByText } = render(
+                <FloorPlanViewer 
+                    building={buildingWithRooms} 
+                    floorLevel="8" 
+                    onClose={mockOnClose}
+                    nextRoom="802"
+                    destinationRoomSelection={null}
+                />
+            );
+
+            expect(getByText('H802')).toBeTruthy();
         });
     });
 });

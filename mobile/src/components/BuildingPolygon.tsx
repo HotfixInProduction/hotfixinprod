@@ -13,9 +13,10 @@ interface BuildingPolygonProps {
     readonly currentDelta: number;
     readonly startBuildingId?: string | null;
     readonly destinationBuildingId?: string | null;
+    readonly disabled?: boolean;
 }
 
-export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta, startBuildingId, destinationBuildingId }: BuildingPolygonProps) {
+export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, currentDelta, startBuildingId, destinationBuildingId, disabled = false }: BuildingPolygonProps) {
     const { currentBuildingId } = useBuildingPolygonController();
 
     return (
@@ -41,13 +42,13 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                             strokeColor={strokeColor}
                             fillColor={fillColor}
                             strokeWidth={2}
-                            onPress={() => onSelectBuilding(b)}
+                            onPress={() => !disabled && onSelectBuilding(b)}
                             tappable
                         />
                         <Marker
                             coordinate={b.labelCoord}
                             opacity={0.01}
-                            onPress={() => onSelectBuilding(b)}
+                            onPress={() => !disabled && onSelectBuilding(b)}
                             testID={`building-polygon-${b.id}-polygon`}
                         >
                             <View style={{ width: 60, height: 60, backgroundColor: 'rgba(0,0,0,0.01)' }} />
@@ -55,7 +56,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                         {isUserInside && (
                             <Marker
                                 coordinate={b.labelCoord}
-                                opacity={0.0}
+                                opacity={0}
                                 pointerEvents='none'
                                 testID={`building-polygon-${b.id}-highlighted`}
                             />
@@ -64,7 +65,7 @@ export default function BuildingPolygon({ onSelectBuilding, selectedBuildingId, 
                             <Marker
                                 coordinate={b.labelCoord}
                                 pointerEvents='auto'
-                                onPress={() => onSelectBuilding(b)}
+                                onPress={() => !disabled && onSelectBuilding(b)}
                                 anchor={{ x: 0.5, y: 1 }}
                                 testID={"building-marker-" + b.id}
                             >
