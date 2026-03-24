@@ -9,7 +9,10 @@ import { useFloorPlanState } from '../hooks/useFloorPlanState';
 import { useRoomList } from '../hooks/useRoomList';
 import { useIndoorPath, useSvgPathForFloor, usePathFloors } from '../hooks/useIndoorPath';
 import { useProcessedSvg } from '../hooks/useProcessedSvg';
+import { useAmenities, AmenityElement } from '../hooks/useAmenities';
 import RoomPickerModal from './RoomPickerModal';
+import AmenityInfoModal from './AmenityInfoModal';
+import AmenityOverlay from './AmenityOverlay';
 import { Building, RoomSelection } from '../types/building';
 
 type Props = Readonly<{
@@ -186,6 +189,10 @@ export default function FloorPlanViewer({
     // Accessibility mode state
     const [accessibleOnly, setAccessibleOnly] = useState(false);
     
+    // Amenity state
+    const [selectedAmenity, setSelectedAmenity] = useState<AmenityElement | null>(null);
+    const amenities = useAmenities(rawSvgContent);
+    
     // Handle room selection with external state persistence
     const handleStartRoomSelect = (svgLabel: string) => {
         setStartRoom(svgLabel);
@@ -254,6 +261,12 @@ export default function FloorPlanViewer({
     // Check if this is cross-building navigation
     const isCrossBuilding = startBuildingId !== destBuildingId;
     const isStartBuilding = building?.id === startBuildingId;
+
+    // Calculate SVG scale factor
+    // SVG coordinate system is 1024x1024, displayed at (screenWidth - 40) x (screenWidth - 40)
+    const displaySvgSize = screenWidth - 40;
+    const originalSvgSize = 1024;
+    const svgScale = displaySvgSize / originalSvgSize;
 
     if (!building || !rawSvgContent || !svgWithPaths) return null;
 
@@ -383,6 +396,7 @@ export default function FloorPlanViewer({
                             contentContainerStyle={styles.scrollContent}
                             showsVerticalScrollIndicator={true}
                             showsHorizontalScrollIndicator={true}
+                            scrollEnabled={true}
                         >
                             <View style={styles.svgContainer}>
                                 <SvgXml
@@ -390,6 +404,14 @@ export default function FloorPlanViewer({
                                     width={screenWidth - 40}
                                     height={screenWidth - 40}
                                     onError={(e) => console.log('SVG Error: ', e)}
+                                />
+                                {/* Amenity overlay on top of SVG */}
+                                <AmenityOverlay
+                                    amenities={amenities}
+                                    svgScale={svgScale}
+                                    svgOffsetX={0}
+                                    svgOffsetY={0}
+                                    onAmenityPress={setSelectedAmenity}
                                 />
                             </View>
                         </ScrollView>
@@ -417,6 +439,13 @@ export default function FloorPlanViewer({
                 selectedRoom={effectiveDestRoom}
                 onSelect={handleDestinationRoomSelect}
                 onClose={() => setRoomPickerOpen(null)}
+            />
+
+            {/* Amenity info modal */}
+            <AmenityInfoModal
+                visible={!!selectedAmenity}
+                amenity={selectedAmenity}
+                onClose={() => setSelectedAmenity(null)}
             />
         </>
     );
@@ -658,5 +687,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 4,
         elevation: 2,
+        position: 'relative',
+        overflow: 'visible',
     },
 });
