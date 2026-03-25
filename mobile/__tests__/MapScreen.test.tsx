@@ -1504,3 +1504,115 @@ describe('Directions Floor Plan', () => {
   });
 });
 
+describe('Route Instructions', () => {
+  const setupRouteInstructions = async (getByTestId: any) => {
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
+  };
+
+  it('hides route info panel when route instructions are shown', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    await setupRouteInstructions(getByTestId);
+
+    expect(queryByTestId('route-info-container')).toBeNull();
+  });
+
+  it('shows compact route header when route instructions are open', async () => {
+    const { getByTestId } = render(<MapScreen />);
+    await setupRouteInstructions(getByTestId);
+
+    expect(getByTestId('compact-route-header')).toBeTruthy();
+  });
+
+  it('hides building selector toggle when route instructions are open', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    await setupRouteInstructions(getByTestId);
+
+    expect(queryByTestId('building-selector-toggle')).toBeNull();
+  });
+
+  it('returns to route info when instructions are closed', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    await setupRouteInstructions(getByTestId);
+
+    fireEvent.press(getByTestId('route-instructions-close-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('route-instructions-mock')).toBeNull();
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+  });
+
+  it('does not show route instructions before start button is pressed', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+    expect(queryByTestId('route-instructions-mock')).toBeNull();
+  });
+
+  it('does not show route instructions when no route is set', async () => {
+    const { queryByTestId } = render(<MapScreen />);
+
+    expect(queryByTestId('route-instructions-mock')).toBeNull();
+  });
+
+  it('opens floor plan viewer from route instructions and can close it', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    await setupRouteInstructions(getByTestId);
+
+    fireEvent.press(getByTestId('route-instructions-view-floor-plan'));
+
+    await waitFor(() => {
+      expect(getByTestId('floor-plan-viewer-mock')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('floor-plan-close'));
+
+    await waitFor(() => {
+      expect(queryByTestId('floor-plan-viewer-mock')).toBeNull();
+    });
+  });
+
+  it('keeps route instructions visible after closing floor plan viewer', async () => {
+    const { getByTestId } = render(<MapScreen />);
+    await setupRouteInstructions(getByTestId);
+
+    fireEvent.press(getByTestId('route-instructions-view-floor-plan'));
+    await waitFor(() => expect(getByTestId('floor-plan-viewer-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('floor-plan-close'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-instructions-mock')).toBeTruthy();
+    });
+  });
+
+  it('clears route instructions when route is cleared', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    await setupRouteInstructions(getByTestId);
+
+    fireEvent.press(getByTestId('route-instructions-close-button'));
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('route-info-close-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('route-instructions-mock')).toBeNull();
+      expect(queryByTestId('route-info-mock')).toBeNull();
+    });
+  });
+});
+
+
