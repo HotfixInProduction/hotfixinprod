@@ -351,7 +351,7 @@ export const createRouteInfoMock = () => {
 
 export const createRouteInstructionsMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ instructions, onClose }: any) => (
+  return ({ instructions, onClose, onViewFloorPlan }: any) => (
     <View testID="route-instructions-mock">
       <Text>Route Instructions</Text>
       <TouchableOpacity
@@ -360,6 +360,12 @@ export const createRouteInstructionsMock = () => {
       >
         <Text>Close Instructions</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+              testID="route-instructions-view-floor-plan"
+              onPress={() => onViewFloorPlan('mock-building-id', '8')}
+            >
+              <Text>View Floor Plan</Text>
+            </TouchableOpacity>
     </View>
   );
 };

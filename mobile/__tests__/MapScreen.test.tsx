@@ -1350,3 +1350,48 @@ describe('Building Polygon Click Prevention', () => {
     });
   });
 });
+
+describe('Directions Floor Plan', () => {
+  it('opens FloorPlanViewer when onViewFloorPlan is called from RouteInstructions', async () => {
+    const { getByTestId, getByText } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('route-instructions-view-floor-plan'));
+
+    await waitFor(() => {
+      expect(getByTestId('floor-plan-viewer-mock')).toBeTruthy();
+    });
+  });
+
+  it('closes directions FloorPlanViewer when its close button is pressed', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('route-info-start-button'));
+    await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('route-instructions-view-floor-plan'));
+    await waitFor(() => expect(getByTestId('floor-plan-viewer-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('floor-plan-close'));
+
+    await waitFor(() => {
+      expect(queryByTestId('floor-plan-viewer-mock')).toBeNull();
+    });
+  });
+});
+
