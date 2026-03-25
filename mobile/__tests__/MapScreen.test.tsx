@@ -1,7 +1,8 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act,  screen } from '@testing-library/react-native';
 import { Alert, Linking } from 'react-native';
 import MapScreen from '../src/screens/MapScreen';
+import RouteInstructions from '../src/components/RouteInstructions';
 import {
   mockRequestForegroundPermissions,
   mockGetForegroundPermissions,
@@ -1612,6 +1613,33 @@ describe('Route Instructions', () => {
       expect(queryByTestId('route-instructions-mock')).toBeNull();
       expect(queryByTestId('route-info-mock')).toBeNull();
     });
+  });
+
+  it('does nothing when onViewFloorPlan is called with non-existing building', () => {
+      const setDirectionsFloorPlan = jest.fn();
+      const buildings = [{ id: 'A', name: 'Building A' }];
+
+      const instructions: MapStep[] = [];
+
+      const start = { name: 'Unknown', address: '', location: { lat: 0, lng: 0 } };
+
+     render(
+        <RouteInstructions
+          instructions={instructions}
+          start={start}
+          destination={null}
+          onClose={jest.fn()}
+          onViewFloorPlan={(buildingId, floor) => {
+            const building = buildings.find(b => b.id === buildingId);
+            if (!building) return;
+            setDirectionsFloorPlan({ building, floor });
+          }}
+        />
+      );
+
+    fireEvent.press(screen.getByText('View Floor Plan'));
+
+    expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
   });
 });
 
