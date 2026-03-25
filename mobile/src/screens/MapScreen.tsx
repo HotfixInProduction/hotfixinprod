@@ -25,6 +25,7 @@ import POIFilter from '../components/POIFilter';
 import NearestPOIBanner from '../components/NearestPOIBanner';
 import { findNearestPOI } from '../utils/distanceUtils';
 import { getPOICategoryIcon, getPOICategoryLabel, getPOICategoryColor } from '../utils/poiMarkerUtils';
+import { useAppSettings } from '../hooks/useAppSettings';
 import {
   CAMPUSES,
   INITIAL_REGION,
@@ -69,6 +70,7 @@ export default function MapScreen() {
   const [directionsGoogle, setDirectionsGoogle] = useState<any>(null);
   const processedSteps = useRouteProcessor(directionsGoogle);
   const googleMapsApiKey = Constants.expoConfig?.extra?.googleApiKey as string | undefined;
+  const { settings } = useAppSettings();
   
   // POI state
   const [selectedPOI, setSelectedPOI] = useState<OutdoorPOI | null>(null);
@@ -273,13 +275,14 @@ export default function MapScreen() {
   // Calculate nearest POI when user location changes
   useEffect(() => {
     const filteredPOIsForCampus = getFilteredPOIs();
-    const nearest = findNearestPOI(userLocation, filteredPOIsForCampus, 500);
+    const poiRange = settings?.poiRangeMeters ?? 500;
+    const nearest = findNearestPOI(userLocation, filteredPOIsForCampus, poiRange);
     if (nearest) {
       setNearestPOI(nearest as OutdoorPOI & { distance: number });
     } else {
       setNearestPOI(null);
     }
-  }, [userLocation, selectedCampus, poiFilters]);
+  }, [userLocation, selectedCampus, poiFilters, settings]);
 
   // auto-fit map to show both start and destination
   useEffect(() => {
@@ -648,14 +651,16 @@ export default function MapScreen() {
         </View>
 
         {/* Nearest POI Banner */}
-        <NearestPOIBanner
-          poi={nearestPOI}
-          onPress={() => {
-            if (nearestPOI) {
-              handlePOISelect(nearestPOI);
-            }
-          }}
-        />
+        {settings?.showNearestPOIBanner !== false && (
+          <NearestPOIBanner
+            poi={nearestPOI}
+            onPress={() => {
+              if (nearestPOI) {
+                handlePOISelect(nearestPOI);
+              }
+            }}
+          />
+        )}
 
         {!showCompactRouteHeader && (
           <>

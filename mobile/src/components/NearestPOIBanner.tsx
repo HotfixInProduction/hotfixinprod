@@ -12,7 +12,11 @@ interface NearestPOIBannerProps {
 
 export default function NearestPOIBanner({ poi, onPress }: Readonly<NearestPOIBannerProps>) {
   if (!poi) {
-    return null;
+    return (
+      <View style={styles.container}>
+      <Text style={styles.label}>No POIs nearby</Text>
+      </View>
+    );
   }
 
   return (
