@@ -1009,6 +1009,79 @@ describe('Transportation Modes', () => {
   });
 });
 
+describe('Shuttle Schedule Edge Cases', () => {
+  it('shows "no more departures today" when next departure exceeds 60 minutes', async () => {
+    const OriginalDate = Date;
+    const lateTime = new OriginalDate('2026-03-02T23:00:00');
+    class MockDate extends OriginalDate {
+      constructor(...args: any[]) {
+        if (args.length === 0) {
+          super(lateTime.getTime());
+          return;
+        }
+        super(args[0]);
+      }
+      static now() { return lateTime.getTime(); }
+    }
+    (globalThis as any).Date = MockDate as any;
+
+    try {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('set-start'));
+      fireEvent.press(getByTestId('set-destination'));
+
+      await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+      fireEvent.press(getByTestId('route-info-mode-shuttle'));
+      fireEvent.press(getByTestId('route-info-open-shuttle-schedule'));
+
+      await waitFor(() => {
+        expect(getByText(/No more shuttle departures today/i)).toBeTruthy();
+      });
+    } finally {
+      (globalThis as any).Date = OriginalDate;
+    }
+  });
+
+  it('shows service resume message on weekends', async () => {
+    const OriginalDate = Date;
+    const saturday = new OriginalDate('2026-03-07T10:00:00');
+    class MockDate extends OriginalDate {
+      constructor(...args: any[]) {
+        if (args.length === 0) {
+          super(saturday.getTime());
+          return;
+        }
+        super(args[0]);
+      }
+      static now() { return saturday.getTime(); }
+    }
+    (globalThis as any).Date = MockDate as any;
+
+    try {
+      const { getByTestId, getByText } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('set-start'));
+      fireEvent.press(getByTestId('set-destination'));
+
+      await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+      fireEvent.press(getByTestId('route-info-mode-shuttle'));
+      fireEvent.press(getByTestId('route-info-open-shuttle-schedule'));
+
+      await waitFor(() => {
+        expect(getByText(/No service today/i)).toBeTruthy();
+      });
+    } finally {
+      (globalThis as any).Date = OriginalDate;
+    }
+  });
+});
+
+
 describe('Clearing Route', () => {
   it('clears the route and resets the map', async () => {
     const { getByTestId, queryByTestId } = render(<MapScreen />);
