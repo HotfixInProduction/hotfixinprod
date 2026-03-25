@@ -3,6 +3,7 @@ import { render, fireEvent, waitFor, act,  screen } from '@testing-library/react
 import { Alert, Linking } from 'react-native';
 import MapScreen from '../src/screens/MapScreen';
 import RouteInstructions from '../src/components/RouteInstructions';
+import { MapStep } from '../types/map';
 import {
   mockRequestForegroundPermissions,
   mockGetForegroundPermissions,
