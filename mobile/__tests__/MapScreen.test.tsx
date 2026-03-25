@@ -1617,19 +1617,39 @@ describe('Route Instructions', () => {
   });
 
   it('does nothing when onViewFloorPlan is called with non-existing building', () => {
-    const setDirectionsFloorPlan = jest.fn();
-    const buildings = [{ id: 'A', name: 'Building A' }];
+      const setDirectionsFloorPlan = jest.fn();
+      const buildings = [{ id: 'A', name: 'Building A' }];
 
-    const handler = (buildingId: string, floor?: string) => {
-      const building = buildings.find(b => b.id === buildingId);
-      if (!building) return;
-      setDirectionsFloorPlan({ building, floor });
-    };
+      const instructions: MapStep[] = [];
 
-    handler('NON_EXISTENT', '1');
+      const start: Place = { name: 'Unknown', address: '', location: { lat: 0, lng: 0 } };
 
-    expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
-  });
+      const { getByText } = render(
+        <RouteInstructions
+          instructions={instructions}
+          start={start}
+          destination={null}
+          onClose={jest.fn()}
+          onViewFloorPlan={(buildingId, floor) => {
+            const building = buildings.find(b => b.id === buildingId);
+
+            if (!building) return;
+
+            setDirectionsFloorPlan({ building, floor });
+          }}
+        />
+      );
+
+      const viewFloorPlanHandler = (buildingId: string, floor?: string) => {
+        const building = buildings.find(b => b.id === buildingId);
+        if (!building) return;
+        setDirectionsFloorPlan({ building, floor });
+      };
+
+      viewFloorPlanHandler('NON_EXISTENT', '1');
+
+      expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
+    });
 });
 
 
