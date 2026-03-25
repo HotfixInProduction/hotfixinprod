@@ -1351,6 +1351,42 @@ describe('Building Polygon Click Prevention', () => {
   });
 });
 
+describe('Compact Route Header', () => {
+  it('displays start and destination names in compact route header', async () => {
+    const { getByTestId, getAllByText } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => {
+      const header = getByTestId('compact-route-header');
+      expect(header).toBeTruthy();
+      expect(getAllByText(/SGW|Loyola|Downtown/i).length).toBeGreaterThan(0);
+    });
+  });
+
+  it('hides building selector toggle when compact route header is shown', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('building-selector-toggle')).toBeNull();
+    });
+  });
+});
+
 describe('Directions Floor Plan', () => {
   it('opens FloorPlanViewer when onViewFloorPlan is called from RouteInstructions', async () => {
     const { getByTestId, getByText } = render(<MapScreen />);
