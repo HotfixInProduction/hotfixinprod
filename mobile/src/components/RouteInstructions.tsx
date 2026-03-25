@@ -34,7 +34,7 @@ const RouteInstructions = ({ instructions, start, destination, onClose, onViewFl
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>Directions</Text>
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <TouchableOpacity testID="close-button" onPress={onClose} style={styles.closeButton}>
                     <MaterialIcons name="close" size={18} color="#912338" />
                 </TouchableOpacity>
             </View>
