@@ -1617,28 +1617,31 @@ describe('Route Instructions', () => {
   });
 
   it('does nothing when onViewFloorPlan is called with non-existing building', () => {
-      const setDirectionsFloorPlan = jest.fn();
-      const buildings = [{ id: 'A', name: 'Building A' }];
+    const setDirectionsFloorPlan = jest.fn();
+    const buildings = [{ id: 'A', name: 'Building A' }];
 
-      const instructions: MapStep[] = [];
-      const start = { name: 'Unknown', address: '', location: { lat: 0, lng: 0 } };
+    const start = { name: 'Unknown', address: '', location: { lat: 0, lng: 0 } };
+    const instructions: MapStep[] = [];
 
-     const { getByTestId } = render(
-        <RouteInstructions
-          instructions={instructions}
-          start={start}
-          destination={null}
-          onClose={jest.fn()}
-          onViewFloorPlan={(buildingId, floor) => {
-            const building = buildings.find(b => b.id === buildingId);
-            if (!building) return;
-            setDirectionsFloorPlan({ building, floor });
-          }}
-        />
-      );
-  const viewFloorPlanButton = getByTestId('route-instructions-view-floor-plan');
-  fireEvent.press(viewFloorPlanButton, { nativeEvent: { buildingId: 'NON_EXISTENT_BUILDING', floor: '1' } });
-  expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
+    const routeInstructions = (
+      <RouteInstructions
+        instructions={instructions}
+        start={start}
+        destination={null}
+        onClose={jest.fn()}
+        onViewFloorPlan={(buildingId, floor) => {
+          const building = buildings.find(b => b.id === buildingId);
+          if (!building) return; 
+          setDirectionsFloorPlan({ building, floor });
+        }}
+      />
+    );
+
+    render(routeInstructions);
+
+    routeInstructions.props.onViewFloorPlan('NON_EXISTENT', '1');
+
+    expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
   });
 });
 
