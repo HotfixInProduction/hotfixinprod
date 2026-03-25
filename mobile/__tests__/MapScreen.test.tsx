@@ -1620,26 +1620,13 @@ describe('Route Instructions', () => {
     const setDirectionsFloorPlan = jest.fn();
     const buildings = [{ id: 'A', name: 'Building A' }];
 
-    const start = { name: 'Unknown', address: '', location: { lat: 0, lng: 0 } };
-    const instructions: MapStep[] = [];
+    const handler = (buildingId: string, floor?: string) => {
+      const building = buildings.find(b => b.id === buildingId);
+      if (!building) return;
+      setDirectionsFloorPlan({ building, floor });
+    };
 
-    const routeInstructions = (
-      <RouteInstructions
-        instructions={instructions}
-        start={start}
-        destination={null}
-        onClose={jest.fn()}
-        onViewFloorPlan={(buildingId, floor) => {
-          const building = buildings.find(b => b.id === buildingId);
-          if (!building) return; 
-          setDirectionsFloorPlan({ building, floor });
-        }}
-      />
-    );
-
-    render(routeInstructions);
-
-    routeInstructions.props.onViewFloorPlan('NON_EXISTENT', '1');
+    handler('NON_EXISTENT', '1');
 
     expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
   });
