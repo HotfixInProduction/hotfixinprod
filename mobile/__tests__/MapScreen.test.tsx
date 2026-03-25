@@ -1621,10 +1621,9 @@ describe('Route Instructions', () => {
       const buildings = [{ id: 'A', name: 'Building A' }];
 
       const instructions: MapStep[] = [];
-
       const start = { name: 'Unknown', address: '', location: { lat: 0, lng: 0 } };
 
-     render(
+     const { getByTestId } = render(
         <RouteInstructions
           instructions={instructions}
           start={start}
@@ -1637,10 +1636,9 @@ describe('Route Instructions', () => {
           }}
         />
       );
-
-    fireEvent.press(screen.getByText('View Floor Plan'));
-
-    expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
+  const viewFloorPlanButton = getByTestId('route-instructions-view-floor-plan');
+  fireEvent.press(viewFloorPlanButton, { nativeEvent: { buildingId: 'NON_EXISTENT_BUILDING', floor: '1' } });
+  expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
   });
 });
 
