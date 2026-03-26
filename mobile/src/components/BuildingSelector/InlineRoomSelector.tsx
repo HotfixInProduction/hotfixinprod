@@ -41,6 +41,20 @@ type SyncSelectionParams = {
   setShowRoomList: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
+type SelectorInputProps = {
+  text: string;
+  disabled: boolean;
+  isPlaceholder: boolean;
+  isOpen: boolean;
+  onPress?: () => void;
+  left?: boolean;
+};
+
+const getBuilding = (buildingId?: string | null) =>
+  buildingId
+    ? (buildings.find((b) => b.id === buildingId) as Building | undefined)
+    : undefined;
+
 const getFloorText = (
   building: Building | undefined,
   selection: RoomSelection | null
@@ -59,6 +73,19 @@ const getRoomText = (
   if (selection?.room) return `Room: ${buildingPrefix}${selection.room}`;
   return 'Room: Select';
 };
+
+const getSelectedText = (
+  buildingId: string | null | undefined,
+  selection: RoomSelection | null,
+  buildingPrefix: string
+) =>
+  [
+    buildingId ? `Building: ${buildingId}` : 'No building selected',
+    selection?.floor ? `Floor ${selection.floor}` : null,
+    selection?.room ? `${buildingPrefix}${selection.room}` : null,
+  ]
+    .filter(Boolean)
+    .join(' • ');
 
 const syncInlineRoomSelection = ({
   building,
@@ -109,6 +136,43 @@ const syncInlineRoomSelection = ({
     });
   }
 };
+
+const SelectorInput: React.FC<SelectorInputProps> = ({
+  text,
+  disabled,
+  isPlaceholder,
+  isOpen,
+  onPress,
+  left = false,
+}) => (
+  <TouchableOpacity
+    style={[
+      styles.compactInput,
+      left && styles.compactInputLeft,
+      disabled && styles.compactInputDisabled,
+    ]}
+    onPress={onPress}
+    activeOpacity={disabled ? 1 : 0.8}
+    disabled={disabled}
+  >
+    <Text
+      style={[
+        styles.compactInputText,
+        isPlaceholder && styles.compactInputPlaceholder,
+        disabled && styles.compactInputDisabledText,
+      ]}
+      numberOfLines={1}
+    >
+      {text}
+    </Text>
+
+    <MaterialCommunityIcons
+      name={isOpen ? 'chevron-up' : 'chevron-down'}
+      size={18}
+      color={disabled ? '#aaa' : '#555'}
+    />
+  </TouchableOpacity>
+);
 
 const FloorDropdown: React.FC<FloorDropdownProps> = ({
   label,
@@ -220,9 +284,7 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
   const [showFloorList, setShowFloorList] = useState(false);
   const [showRoomList, setShowRoomList] = useState(false);
 
-  const building = buildingId
-    ? (buildings.find((b) => b.id === buildingId) as Building | undefined)
-    : undefined;
+  const building = getBuilding(buildingId);
 
   const {
     currentFloor,
@@ -298,76 +360,39 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
 
   const floorText = getFloorText(building, selection);
   const roomText = getRoomText(building, selection, buildingPrefix);
+  const selectedText = getSelectedText(buildingId, selection, buildingPrefix);
 
   return (
     <View style={styles.section}>
       <View style={styles.compactRow}>
-        <TouchableOpacity
-          style={[
-            styles.compactInput,
-            styles.compactInputLeft,
-            floorDisabled && styles.compactInputDisabled,
-          ]}
-          onPress={floorDisabled ? undefined : toggleFloorList}
-          activeOpacity={floorDisabled ? 1 : 0.8}
+        <SelectorInput
+          text={floorText}
           disabled={floorDisabled}
-        >
-          <Text
-            style={[
-              styles.compactInputText,
-              (!building || !selection?.floor) && styles.compactInputPlaceholder,
-              floorDisabled && styles.compactInputDisabledText,
-            ]}
-            numberOfLines={1}
-          >
-            {floorText}
-          </Text>
+          isPlaceholder={!building || !selection?.floor}
+          isOpen={showFloorList}
+          onPress={floorDisabled ? undefined : toggleFloorList}
+          left
+        />
 
-          <MaterialCommunityIcons
-            name={showFloorList ? 'chevron-up' : 'chevron-down'}
-            size={18}
-            color={floorDisabled ? '#aaa' : '#555'}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.compactInput,
-            roomDisabled && styles.compactInputDisabled,
-          ]}
-          onPress={roomDisabled ? undefined : toggleRoomList}
-          activeOpacity={roomDisabled ? 1 : 0.8}
+        <SelectorInput
+          text={roomText}
           disabled={roomDisabled}
-        >
-          <Text
-            style={[
-              styles.compactInputText,
-              (!building || !selection?.room) && styles.compactInputPlaceholder,
-              roomDisabled && styles.compactInputDisabledText,
-            ]}
-            numberOfLines={1}
-          >
-            {roomText}
-          </Text>
-
-          <MaterialCommunityIcons
-            name={showRoomList ? 'chevron-up' : 'chevron-down'}
-            size={18}
-            color={roomDisabled ? '#aaa' : '#555'}
-          />
-        </TouchableOpacity>
+          isPlaceholder={!building || !selection?.room}
+          isOpen={showRoomList}
+          onPress={roomDisabled ? undefined : toggleRoomList}
+        />
       </View>
 
-      {showFloorList && building && (
+      {showFloorList ? (
         <FloorDropdown
           label={label}
           currentFloor={String(currentFloor)}
           availableFloors={availableFloors.map(String)}
           onSelect={handleFloorSelect}
         />
-      )}
+      ) : null}
 
-      {showRoomList && building && !!currentFloor && (
+      {showRoomList ? (
         <RoomDropdown
           label={label}
           currentFloor={String(currentFloor)}
@@ -376,13 +401,9 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
           buildingPrefix={buildingPrefix}
           onSelect={handleRoomSelect}
         />
-      )}
+      ) : null}
 
-      <Text style={styles.selectedText}>
-        {buildingId ? `Building: ${buildingId}` : 'No building selected'}
-        {selection?.floor ? ` • Floor ${selection.floor}` : ''}
-        {selection?.room ? ` • ${buildingPrefix}${selection.room}` : ''}
-      </Text>
+      <Text style={styles.selectedText}>{selectedText}</Text>
     </View>
   );
 };
