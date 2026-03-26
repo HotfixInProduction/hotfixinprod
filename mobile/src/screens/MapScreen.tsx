@@ -570,15 +570,10 @@ export default function MapScreen() {
           ]}
           pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8 }}>
-                    <Text style={{ color: 'black', marginRight: 8 }}>Enable Room Selection</Text>
-                    <Switch
-                      value={enableRoomSelection}
-                      onValueChange={setEnableRoomSelection}
-                    />
-          </View>
+
           <StartDestinationPicker
             enableRoomSelection={enableRoomSelection}
+            setEnableRoomSelection={setEnableRoomSelection}
             userLocation={userLocation}
             start={start}
             destination={destination}
@@ -588,11 +583,11 @@ export default function MapScreen() {
             transportMode={transportMode}
             mapSelectionTarget={mapSelectionTarget}
             setMapSelectionTarget={(target) => {
-                                      setMapSelectionTarget(target);
-                                      if (target) {
-                                        setBuildingSelectorVisible(false);
-                                      }
-                                  }}
+              setMapSelectionTarget(target);
+              if (target) {
+              setBuildingSelectorVisible(false);
+              }
+            }}
             setDirectionsGoogle={setDirectionsGoogle}
             setRouteInfo={setRouteInfo}
             startRoomSelection={startRoomSelection}

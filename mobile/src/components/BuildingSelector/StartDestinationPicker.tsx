@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Switch } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import BuildingSelector from './BuildingSelector';
 import * as Location from 'expo-location';
 import { buildings } from '../../data/buildings';
 import type { MapStep, TravelMode } from '../../types/map';
 import InlineRoomSelector from './InlineRoomSelector';
+import type { RoomSelection } from '../../types/building';
 
 export type Place = {
   name: string;
@@ -27,6 +28,7 @@ type StartDestinationPickerProps = {
   setDirectionsGoogle: (data: any) => void;
   setRouteInfo: (val: {distance: number, duration: number} | null) => void;
   enableRoomSelection?: boolean;
+  setEnableRoomSelection?: (val: boolean) => void;
   startRoomSelection?: RoomSelection | null;
   setStartRoomSelection?: (selection: RoomSelection | null) => void;
   destinationRoomSelection?: RoomSelection | null;
@@ -41,7 +43,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   SHUTTLE: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo, enableRoomSelection = false, startRoomSelection, setStartRoomSelection, destinationRoomSelection, setDestinationRoomSelection }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo, enableRoomSelection = false, setEnableRoomSelection, startRoomSelection, setStartRoomSelection, destinationRoomSelection, setDestinationRoomSelection }) => {
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
   // Calculate distance between two coordinates in meters using Haversine formula
@@ -156,6 +158,16 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
 
   return (
     <View style={styles.container} testID="building-selector-container">
+    <View style={styles.toggleRow}>
+      <Text style={styles.toggleLabel}>Room Selection Mode</Text>
+
+      <Switch
+        value={!!enableRoomSelection}
+        onValueChange={setEnableRoomSelection}
+        trackColor={{ false: '#ddd', true: '#f3c4cc' }}
+        thumbColor={enableRoomSelection ? '#912338' : '#999'}
+      />
+    </View>
       <Text style={styles.label}>Start Building</Text>
       <View style={styles.selectorRow}>
         <View style={styles.selectorWrapper}>
@@ -397,6 +409,21 @@ const styles = StyleSheet.create({
   },
   selectOnMapTextActive: {
     color: '#fff',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  toggleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f1f1f',
   },
 });
 
