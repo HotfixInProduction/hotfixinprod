@@ -4,6 +4,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { Building } from '../types/building';
 import type { Place } from './BuildingSelector/StartDestinationPicker';
+import ItemListColumn from './ItemListColumn';
 
 type Props = Readonly<{
     building: Building | null;
@@ -91,29 +92,19 @@ export default function BuildingInfo({ building, onClose, onViewFloorPlan, onSet
             {(hasDepartments || hasServices) && (
                 <View style={styles.columnWrapper}>
                     {hasDepartments && (
-                        <View testID="departments-column" style={styles.column}>
-                            <Text style={styles.columnHeader}>Departments</Text>
-                            <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
-                                {building.departments!.map((dept) => (
-                                    <Text key={dept} style={styles.itemText}>
-                                        {dept}
-                                    </Text>
-                                ))}
-                            </ScrollView>
-                        </View>
+                        <ItemListColumn
+                            testID="departments-column"
+                            title="Departments"
+                            items={building.departments!}
+                        />
                     )}
 
                     {hasServices && (
-                        <View style={styles.column}>
-                            <Text testID="services-column" style={styles.columnHeader}>Services</Text>
-                            <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
-                                {building.services!.map((service) => (
-                                    <Text key={service} style={styles.itemText}>
-                                        {service}
-                                    </Text>
-                                ))}
-                            </ScrollView>
-                        </View>
+                        <ItemListColumn
+                            testID="services-column"
+                            title="Services"
+                            items={building.services!}
+                        />
                     )}
                 </View>
             )}
