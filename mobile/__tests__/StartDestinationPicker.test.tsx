@@ -34,6 +34,22 @@ jest.mock('../src/data/buildings', () => ({
   ]
 }));
 
+jest.mock('../src/components/BuildingSelector/InlineRoomSelector', () => {
+  const React = require('react');
+  const { View, Text } = require('react-native');
+
+  return function MockInlineRoomSelector(props: any) {
+    return (
+      <View testID={`inline-room-selector-${props.label.toLowerCase()}`}>
+        <Text>{props.label} Inline Room Selector</Text>
+        <Text testID={`inline-room-selector-building-${props.label.toLowerCase()}`}>
+          {String(props.buildingId)}
+        </Text>
+      </View>
+    );
+  };
+});
+
 describe('StartDestinationPicker', () => {
   // Helper functions to reduce code duplication
   const getStartSelector = () => {
@@ -572,5 +588,243 @@ describe('StartDestinationPicker', () => {
         name: 'Only Street',
       }));
     });
+  });
+  it('renders room selection mode toggle', () => {
+    const { getByText } = render(<StartDestinationPicker {...defaultStartDestProps} />);
+    expect(getByText('Room Selection Mode')).toBeTruthy();
+  });
+
+  it('calls setEnableRoomSelection when toggle is changed', async () => {
+    const mockSetEnableRoomSelection = jest.fn();
+    const { getByRole } = render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={false}
+        setEnableRoomSelection={mockSetEnableRoomSelection}
+      />
+    );
+
+    const toggle = getByRole('switch');
+
+    await act(async () => {
+      fireEvent(toggle, 'valueChange', true);
+    });
+
+    expect(mockSetEnableRoomSelection).toHaveBeenCalledWith(true);
+  });
+
+  it('renders InlineRoomSelector components when room selection mode is enabled', () => {
+    const { getByTestId } = render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={true}
+        setStartRoomSelection={jest.fn()}
+        setDestinationRoomSelection={jest.fn()}
+      />
+    );
+
+    expect(getByTestId('inline-room-selector-start')).toBeTruthy();
+    expect(getByTestId('inline-room-selector-destination')).toBeTruthy();
+  });
+
+  it('does not render InlineRoomSelector components when room selection mode is disabled', () => {
+    const { queryByTestId } = render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={false}
+        setStartRoomSelection={jest.fn()}
+        setDestinationRoomSelection={jest.fn()}
+      />
+    );
+
+    expect(queryByTestId('inline-room-selector-start')).toBeNull();
+    expect(queryByTestId('inline-room-selector-destination')).toBeNull();
+  });
+
+  it('initializes start room selection when selecting a start building in room mode', async () => {
+    const mockSetStart = jest.fn();
+    const mockSetStartRoomSelection = jest.fn();
+
+    render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={true}
+        setStart={mockSetStart}
+        setStartRoomSelection={mockSetStartRoomSelection}
+      />
+    );
+
+    const onSelectStart = getStartSelector();
+    const mockPlace = createMockPlace('Hall Building', '1455 De Maisonneuve Blvd. W.');
+
+    await selectPlace(onSelectStart, mockPlace);
+
+    expect(mockSetStart).toHaveBeenCalledWith(mockPlace);
+    expect(mockSetStartRoomSelection).toHaveBeenCalledWith({
+      buildingId: 'Hall Building',
+      floor: '',
+      room: '',
+    });
+  });
+
+  it('initializes destination room selection when selecting a destination building in room mode', async () => {
+    const mockSetDestination = jest.fn();
+    const mockSetDestinationRoomSelection = jest.fn();
+
+    render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={true}
+        setDestination={mockSetDestination}
+        setDestinationRoomSelection={mockSetDestinationRoomSelection}
+      />
+    );
+
+    const onSelectDest = getDestinationSelector();
+    const mockPlace = createMockPlace('EV Building', '1515 St. Catherine St. W.');
+
+    await selectPlace(onSelectDest, mockPlace);
+
+    expect(mockSetDestination).toHaveBeenCalledWith(mockPlace);
+    expect(mockSetDestinationRoomSelection).toHaveBeenCalledWith({
+      buildingId: 'EV Building',
+      floor: '',
+      room: '',
+    });
+  });
+
+  it('clears start room selection when start building is cleared via selector in room mode', async () => {
+    const mockSetStart = jest.fn();
+    const mockSetStartRoomSelection = jest.fn();
+
+    render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={true}
+        setStart={mockSetStart}
+        setStartRoomSelection={mockSetStartRoomSelection}
+      />
+    );
+
+    const onSelectStart = getStartSelector();
+
+    await selectPlace(onSelectStart, null);
+
+    expect(mockSetStart).toHaveBeenCalledWith(null);
+    expect(mockSetStartRoomSelection).toHaveBeenCalledWith(null);
+  });
+
+  it('clears destination room selection when destination building is cleared via selector in room mode', async () => {
+    const mockSetDestination = jest.fn();
+    const mockSetDestinationRoomSelection = jest.fn();
+
+    render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={true}
+        setDestination={mockSetDestination}
+        setDestinationRoomSelection={mockSetDestinationRoomSelection}
+      />
+    );
+
+    const onSelectDest = getDestinationSelector();
+
+    await selectPlace(onSelectDest, null);
+
+    expect(mockSetDestination).toHaveBeenCalledWith(null);
+    expect(mockSetDestinationRoomSelection).toHaveBeenCalledWith(null);
+  });
+  it('clear start button also clears start room selection', async () => {
+    const mockSetStart = jest.fn();
+    const mockSetStartRoomSelection = jest.fn();
+
+    const { getByTestId } = render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={false}
+        start={createMockPlace('Start Building', '123 Start St')}
+        setStart={mockSetStart}
+        setStartRoomSelection={mockSetStartRoomSelection}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.press(getByTestId('clear-start-button'));
+    });
+
+    expect(mockSetStart).toHaveBeenCalledWith(null);
+    expect(mockSetStartRoomSelection).toHaveBeenCalledWith(null);
+  });
+
+  it('clear destination button also clears destination room selection', async () => {
+    const mockSetDestination = jest.fn();
+    const mockSetDestinationRoomSelection = jest.fn();
+
+    const { getByTestId } = render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        enableRoomSelection={false}
+        destination={createMockPlace('Destination Building', '456 Dest Ave')}
+        setDestination={mockSetDestination}
+        setDestinationRoomSelection={mockSetDestinationRoomSelection}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.press(getByTestId('clear-destination-button'));
+    });
+
+    expect(mockSetDestination).toHaveBeenCalledWith(null);
+    expect(mockSetDestinationRoomSelection).toHaveBeenCalledWith(null);
+  });
+
+  it('renders View Directions button only when canShowDirectionsAction is true', () => {
+    const { getByTestId, queryByTestId, rerender } = render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        canShowDirectionsAction={false}
+        onShowDirections={jest.fn()}
+      />
+    );
+
+    expect(queryByTestId('view-directions-button')).toBeNull();
+
+    rerender(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        canShowDirectionsAction={true}
+        onShowDirections={jest.fn()}
+      />
+    );
+
+    expect(getByTestId('view-directions-button')).toBeTruthy();
+  });
+
+  it('does not render View Directions button when onShowDirections is missing', () => {
+    const { queryByTestId } = render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        canShowDirectionsAction={true}
+      />
+    );
+
+    expect(queryByTestId('view-directions-button')).toBeNull();
+  });
+
+  it('calls onShowDirections when View Directions button is pressed', async () => {
+    const mockOnShowDirections = jest.fn();
+    const { getByTestId } = render(
+      <StartDestinationPicker
+        {...defaultStartDestProps}
+        canShowDirectionsAction={true}
+        onShowDirections={mockOnShowDirections}
+      />
+    );
+
+    await act(async () => {
+      fireEvent.press(getByTestId('view-directions-button'));
+    });
+
+    expect(mockOnShowDirections).toHaveBeenCalled();
   });
 });
