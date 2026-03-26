@@ -33,6 +33,8 @@ type StartDestinationPickerProps = {
   setStartRoomSelection?: (selection: RoomSelection | null) => void;
   destinationRoomSelection?: RoomSelection | null;
   setDestinationRoomSelection?: (selection: RoomSelection | null) => void;
+  canShowDirectionsAction?: boolean;
+  onShowDirections?: () => void;
 };
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -43,7 +45,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   SHUTTLE: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo, enableRoomSelection = false, setEnableRoomSelection, startRoomSelection, setStartRoomSelection, destinationRoomSelection, setDestinationRoomSelection }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo, enableRoomSelection = false, setEnableRoomSelection, startRoomSelection, setStartRoomSelection, destinationRoomSelection, setDestinationRoomSelection, canShowDirectionsAction, onShowDirections }) => {
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
   // Calculate distance between two coordinates in meters using Haversine formula
@@ -319,6 +321,16 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
           </Text>
         </TouchableOpacity>
       )}
+      {canShowDirectionsAction && onShowDirections && (
+        <TouchableOpacity
+          style={styles.viewDirectionsButton}
+          onPress={onShowDirections}
+          testID="view-directions-button"
+        >
+          <MaterialIcons name="directions" size={18} color="#fff" />
+          <Text style={styles.viewDirectionsButtonText}>View Directions</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -424,6 +436,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#1f1f1f',
+  },
+  viewDirectionsButton: {
+    marginTop: 14,
+    backgroundColor: '#912338',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+
+  viewDirectionsButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
 

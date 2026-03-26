@@ -68,6 +68,7 @@ export default function MapScreen() {
   const processedSteps = useRouteProcessor(directionsGoogle);
   const googleMapsApiKey = Constants.expoConfig?.extra?.googleApiKey as string | undefined;
   const [enableRoomSelection, setEnableRoomSelection] = useState(false);
+  const [showRoutePreview, setShowRoutePreview] = useState(false);
   
   // Room selection state for cross-building persistence
   const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
@@ -131,9 +132,6 @@ export default function MapScreen() {
     transportMode,
     onTransportModeChange: setTransportMode,
   });
-
-
-
   useEffect(() => {
     if (shuttleRouteInfo) {
       setRouteInfo(shuttleRouteInfo);
@@ -217,6 +215,16 @@ export default function MapScreen() {
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription.remove();
   }, []);
+
+  useEffect(() => {
+    setShowRoutePreview(false);
+  }, [
+    start,
+    destination,
+    startRoomSelection,
+    destinationRoomSelection,
+    enableRoomSelection,
+  ]);
 
   useEffect(() => {
     if (selectedBuilding) {
@@ -394,6 +402,7 @@ export default function MapScreen() {
     setShowInstructions(false);
     setDirectionsGoogle(null);
     setShowShuttleSchedule(false);
+    setShowRoutePreview(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
 
@@ -402,7 +411,7 @@ export default function MapScreen() {
   const activeModal = (() => {
     if (selectedBuilding) return 'buildingInfo';
     if (showInstructions) return 'routeInstructions';
-    if (routeInfo && isStartComplete && isDestinationComplete) return 'routeInfo';
+    if (showRoutePreview && routeInfo && isStartComplete && isDestinationComplete) return 'routeInfo';
     return 'none';
   })();
   const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
@@ -594,6 +603,8 @@ export default function MapScreen() {
             setStartRoomSelection={setStartRoomSelection}
             destinationRoomSelection={destinationRoomSelection}
             setDestinationRoomSelection={setDestinationRoomSelection}
+            canShowDirectionsAction={isStartComplete && isDestinationComplete}
+            onShowDirections={() => setShowRoutePreview(true)}
           />
         </Animated.View>
       )}
