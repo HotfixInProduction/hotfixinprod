@@ -29,6 +29,18 @@ type RoomDropdownProps = {
   onSelect: (room: string) => void;
 };
 
+type SyncSelectionParams = {
+  building: Building | undefined;
+  selection: RoomSelection | null;
+  availableFloors: string[];
+  roomList: string[];
+  currentFloor: string;
+  setCurrentFloor: (floor: string) => void;
+  onChange: (selection: RoomSelection | null) => void;
+  setShowFloorList: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowRoomList: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
 const getFloorText = (
   building: Building | undefined,
   selection: RoomSelection | null
@@ -46,6 +58,56 @@ const getRoomText = (
   if (!building) return 'Room';
   if (selection?.room) return `Room: ${buildingPrefix}${selection.room}`;
   return 'Room: Select';
+};
+
+const syncInlineRoomSelection = ({
+  building,
+  selection,
+  availableFloors,
+  roomList,
+  currentFloor,
+  setCurrentFloor,
+  onChange,
+  setShowFloorList,
+  setShowRoomList,
+}: SyncSelectionParams) => {
+  if (!building) {
+    setShowFloorList(false);
+    setShowRoomList(false);
+    return;
+  }
+
+  const selectedFloor = selection?.floor;
+  const selectedRoom = selection?.room;
+  const firstFloor = availableFloors[0] ? String(availableFloors[0]) : '';
+  const floorExists =
+    !!selectedFloor && availableFloors.includes(String(selectedFloor));
+  const roomExists =
+    !!selectedRoom && roomList.includes(String(selectedRoom));
+
+  if (!selectedFloor || !floorExists) {
+    if (!firstFloor) return;
+
+    setCurrentFloor(firstFloor);
+    onChange({
+      buildingId: building.id,
+      floor: firstFloor,
+      room: '',
+    });
+    return;
+  }
+
+  if (String(currentFloor) !== String(selectedFloor)) {
+    setCurrentFloor(String(selectedFloor));
+  }
+
+  if (selectedRoom && !roomExists) {
+    onChange({
+      buildingId: building.id,
+      floor: String(currentFloor),
+      room: '',
+    });
+  }
 };
 
 const FloorDropdown: React.FC<FloorDropdownProps> = ({
@@ -178,46 +240,21 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
   const roomList = useRoomList(rawSvgContent, building?.id, currentFloor);
 
   useEffect(() => {
-    if (!building) {
-      setShowFloorList(false);
-      setShowRoomList(false);
-      return;
-    }
-
-    const selectedFloor = selection?.floor;
-    const selectedRoom = selection?.room;
-    const firstFloor = availableFloors[0] ? String(availableFloors[0]) : '';
-    const floorExists =
-      !!selectedFloor && availableFloors.includes(String(selectedFloor));
-    const roomExists =
-      !!selectedRoom && roomList.includes(String(selectedRoom));
-
-    if (!selectedFloor || !floorExists) {
-      if (!firstFloor) return;
-
-      setCurrentFloor(firstFloor);
-      onChange({
-        buildingId: building.id,
-        floor: firstFloor,
-        room: '',
-      });
-      return;
-    }
-
-    if (String(currentFloor) !== String(selectedFloor)) {
-      setCurrentFloor(String(selectedFloor));
-    }
-
-    if (selectedRoom && !roomExists) {
-      onChange({
-        buildingId: building.id,
-        floor: String(currentFloor),
-        room: '',
-      });
-    }
+    syncInlineRoomSelection({
+      building,
+      selection,
+      availableFloors,
+      roomList,
+      currentFloor: String(currentFloor),
+      setCurrentFloor,
+      onChange,
+      setShowFloorList,
+      setShowRoomList,
+    });
   }, [
     building,
-    selection,
+    selection?.floor,
+    selection?.room,
     availableFloors,
     roomList,
     currentFloor,
