@@ -13,6 +13,142 @@ type InlineRoomSelectorProps = {
   onChange: (selection: RoomSelection | null) => void;
 };
 
+type FloorDropdownProps = {
+  label: string;
+  currentFloor: string;
+  availableFloors: string[];
+  onSelect: (floor: string) => void;
+};
+
+type RoomDropdownProps = {
+  label: string;
+  currentFloor: string;
+  roomList: string[];
+  selection: RoomSelection | null;
+  buildingPrefix: string;
+  onSelect: (room: string) => void;
+};
+
+const getFloorText = (
+  building: Building | undefined,
+  selection: RoomSelection | null
+) => {
+  if (!building) return 'Floor';
+  if (selection?.floor) return `Floor: ${selection.floor}`;
+  return 'Floor: Select';
+};
+
+const getRoomText = (
+  building: Building | undefined,
+  selection: RoomSelection | null,
+  buildingPrefix: string
+) => {
+  if (!building) return 'Room';
+  if (selection?.room) return `Room: ${buildingPrefix}${selection.room}`;
+  return 'Room: Select';
+};
+
+const FloorDropdown: React.FC<FloorDropdownProps> = ({
+  label,
+  currentFloor,
+  availableFloors,
+  onSelect,
+}) => (
+  <View style={styles.dropdownContainer}>
+    <ScrollView
+      style={styles.dropdownList}
+      nestedScrollEnabled
+      showsVerticalScrollIndicator
+    >
+      {availableFloors.map((floor) => {
+        const floorValue = String(floor);
+        const isSelected = String(currentFloor) === floorValue;
+
+        return (
+          <TouchableOpacity
+            key={`${label}-floor-${floorValue}`}
+            style={[
+              styles.dropdownItem,
+              isSelected && styles.dropdownItemSelected,
+            ]}
+            onPress={() => onSelect(floorValue)}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.dropdownItemText,
+                isSelected && styles.dropdownItemTextSelected,
+              ]}
+            >
+              Floor {floorValue}
+            </Text>
+
+            {isSelected && (
+              <MaterialCommunityIcons name="check" size={16} color="#912338" />
+            )}
+          </TouchableOpacity>
+        );
+      })}
+    </ScrollView>
+  </View>
+);
+
+const RoomDropdown: React.FC<RoomDropdownProps> = ({
+  label,
+  currentFloor,
+  roomList,
+  selection,
+  buildingPrefix,
+  onSelect,
+}) => {
+  if (!currentFloor) return null;
+
+  return (
+    <View style={styles.dropdownContainer}>
+      {roomList.length > 0 ? (
+        <ScrollView
+          style={styles.dropdownList}
+          nestedScrollEnabled
+          showsVerticalScrollIndicator
+        >
+          {roomList.map((room) => {
+            const roomValue = String(room);
+            const isSelected = selection?.room === roomValue;
+
+            return (
+              <TouchableOpacity
+                key={`${label}-room-${roomValue}`}
+                style={[
+                  styles.dropdownItem,
+                  isSelected && styles.dropdownItemSelected,
+                ]}
+                onPress={() => onSelect(roomValue)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.dropdownItemText,
+                    isSelected && styles.dropdownItemTextSelected,
+                  ]}
+                >
+                  {buildingPrefix}
+                  {roomValue}
+                </Text>
+
+                {isSelected && (
+                  <MaterialCommunityIcons name="check" size={16} color="#912338" />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      ) : (
+        <Text style={styles.helperText}>No rooms available for this floor.</Text>
+      )}
+    </View>
+  );
+};
+
 const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
   buildingId,
   label,
@@ -50,14 +186,13 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
 
     const selectedFloor = selection?.floor;
     const selectedRoom = selection?.room;
-    const firstFloor =
-      availableFloors.length > 0 ? String(availableFloors[0]) : '';
+    const firstFloor = availableFloors[0] ? String(availableFloors[0]) : '';
     const floorExists =
       !!selectedFloor && availableFloors.includes(String(selectedFloor));
     const roomExists =
       !!selectedRoom && roomList.includes(String(selectedRoom));
 
-    const resetToFirstFloor = () => {
+    if (!selectedFloor || !floorExists) {
       if (!firstFloor) return;
 
       setCurrentFloor(firstFloor);
@@ -66,15 +201,6 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
         floor: firstFloor,
         room: '',
       });
-    };
-
-    if (!selectedFloor) {
-      resetToFirstFloor();
-      return;
-    }
-
-    if (!floorExists) {
-      resetToFirstFloor();
       return;
     }
 
@@ -91,8 +217,7 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
     }
   }, [
     building,
-    selection?.floor,
-    selection?.room,
+    selection,
     availableFloors,
     roomList,
     currentFloor,
@@ -102,6 +227,18 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
 
   const floorDisabled = !building || availableFloors.length === 0;
   const roomDisabled = !building || !currentFloor;
+
+  const handleFloorPress = () => {
+    if (floorDisabled) return;
+    setShowFloorList((prev) => !prev);
+    setShowRoomList(false);
+  };
+
+  const handleRoomPress = () => {
+    if (roomDisabled) return;
+    setShowRoomList((prev) => !prev);
+    setShowFloorList(false);
+  };
 
   const handleFloorSelect = (floor: string) => {
     setCurrentFloor(floor);
@@ -124,110 +261,8 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
     setShowRoomList(false);
   };
 
-  const floorText = !building
-    ? 'Floor'
-    : selection?.floor
-      ? `Floor: ${selection.floor}`
-      : 'Floor: Select';
-
-  const roomText = !building
-    ? 'Room'
-    : selection?.room
-      ? `Room: ${buildingPrefix}${selection.room}`
-      : 'Room: Select';
-
-  const renderCheckIcon = () => (
-    <MaterialCommunityIcons name="check" size={16} color="#912338" />
-  );
-
-  const renderFloorList = () => {
-    if (!showFloorList || !building) return null;
-
-    return (
-      <View style={styles.dropdownContainer}>
-        <ScrollView
-          style={styles.dropdownList}
-          nestedScrollEnabled
-          showsVerticalScrollIndicator
-        >
-          {availableFloors.map((floor) => {
-            const floorValue = String(floor);
-            const isSelected = String(currentFloor) === floorValue;
-
-            return (
-              <TouchableOpacity
-                key={`${label}-floor-${floorValue}`}
-                style={[
-                  styles.dropdownItem,
-                  isSelected && styles.dropdownItemSelected,
-                ]}
-                onPress={() => handleFloorSelect(floorValue)}
-                activeOpacity={0.8}
-              >
-                <Text
-                  style={[
-                    styles.dropdownItemText,
-                    isSelected && styles.dropdownItemTextSelected,
-                  ]}
-                >
-                  Floor {floorValue}
-                </Text>
-
-                {isSelected && renderCheckIcon()}
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-    );
-  };
-
-  const renderRoomList = () => {
-    if (!showRoomList || !building || !currentFloor) return null;
-
-    return (
-      <View style={styles.dropdownContainer}>
-        {roomList.length > 0 ? (
-          <ScrollView
-            style={styles.dropdownList}
-            nestedScrollEnabled
-            showsVerticalScrollIndicator
-          >
-            {roomList.map((room) => {
-              const roomValue = String(room);
-              const isSelected = selection?.room === roomValue;
-
-              return (
-                <TouchableOpacity
-                  key={`${label}-room-${roomValue}`}
-                  style={[
-                    styles.dropdownItem,
-                    isSelected && styles.dropdownItemSelected,
-                  ]}
-                  onPress={() => handleRoomSelect(roomValue)}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownItemText,
-                      isSelected && styles.dropdownItemTextSelected,
-                    ]}
-                  >
-                    {buildingPrefix}
-                    {roomValue}
-                  </Text>
-
-                  {isSelected && renderCheckIcon()}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        ) : (
-          <Text style={styles.helperText}>No rooms available for this floor.</Text>
-        )}
-      </View>
-    );
-  };
+  const floorText = getFloorText(building, selection);
+  const roomText = getRoomText(building, selection, buildingPrefix);
 
   return (
     <View style={styles.section}>
@@ -238,11 +273,7 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
             styles.compactInputLeft,
             floorDisabled && styles.compactInputDisabled,
           ]}
-          onPress={() => {
-            if (floorDisabled) return;
-            setShowFloorList((prev) => !prev);
-            setShowRoomList(false);
-          }}
+          onPress={handleFloorPress}
           activeOpacity={floorDisabled ? 1 : 0.8}
           disabled={floorDisabled}
         >
@@ -269,11 +300,7 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
             styles.compactInput,
             roomDisabled && styles.compactInputDisabled,
           ]}
-          onPress={() => {
-            if (roomDisabled) return;
-            setShowRoomList((prev) => !prev);
-            setShowFloorList(false);
-          }}
+          onPress={handleRoomPress}
           activeOpacity={roomDisabled ? 1 : 0.8}
           disabled={roomDisabled}
         >
@@ -296,8 +323,25 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
         </TouchableOpacity>
       </View>
 
-      {renderFloorList()}
-      {renderRoomList()}
+      {showFloorList && building && (
+        <FloorDropdown
+          label={label}
+          currentFloor={String(currentFloor)}
+          availableFloors={availableFloors.map(String)}
+          onSelect={handleFloorSelect}
+        />
+      )}
+
+      {showRoomList && building && !!currentFloor && (
+        <RoomDropdown
+          label={label}
+          currentFloor={String(currentFloor)}
+          roomList={roomList.map(String)}
+          selection={selection}
+          buildingPrefix={buildingPrefix}
+          onSelect={handleRoomSelect}
+        />
+      )}
 
       <Text style={styles.selectedText}>
         {buildingId ? `Building: ${buildingId}` : 'No building selected'}
