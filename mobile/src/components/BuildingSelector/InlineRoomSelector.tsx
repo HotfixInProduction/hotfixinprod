@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
 } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
@@ -12,19 +11,19 @@ import { useFloorPlanState } from '../../hooks/useFloorPlanState';
 import { useRoomList } from '../../hooks/useRoomList';
 import type { Building, RoomSelection } from '../../types/building';
 
-type InlineRoomSelectorProps = Readonly<{
+type InlineRoomSelectorProps = {
   buildingId?: string | null;
   label: string;
   selection: RoomSelection | null;
   onChange: (selection: RoomSelection | null) => void;
-}>;
+};
 
-export default function InlineRoomSelector({
+const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
   buildingId,
   label,
   selection,
   onChange,
-}: InlineRoomSelectorProps) {
+}) => {
   const [showFloorList, setShowFloorList] = useState(false);
   const [showRoomList, setShowRoomList] = useState(false);
 
@@ -56,36 +55,35 @@ export default function InlineRoomSelector({
 
     const selectedFloor = selection?.floor;
     const selectedRoom = selection?.room;
-
+    const firstFloor =
+      availableFloors.length > 0 ? String(availableFloors[0]) : '';
     const floorExists =
       !!selectedFloor && availableFloors.includes(String(selectedFloor));
-
     const roomExists =
       !!selectedRoom && roomList.includes(String(selectedRoom));
 
-    if (!selectedFloor && availableFloors.length > 0) {
-      const firstFloor = String(availableFloors[0]);
+    const resetToFirstFloor = () => {
+      if (!firstFloor) return;
+
       setCurrentFloor(firstFloor);
       onChange({
         buildingId: building.id,
         floor: firstFloor,
         room: '',
       });
+    };
+
+    if (!selectedFloor) {
+      resetToFirstFloor();
       return;
     }
 
-    if (selectedFloor && !floorExists && availableFloors.length > 0) {
-      const firstFloor = String(availableFloors[0]);
-      setCurrentFloor(firstFloor);
-      onChange({
-        buildingId: building.id,
-        floor: firstFloor,
-        room: '',
-      });
+    if (!floorExists) {
+      resetToFirstFloor();
       return;
     }
 
-    if (selectedFloor && String(currentFloor) !== String(selectedFloor)) {
+    if (String(currentFloor) !== String(selectedFloor)) {
       setCurrentFloor(String(selectedFloor));
     }
 
@@ -131,6 +129,111 @@ export default function InlineRoomSelector({
     setShowRoomList(false);
   };
 
+  const floorText = !building
+    ? 'Floor'
+    : selection?.floor
+      ? `Floor: ${selection.floor}`
+      : 'Floor: Select';
+
+  const roomText = !building
+    ? 'Room'
+    : selection?.room
+      ? `Room: ${buildingPrefix}${selection.room}`
+      : 'Room: Select';
+
+  const renderCheckIcon = () => (
+    <MaterialCommunityIcons name="check" size={16} color="#912338" />
+  );
+
+  const renderFloorList = () => {
+    if (!showFloorList || !building) return null;
+
+    return (
+      <View style={styles.dropdownContainer}>
+        <ScrollView
+          style={styles.dropdownList}
+          nestedScrollEnabled
+          showsVerticalScrollIndicator
+        >
+          {availableFloors.map((floor) => {
+            const floorValue = String(floor);
+            const isSelected = String(currentFloor) === floorValue;
+
+            return (
+              <TouchableOpacity
+                key={`${label}-floor-${floorValue}`}
+                style={[
+                  styles.dropdownItem,
+                  isSelected && styles.dropdownItemSelected,
+                ]}
+                onPress={() => handleFloorSelect(floorValue)}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.dropdownItemText,
+                    isSelected && styles.dropdownItemTextSelected,
+                  ]}
+                >
+                  Floor {floorValue}
+                </Text>
+
+                {isSelected && renderCheckIcon()}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  };
+
+  const renderRoomList = () => {
+    if (!showRoomList || !building || !currentFloor) return null;
+
+    return (
+      <View style={styles.dropdownContainer}>
+        {roomList.length > 0 ? (
+          <ScrollView
+            style={styles.dropdownList}
+            nestedScrollEnabled
+            showsVerticalScrollIndicator
+          >
+            {roomList.map((room) => {
+              const roomValue = String(room);
+              const isSelected = selection?.room === roomValue;
+
+              return (
+                <TouchableOpacity
+                  key={`${label}-room-${roomValue}`}
+                  style={[
+                    styles.dropdownItem,
+                    isSelected && styles.dropdownItemSelected,
+                  ]}
+                  onPress={() => handleRoomSelect(roomValue)}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownItemText,
+                      isSelected && styles.dropdownItemTextSelected,
+                    ]}
+                  >
+                    {buildingPrefix}
+                    {roomValue}
+                  </Text>
+
+                  {isSelected && renderCheckIcon()}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        ) : (
+          <Text style={styles.helperText}>No rooms available for this floor.</Text>
+        )}
+      </View>
+    );
+  };
+
   return (
     <View style={styles.section}>
       <View style={styles.compactRow}>
@@ -141,10 +244,9 @@ export default function InlineRoomSelector({
             floorDisabled && styles.compactInputDisabled,
           ]}
           onPress={() => {
-            if (!floorDisabled) {
-              setShowFloorList((prev) => !prev);
-              setShowRoomList(false);
-            }
+            if (floorDisabled) return;
+            setShowFloorList((prev) => !prev);
+            setShowRoomList(false);
           }}
           activeOpacity={floorDisabled ? 1 : 0.8}
           disabled={floorDisabled}
@@ -157,11 +259,7 @@ export default function InlineRoomSelector({
             ]}
             numberOfLines={1}
           >
-            {!building
-              ? 'Floor'
-              : selection?.floor
-                ? `Floor: ${selection.floor}`
-                : 'Floor: Select'}
+            {floorText}
           </Text>
 
           <MaterialCommunityIcons
@@ -177,10 +275,9 @@ export default function InlineRoomSelector({
             roomDisabled && styles.compactInputDisabled,
           ]}
           onPress={() => {
-            if (!roomDisabled) {
-              setShowRoomList((prev) => !prev);
-              setShowFloorList(false);
-            }
+            if (roomDisabled) return;
+            setShowRoomList((prev) => !prev);
+            setShowFloorList(false);
           }}
           activeOpacity={roomDisabled ? 1 : 0.8}
           disabled={roomDisabled}
@@ -193,11 +290,7 @@ export default function InlineRoomSelector({
             ]}
             numberOfLines={1}
           >
-            {!building
-              ? 'Room'
-              : selection?.room
-                ? `Room: ${buildingPrefix}${selection.room}`
-                : 'Room: Select'}
+            {roomText}
           </Text>
 
           <MaterialCommunityIcons
@@ -208,98 +301,8 @@ export default function InlineRoomSelector({
         </TouchableOpacity>
       </View>
 
-      {showFloorList && building && (
-        <View style={styles.dropdownContainer}>
-          <ScrollView
-            style={styles.dropdownList}
-            nestedScrollEnabled
-            showsVerticalScrollIndicator
-          >
-            {availableFloors.map((floor) => {
-              const floorValue = String(floor);
-              const isSelected = String(currentFloor) === floorValue;
-
-              return (
-                <TouchableOpacity
-                  key={`${label}-floor-${floorValue}`}
-                  style={[
-                    styles.dropdownItem,
-                    isSelected && styles.dropdownItemSelected,
-                  ]}
-                  onPress={() => handleFloorSelect(floorValue)}
-                  activeOpacity={0.8}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownItemText,
-                      isSelected && styles.dropdownItemTextSelected,
-                    ]}
-                  >
-                    Floor {floorValue}
-                  </Text>
-
-                  {isSelected && (
-                    <MaterialCommunityIcons
-                      name="check"
-                      size={16}
-                      color="#912338"
-                    />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-      )}
-
-      {showRoomList && building && !!currentFloor && (
-        <View style={styles.dropdownContainer}>
-          {roomList.length > 0 ? (
-            <ScrollView
-              style={styles.dropdownList}
-              nestedScrollEnabled
-              showsVerticalScrollIndicator
-            >
-              {roomList.map((room) => {
-                const roomValue = String(room);
-                const isSelected = selection?.room === roomValue;
-
-                return (
-                  <TouchableOpacity
-                    key={`${label}-room-${roomValue}`}
-                    style={[
-                      styles.dropdownItem,
-                      isSelected && styles.dropdownItemSelected,
-                    ]}
-                    onPress={() => handleRoomSelect(roomValue)}
-                    activeOpacity={0.8}
-                  >
-                    <Text
-                      style={[
-                        styles.dropdownItemText,
-                        isSelected && styles.dropdownItemTextSelected,
-                      ]}
-                    >
-                      {buildingPrefix}
-                      {roomValue}
-                    </Text>
-
-                    {isSelected && (
-                      <MaterialCommunityIcons
-                        name="check"
-                        size={16}
-                        color="#912338"
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          ) : (
-            <Text style={styles.helperText}>No rooms available for this floor.</Text>
-          )}
-        </View>
-      )}
+      {renderFloorList()}
+      {renderRoomList()}
 
       <Text style={styles.selectedText}>
         {buildingId ? `Building: ${buildingId}` : 'No building selected'}
@@ -308,7 +311,7 @@ export default function InlineRoomSelector({
       </Text>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   section: {
@@ -400,3 +403,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export default InlineRoomSelector;
