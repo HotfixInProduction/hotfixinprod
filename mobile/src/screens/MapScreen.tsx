@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { Switch } from 'react-native';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus, ScrollView } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
@@ -38,10 +39,10 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
 };
 
 export default function MapScreen() {
-    const [directionsFloorPlan, setDirectionsFloorPlan] = useState<{
+  const [directionsFloorPlan, setDirectionsFloorPlan] = useState<{
       building: Building;
       floor?: string;
-    } | null>(null);
+  } | null>(null);
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
@@ -66,6 +67,7 @@ export default function MapScreen() {
   const [directionsGoogle, setDirectionsGoogle] = useState<any>(null);
   const processedSteps = useRouteProcessor(directionsGoogle);
   const googleMapsApiKey = Constants.expoConfig?.extra?.googleApiKey as string | undefined;
+  const [enableRoomSelection, setEnableRoomSelection] = useState(false);
   
   // Room selection state for cross-building persistence
   const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
@@ -75,6 +77,14 @@ export default function MapScreen() {
   const findBuildingById = useCallback((buildingId: string) => {
     return buildings.find(b => b.id === buildingId);
   }, []);
+
+  const isStartComplete = enableRoomSelection
+      ? !!start && !!startRoomSelection?.buildingId && !!startRoomSelection?.floor && !!startRoomSelection?.room
+      : !!start;
+
+    const isDestinationComplete = enableRoomSelection
+      ? !!destination && !!destinationRoomSelection?.buildingId && !!destinationRoomSelection?.floor && !!destinationRoomSelection?.room
+      : !!destination;
 
   // Sync room selections to start/destination places for cross-building navigation
   useEffect(() => {
@@ -354,7 +364,7 @@ export default function MapScreen() {
   };
 
   const handleBuildingSelect = (building: any) => {
-    if (mapSelectionTarget && buildingSelectorVisible) {
+    if (mapSelectionTarget) {
       const place: Place = {
         name: building.id,
         address: building.address || building.id,
@@ -369,6 +379,7 @@ export default function MapScreen() {
         setDestination(place);
       }
       setMapSelectionTarget(null);
+      setBuildingSelectorVisible(true);
       return;
     }
     setSelectedBuilding(building);
@@ -391,7 +402,7 @@ export default function MapScreen() {
   const activeModal = (() => {
     if (selectedBuilding) return 'buildingInfo';
     if (showInstructions) return 'routeInstructions';
-    if (routeInfo && start && destination) return 'routeInfo';
+    if (routeInfo && isStartComplete && isDestinationComplete) return 'routeInfo';
     return 'none';
   })();
   const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
@@ -559,7 +570,15 @@ export default function MapScreen() {
           ]}
           pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
         >
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8 }}>
+                    <Text style={{ color: 'black', marginRight: 8 }}>Enable Room Selection</Text>
+                    <Switch
+                      value={enableRoomSelection}
+                      onValueChange={setEnableRoomSelection}
+                    />
+          </View>
           <StartDestinationPicker
+            enableRoomSelection={enableRoomSelection}
             userLocation={userLocation}
             start={start}
             destination={destination}
@@ -568,20 +587,32 @@ export default function MapScreen() {
             setInstructions={setInstructions}
             transportMode={transportMode}
             mapSelectionTarget={mapSelectionTarget}
-            setMapSelectionTarget={setMapSelectionTarget}
+            setMapSelectionTarget={(target) => {
+                                      setMapSelectionTarget(target);
+                                      if (target) {
+                                        setBuildingSelectorVisible(false);
+                                      }
+                                  }}
             setDirectionsGoogle={setDirectionsGoogle}
             setRouteInfo={setRouteInfo}
+            startRoomSelection={startRoomSelection}
+            setStartRoomSelection={setStartRoomSelection}
+            destinationRoomSelection={destinationRoomSelection}
+            setDestinationRoomSelection={setDestinationRoomSelection}
           />
         </Animated.View>
       )}
 
-      {mapSelectionTarget && buildingSelectorVisible && (
+      {mapSelectionTarget && (
         <View style={styles.mapSelectionBanner} testID="map-selection-banner">
           <MaterialIcons name="touch-app" size={20} color="#fff" />
           <Text style={styles.mapSelectionBannerText}>
             Tap a building to set as {mapSelectionTarget === 'start' ? 'Start' : 'Destination'}
           </Text>
-          <TouchableOpacity onPress={() => setMapSelectionTarget(null)} testID="cancel-map-selection">
+          <TouchableOpacity onPress={() => {
+              setMapSelectionTarget(null);
+              setBuildingSelectorVisible(true);
+              }} testID="cancel-map-selection">
             <MaterialIcons name="close" size={20} color="#fff" />
           </TouchableOpacity>
         </View>

@@ -5,12 +5,14 @@ import BuildingSelector from './BuildingSelector';
 import * as Location from 'expo-location';
 import { buildings } from '../../data/buildings';
 import type { MapStep, TravelMode } from '../../types/map';
+import InlineRoomSelector from './InlineRoomSelector';
 
 export type Place = {
   name: string;
   address: string;
   location: { lat: number; lng: number };
 };
+
 
 type StartDestinationPickerProps = {
   userLocation: { latitude: number; longitude: number } | null;
@@ -24,6 +26,11 @@ type StartDestinationPickerProps = {
   setMapSelectionTarget?: (target: 'start' | 'destination' | null) => void;
   setDirectionsGoogle: (data: any) => void;
   setRouteInfo: (val: {distance: number, duration: number} | null) => void;
+  enableRoomSelection?: boolean;
+  startRoomSelection?: RoomSelection | null;
+  setStartRoomSelection?: (selection: RoomSelection | null) => void;
+  destinationRoomSelection?: RoomSelection | null;
+  setDestinationRoomSelection?: (selection: RoomSelection | null) => void;
 };
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -34,7 +41,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   SHUTTLE: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo, enableRoomSelection = false, startRoomSelection, setStartRoomSelection, destinationRoomSelection, setDestinationRoomSelection }) => {
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
   // Calculate distance between two coordinates in meters using Haversine formula
@@ -154,25 +161,49 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
         <View style={styles.selectorWrapper}>
           <BuildingSelector
             placeholder="Select start building"
-            onSelect={data => setStart(data)}
+            onSelect={(data) => {
+                                   setStart(data);
+                                   if (enableRoomSelection && setStartRoomSelection) {
+                                     setStartRoomSelection(
+                                       data
+                                         ? {
+                                             buildingId: data.name,
+                                             floor: '',
+                                             room: '',
+                                           }
+                                         : null
+                                     );
+                                   }
+                                 }}
             userLocation={userLocation}
             value={start?.name}
             testID="start-building-selector"
           />
         </View>
-        {start && (
+        {!enableRoomSelection && start && (
           <TouchableOpacity
             style={styles.clearButton}
-            onPress={() => setStart(null)}
+            onPress={() => {
+                setStart(null);
+                setStartRoomSelection?.(null);
+                }}
             testID="clear-start-button"
           >
             <MaterialIcons name="close" size={20} color="#666" />
           </TouchableOpacity>
         )}
       </View>
-      {start && (
+      {!enableRoomSelection && start && (
         <Text style={styles.selectedText}>Selected: {start.name}</Text>
       )}
+      {enableRoomSelection && setStartRoomSelection && (
+              <InlineRoomSelector
+                buildingId={start?.name ?? null}
+                label="Start"
+                selection={startRoomSelection ?? null}
+                onChange={setStartRoomSelection}
+              />
+     )}
       {setMapSelectionTarget && (
         <TouchableOpacity
           style={[
@@ -215,24 +246,48 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
         <View style={styles.selectorWrapper}>
           <BuildingSelector
             placeholder="Select destination building"
-            onSelect={data => setDestination(data)}
+            onSelect={(data) => {
+                                   setDestination(data);
+                                   if (enableRoomSelection && setDestinationRoomSelection) {
+                                     setDestinationRoomSelection(
+                                       data
+                                         ? {
+                                             buildingId: data.name,
+                                             floor: '',
+                                             room: '',
+                                           }
+                                         : null
+                                     );
+                                   }
+                                 }}
             userLocation={userLocation}
             value={destination?.name}
             testID="destination-building-selector"
           />
         </View>
-        {destination && (
+        {!enableRoomSelection && destination && (
           <TouchableOpacity
             style={styles.clearButton}
-            onPress={() => setDestination(null)}
+            onPress={() => {
+                setDestination(null);
+                setDestinationRoomSelection?.(null);
+                }}
             testID="clear-destination-button"
           >
             <MaterialIcons name="close" size={20} color="#666" />
           </TouchableOpacity>
         )}
       </View>
-      {destination && (
+      {!enableRoomSelection && destination && (
         <Text style={styles.selectedText}>Selected: {destination.name}</Text>
+      )}
+      {enableRoomSelection && setDestinationRoomSelection && (
+              <InlineRoomSelector
+              buildingId={destination?.name ?? null}
+              label="Destination"
+              selection={destinationRoomSelection ?? null}
+              onChange={setDestinationRoomSelection}
+              />
       )}
       {setMapSelectionTarget && (
         <TouchableOpacity
