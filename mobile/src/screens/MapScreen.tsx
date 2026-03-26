@@ -13,6 +13,7 @@ import Constants from "expo-constants";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
 import { useRouteProcessor } from '../hooks/useRouteProcessor';
+import { usePOIState } from '../hooks/usePOIState';
 import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
@@ -73,13 +74,17 @@ export default function MapScreen() {
   const { settings } = useAppSettings();
   
   // POI state
-  const [selectedPOI, setSelectedPOI] = useState<OutdoorPOI | null>(null);
-  const [showPOIFilter, setShowPOIFilter] = useState(false);
-  const [poiFilters, setPoiFilters] = useState<Set<OutdoorPOI['category']>>(
-    new Set(['food', 'cafe', 'restroom', 'parking', 'bike_rack', 'emergency'])
-  );
-  const [nearestPOI, setNearestPOI] = useState<(OutdoorPOI & { distance: number }) | null>(null);
-  const poiInfoSlideAnim = useRef(new Animated.Value(400)).current;
+  const {
+    selectedPOI,
+    setSelectedPOI,
+    showPOIFilter,
+    setShowPOIFilter,
+    poiFilters,
+    setPoiFilters,
+    nearestPOI,
+    setNearestPOI,
+    poiInfoSlideAnim,
+  } = usePOIState();
   
   // Room selection state for cross-building persistence
   const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
