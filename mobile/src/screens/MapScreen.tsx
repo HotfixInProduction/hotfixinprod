@@ -1,5 +1,4 @@
 import { StatusBar } from 'expo-status-bar';
-import { Switch } from 'react-native';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus, ScrollView } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
