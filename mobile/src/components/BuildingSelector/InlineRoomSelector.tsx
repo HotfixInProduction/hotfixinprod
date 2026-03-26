@@ -252,7 +252,7 @@ export default function InlineRoomSelector({
         </View>
       )}
 
-      {showRoomList && building && currentFloor && (
+      {showRoomList && building && !!currentFloor && (
         <View style={styles.dropdownContainer}>
           {roomList.length > 0 ? (
             <ScrollView
