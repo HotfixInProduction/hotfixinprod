@@ -12,6 +12,11 @@ interface POIFilterProps {
 }
 
 export default function POIFilter({ visible, onClose, selectedFilters, onFilterChange }: Readonly<POIFilterProps>) {
+  const allCategories = React.useMemo(
+    () => new Set(POI_CATEGORIES.map(cat => cat.key as OutdoorPOI['category'])),
+    []
+  );
+
   const toggleFilter = (category: OutdoorPOI['category']) => {
     const newFilters = new Set(selectedFilters);
     if (newFilters.has(category)) {
@@ -23,10 +28,6 @@ export default function POIFilter({ visible, onClose, selectedFilters, onFilterC
   };
 
   const selectAll = () => {
-    const allCategories = React.useMemo(
-      () => new Set(POI_CATEGORIES.map(cat => cat.key as OutdoorPOI['category'])),
-      []
-    );
     onFilterChange(allCategories);
   };
 
