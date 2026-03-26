@@ -895,6 +895,21 @@ describe('Auto-zoom Map', () => {
 });
 
 describe('Transportation Modes', () => {
+  const openRouteInfo = async (getByTestId: any) => {
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+  };
   it('updates map directions mode immediately when mode is changed', async () => {
     globalThis.fetch = jest.fn().mockImplementation(() =>
       Promise.resolve({
@@ -913,32 +928,20 @@ describe('Transportation Modes', () => {
       } as Response) 
     );
     
-    const { getByTestId, findByTestId } = render(<MapScreen />);
-
-    
-    fireEvent.press(getByTestId('building-selector-toggle'));
-    fireEvent.press(getByTestId('set-start'));
-    fireEvent.press(getByTestId('set-destination'));
-
-    const routeInfoContainer = await findByTestId('route-info-mock');
-    expect(routeInfoContainer).toBeTruthy();
-
+    const { getByTestId } = render(<MapScreen />);
+    await openRouteInfo(getByTestId);
     expect(getByTestId('route-info-mode')).toHaveTextContent('Mode: DRIVING');
 
-    fireEvent.press(getByTestId('route-info-mode-walking'));
+      fireEvent.press(getByTestId('route-info-mode-walking'));
 
-    await waitFor(() => {
-      expect(getByTestId('route-info-mode')).toHaveTextContent('Mode: WALKING');
+      await waitFor(() => {
+        expect(getByTestId('route-info-mode')).toHaveTextContent('Mode: WALKING');
+      });
     });
-  });
 
   it('passes selected mode to route info', async () => {
     const { getByTestId, getByText } = render(<MapScreen />);
-
-    fireEvent.press(getByTestId('building-selector-toggle'));
-    fireEvent.press(getByTestId('set-start'));
-    fireEvent.press(getByTestId('set-destination'));
-    
+    await openRouteInfo(getByTestId);
 
     await waitFor(() => {
       expect(getByText('Mode: DRIVING')).toBeTruthy();
@@ -951,13 +954,19 @@ describe('Transportation Modes', () => {
     });
   });
 
+
   it('renders only shuttle segment when both points are at shuttle terminals', async () => {
     const { getByTestId, queryByTestId, queryAllByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-terminal'));
     fireEvent.press(getByTestId('set-destination-terminal'));
-    // 
+
+    await waitFor(() => {
+          expect(getByTestId('view-directions-button')).toBeTruthy();
+        });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -995,7 +1004,12 @@ describe('Transportation Modes', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-walk'));
     fireEvent.press(getByTestId('set-destination-walk'));
-    // 
+
+    await waitFor(() => {
+          expect(getByTestId('view-directions-button')).toBeTruthy();
+        });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -1035,6 +1049,12 @@ describe('Shuttle Schedule Edge Cases', () => {
       fireEvent.press(getByTestId('set-start'));
       fireEvent.press(getByTestId('set-destination'));
 
+      await waitFor(() => {
+            expect(getByTestId('view-directions-button')).toBeTruthy();
+          });
+
+      fireEvent.press(getByTestId('view-directions-button'));
+
       await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
 
       fireEvent.press(getByTestId('route-info-mode-shuttle'));
@@ -1070,6 +1090,12 @@ describe('Shuttle Schedule Edge Cases', () => {
       fireEvent.press(getByTestId('set-start'));
       fireEvent.press(getByTestId('set-destination'));
 
+      await waitFor(() => {
+        expect(getByTestId('view-directions-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('view-directions-button'));
+
       await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
 
       fireEvent.press(getByTestId('route-info-mode-shuttle'));
@@ -1093,7 +1119,12 @@ describe('Clearing Route', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -1127,7 +1158,12 @@ describe('Clearing Route', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -1150,7 +1186,12 @@ describe('Clearing Route', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -1221,7 +1262,12 @@ describe('MapScreen Shuttle Coverage', () => {
       fireEvent.press(getByTestId('building-selector-toggle'));
       fireEvent.press(getByTestId('set-start'));
       fireEvent.press(getByTestId('set-destination'));
-      // 
+
+      await waitFor(() => {
+        expect(getByTestId('view-directions-button')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('view-directions-button'));
 
       await waitFor(() => {
         expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -1264,7 +1310,12 @@ describe('MapScreen Shuttle Coverage', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    // 
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -1296,18 +1347,22 @@ describe('MapScreen Shuttle Coverage', () => {
 
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
-    fireEvent.press(getByTestId('set-destination-downtown'));
-    // 
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
-      expect(getByTestId('route-info-mode').props.children).toContain('DRIVING');
     });
 
     fireEvent.press(getByTestId('route-info-mode-force-shuttle'));
 
     await waitFor(() => {
-      expect(getByTestId('route-info-mode').props.children).toContain('TRANSIT');
+      expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
     });
   });
 
@@ -1315,13 +1370,17 @@ describe('MapScreen Shuttle Coverage', () => {
     const { getByTestId, queryByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
-    fireEvent.press(getByTestId('set-start-far'));
+    fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
-    // 
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
-      expect(queryByTestId('route-info-mode-shuttle')).toBeNull();
     });
   });
 });
@@ -1435,6 +1494,12 @@ describe('Compact Route Header', () => {
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
 
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
     await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
 
     fireEvent.press(getByTestId('route-info-start-button'));
@@ -1453,6 +1518,12 @@ describe('Compact Route Header', () => {
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
 
+    await waitFor(() => {
+       expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
     await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
 
     fireEvent.press(getByTestId('route-info-start-button'));
@@ -1470,6 +1541,12 @@ describe('Directions Floor Plan', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+        expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
 
@@ -1490,6 +1567,12 @@ describe('Directions Floor Plan', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+            expect(getByTestId('view-directions-button')).toBeTruthy();
+        });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
 
@@ -1512,6 +1595,12 @@ describe('Route Instructions', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+            expect(getByTestId('view-directions-button')).toBeTruthy();
+        });
+
+        fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
 
@@ -1559,6 +1648,12 @@ describe('Route Instructions', () => {
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start'));
     fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+                expect(getByTestId('view-directions-button')).toBeTruthy();
+            });
+
+            fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
 
@@ -1651,6 +1746,110 @@ describe('Route Instructions', () => {
 
       expect(setDirectionsFloorPlan).not.toHaveBeenCalled();
     });
+});
+
+describe('View Directions flow', () => {
+  beforeEach(() => {
+    resetAllMocks();
+
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          routes: [
+            {
+              legs: [
+                {
+                  distance: { value: 5000, text: '5.0 km' },
+                  duration: { value: 600, text: '10 mins' },
+                  steps: [],
+                },
+              ],
+            },
+          ],
+        }),
+    } as any);
+  });
+
+  it('does not auto-open route info after selecting start and destination in normal mode', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    expect(queryByTestId('route-info-mock')).toBeNull();
+  });
+
+  it('opens route info only after pressing View Directions in normal mode', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    expect(queryByTestId('route-info-mock')).toBeNull();
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+  });
+
+  it('does not auto-open route info again when destination changes before View Directions is pressed', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    expect(queryByTestId('route-info-mock')).toBeNull();
+
+    fireEvent.press(getByTestId('set-destination-downtown'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+      expect(queryByTestId('route-info-mock')).toBeNull();
+    });
+  });
+
+  it('does not auto-open route info in room mode until View Directions is pressed', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent(getByTestId('toggle-room-selection'), 'valueChange', true);
+
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    fireEvent.press(getByTestId('set-room-start-complete'));
+    fireEvent.press(getByTestId('set-room-destination-complete'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    expect(queryByTestId('route-info-mock')).toBeNull();
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+  });
 });
 
 

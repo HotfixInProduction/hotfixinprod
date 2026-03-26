@@ -108,7 +108,7 @@ export const createBuildingPolygonMock = () => {
 };
 
 export const createStartDestinationPickerMock = () => {
-  const { View, TouchableOpacity, Text } = require('react-native');
+  const { View, TouchableOpacity, Text, Switch } = require('react-native');
 
   const mockStart = {
     id: 'start-place',
@@ -152,8 +152,14 @@ export const createStartDestinationPickerMock = () => {
     location: { lat: 45.4579, lng: -73.6395 },
   };
 
-  return ({ setStart, setDestination, setMapSelectionTarget, mapSelectionTarget }: any) => (
+  return ({ setStart, setDestination, setMapSelectionTarget, mapSelectionTarget, enableRoomSelection, setEnableRoomSelection, setStartRoomSelection, setDestinationRoomSelection, canShowDirectionsAction, onShowDirections, }: any) => (
     <View testID="start-destination-picker-mock">
+      <Text testID="picker-room-mode"> Room mode: {String(!!enableRoomSelection)}</Text>
+      <Switch
+        testID="toggle-room-selection"
+        value={!!enableRoomSelection}
+        onValueChange={setEnableRoomSelection}
+      />
       <TouchableOpacity testID="set-start" onPress={() => setStart(mockStart)}>
         <Text>Set Start</Text>
       </TouchableOpacity>
@@ -195,9 +201,41 @@ export const createStartDestinationPickerMock = () => {
           {mapSelectionTarget && <Text testID="map-selection-target">{mapSelectionTarget}</Text>}
         </>
       )}
-    </View>
-  );
-};
+  <TouchableOpacity
+          testID="set-room-start-complete"
+          onPress={() =>
+            setStartRoomSelection?.({
+              buildingId: 'mock-building-id',
+              floor: '8',
+              room: '820',
+            })
+          }
+        >
+          <Text>Set Room Start Complete</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          testID="set-room-destination-complete"
+          onPress={() =>
+            setDestinationRoomSelection?.({
+              buildingId: 'mock-building-id',
+              floor: '8',
+              room: '820',
+            })
+          }
+        >
+          <Text>Set Room Destination Complete</Text>
+        </TouchableOpacity>
+
+        {canShowDirectionsAction ? (
+          <TouchableOpacity testID="view-directions-button" onPress={onShowDirections}>
+            <Text>View Directions</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    );
+  };
+
 
 export const createMapDirectionsMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
