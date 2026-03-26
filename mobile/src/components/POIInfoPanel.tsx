@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import type { OutdoorPOI } from '../data/outdoorPOI';
 import { formatDistance } from '../utils/distanceUtils';
 import { getPOICategoryIcon, getPOICategoryColor } from '../utils/poiMarkerUtils';
+import POIInfoRow from './POIInfoRow';
 
 interface POIInfoPanelProps {
   readonly poi: (OutdoorPOI & { distance?: number }) | null;
@@ -53,42 +54,38 @@ export default function POIInfoPanel({
           </TouchableOpacity>
         </View>
 
-        {poi.address ? (
-          <View style={styles.infoRow}>
-            <MaterialIcons name="location-on" size={18} color="#666" />
-            <Text style={styles.infoText}>{poi.address}</Text>
-          </View>
-        ) : null}
+        <POIInfoRow
+          icon="location-on"
+          value={poi.address || ''}
+          showValue={!!poi.address}
+        />
 
-        {typeof poi.distance === 'number' ? (
-          <View style={styles.infoRow}>
-            <MaterialIcons name="near-me" size={18} color="#912338" />
-            <Text style={[styles.infoText, { color: '#912338', fontWeight: '600' }]}>
-              {formatDistance(poi.distance)} away
-            </Text>
-          </View>
-        ) : null}
+        <POIInfoRow
+          icon="near-me"
+          value={typeof poi.distance === 'number' ? `${formatDistance(poi.distance)} away` : ''}
+          iconColor="#912338"
+          textStyles={{ color: '#912338', fontWeight: '600' }}
+          showValue={typeof poi.distance === 'number'}
+        />
 
-        {poi.description ? (
-          <View style={styles.infoRow}>
-            <MaterialIcons name="info" size={18} color="#666" />
-            <Text style={[styles.infoText, { flex: 1 }]}>{poi.description}</Text>
-          </View>
-        ) : null}
+        <POIInfoRow
+          icon="info"
+          value={poi.description || ''}
+          textStyles={{ flex: 1 }}
+          showValue={!!poi.description}
+        />
 
-        {poi.hours ? (
-          <View style={styles.infoRow}>
-            <MaterialIcons name="schedule" size={18} color="#666" />
-            <Text style={styles.infoText}>{poi.hours}</Text>
-          </View>
-        ) : null}
+        <POIInfoRow
+          icon="schedule"
+          value={poi.hours || ''}
+          showValue={!!poi.hours}
+        />
 
-        {poi.phone ? (
-          <View style={styles.infoRow}>
-            <MaterialIcons name="phone" size={18} color="#666" />
-            <Text style={styles.infoText}>{poi.phone}</Text>
-          </View>
-        ) : null}
+        <POIInfoRow
+          icon="phone"
+          value={poi.phone || ''}
+          showValue={!!poi.phone}
+        />
 
         {onSetAsDestination && hasUserLocation ? (
           <TouchableOpacity
@@ -154,17 +151,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     fontWeight: '500',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  infoText: {
-    marginLeft: 12,
-    fontSize: 14,
-    color: '#555',
-    flex: 1,
   },
   directionsButton: {
     marginTop: 16,

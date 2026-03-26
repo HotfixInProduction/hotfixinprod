@@ -18,9 +18,9 @@ export const calculateDistance = (
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c; // Distance in kilometers
   return distance * 1000; // Convert to meters
@@ -35,31 +35,11 @@ export const calculateDistance = (
  */
 export const findNearestPOI = (
   userCoordinates: { latitude: number; longitude: number } | null,
-  pois: Array<{ coordinates: { latitude: number; longitude: number }; [key: string]: any }>,
+  pois: Array<{ coordinates: { latitude: number; longitude: number };[key: string]: any }>,
   rangeInMeters = 500
 ): (typeof pois[0] & { distance: number }) | null => {
-  if (!userCoordinates || pois.length === 0) {
-    return null;
-  }
-
-  let nearestPOI: (typeof pois[0] & { distance: number }) | null = null;
-
-  for (const poi of pois) {
-    const distance = calculateDistance(
-      userCoordinates.latitude,
-      userCoordinates.longitude,
-      poi.coordinates.latitude,
-      poi.coordinates.longitude
-    );
-
-    if (distance <= rangeInMeters) {
-      if (!nearestPOI || distance < nearestPOI.distance) {
-        nearestPOI = { ...poi, distance };
-      }
-    }
-  }
-
-  return nearestPOI;
+  const poisInRange = findPOIsInRange(userCoordinates, pois, rangeInMeters);
+  return poisInRange.length > 0 ? poisInRange[0] : null;
 };
 
 /**
@@ -71,7 +51,7 @@ export const findNearestPOI = (
  */
 export const findPOIsInRange = (
   userCoordinates: { latitude: number; longitude: number } | null,
-  pois: Array<{ coordinates: { latitude: number; longitude: number }; [key: string]: any }>,
+  pois: Array<{ coordinates: { latitude: number; longitude: number };[key: string]: any }>,
   rangeInMeters = 500
 ): Array<typeof pois[0] & { distance: number }> => {
   if (!userCoordinates) {

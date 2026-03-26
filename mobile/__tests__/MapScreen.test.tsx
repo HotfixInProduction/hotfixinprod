@@ -1069,6 +1069,22 @@ describe('Transportation Modes', () => {
   });
 
   it('renders only shuttle segment when both points are at shuttle terminals', async () => {
+    globalThis.fetch = jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          status: 'OK',
+          routes: [{
+            legs: [{
+              distance: { value: 5000, text: '5.0 km' },
+              duration: { value: 600, text: '10 mins' },
+              steps: []
+            }]
+          }]
+        }),
+      } as Response) 
+    );
     const { getByTestId, queryByTestId, queryAllByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
@@ -1514,6 +1530,22 @@ describe('Outdoor POI Functionality', () => {
   });
 
   it('sets POI as destination when button is tapped', async () => {
+    globalThis.fetch = jest.fn().mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({
+          status: 'OK',
+          routes: [{
+            legs: [{
+              distance: { value: 5000, text: '5.0 km' },
+              duration: { value: 600, text: '10 mins' },
+              steps: []
+            }]
+          }]
+        }),
+      } as Response) 
+    );
     mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
     mockGetCurrentPosition.mockResolvedValue({
       coords: { latitude: 45.5, longitude: -73.58 },
