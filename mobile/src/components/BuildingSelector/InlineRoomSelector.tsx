@@ -265,14 +265,12 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
   const floorDisabled = !building || availableFloors.length === 0;
   const roomDisabled = !building || !currentFloor;
 
-  const handleFloorPress = () => {
-    if (floorDisabled) return;
+  const toggleFloorList = () => {
     setShowFloorList((prev) => !prev);
     setShowRoomList(false);
   };
 
-  const handleRoomPress = () => {
-    if (roomDisabled) return;
+  const toggleRoomList = () => {
     setShowRoomList((prev) => !prev);
     setShowFloorList(false);
   };
@@ -310,7 +308,7 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
             styles.compactInputLeft,
             floorDisabled && styles.compactInputDisabled,
           ]}
-          onPress={handleFloorPress}
+          onPress={floorDisabled ? undefined : toggleFloorList}
           activeOpacity={floorDisabled ? 1 : 0.8}
           disabled={floorDisabled}
         >
@@ -337,7 +335,7 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
             styles.compactInput,
             roomDisabled && styles.compactInputDisabled,
           ]}
-          onPress={handleRoomPress}
+          onPress={roomDisabled ? undefined : toggleRoomList}
           activeOpacity={roomDisabled ? 1 : 0.8}
           disabled={roomDisabled}
         >
