@@ -36,6 +36,7 @@ import {
   type CampusKey,
 } from '../models/MapRouting';
 import MapViewDirections from 'react-native-maps-directions';
+import { createPlaceFromUserLocation, createPlaceFromBuilding, createPlaceFromPOI } from '../utils/placeUtils';
 
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -100,15 +101,7 @@ export default function MapScreen() {
     if (startRoomSelection) {
       const building = findBuildingById(startRoomSelection.buildingId);
       if (building) {
-        const place: Place = {
-          name: building.id,
-          address: building.address || building.id,
-          location: {
-            lat: building.labelCoord.latitude,
-            lng: building.labelCoord.longitude,
-          },
-        };
-        setStart(place);
+        setStart(createPlaceFromBuilding(building));
       }
     }
 
@@ -116,15 +109,7 @@ export default function MapScreen() {
     if (destinationRoomSelection) {
       const destBuilding = findBuildingById(destinationRoomSelection.buildingId);
       if (destBuilding) {
-        const place: Place = {
-          name: destBuilding.id,
-          address: destBuilding.address || destBuilding.id,
-          location: {
-            lat: destBuilding.labelCoord.latitude,
-            lng: destBuilding.labelCoord.longitude,
-          },
-        };
-        setDestination(place);
+        setDestination(createPlaceFromBuilding(destBuilding));
       }
     }
   }, [startRoomSelection, destinationRoomSelection, findBuildingById]);
@@ -456,27 +441,8 @@ export default function MapScreen() {
   const handleSetPOIAsDestination = useCallback((poi: OutdoorPOI) => {
     if (!userLocation) return;
 
-    // Set current location as start
-    const startPlace: Place = {
-      name: 'Current Location',
-      address: 'Your Location',
-      location: {
-        lat: userLocation.latitude,
-        lng: userLocation.longitude,
-      },
-    };
-    setStart(startPlace);
-
-    // Set POI as destination
-    const destinationPlace: Place = {
-      name: poi.name,
-      address: poi.address || poi.name,
-      location: {
-        lat: poi.coordinates.latitude,
-        lng: poi.coordinates.longitude,
-      },
-    };
-    setDestination(destinationPlace);
+    setStart(createPlaceFromUserLocation(userLocation));
+    setDestination(createPlaceFromPOI(poi));
 
     // Close POI panel
     setSelectedPOI(null);
@@ -485,16 +451,7 @@ export default function MapScreen() {
   const handleSetBuildingAsDestination = useCallback((destination: Place) => {
     if (!userLocation) return;
 
-    // Set current location as start
-    const startPlace: Place = {
-      name: 'Current Location',
-      address: 'Your Location',
-      location: {
-        lat: userLocation.latitude,
-        lng: userLocation.longitude,
-      },
-    };
-    setStart(startPlace);
+    setStart(createPlaceFromUserLocation(userLocation));
     setDestination(destination);
 
     // Close building panel
