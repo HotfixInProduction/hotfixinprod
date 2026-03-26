@@ -23,7 +23,10 @@ export default function POIFilter({ visible, onClose, selectedFilters, onFilterC
   };
 
   const selectAll = () => {
-    const allCategories = new Set(POI_CATEGORIES.map(cat => cat.key as OutdoorPOI['category']));
+    const allCategories = React.useMemo(
+      () => new Set(POI_CATEGORIES.map(cat => cat.key as OutdoorPOI['category'])),
+      []
+    );
     onFilterChange(allCategories);
   };
 
