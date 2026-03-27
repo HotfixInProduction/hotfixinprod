@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { render, fireEvent, waitFor, act,  screen } from '@testing-library/react-native';
 import { Alert, Linking } from 'react-native';
 import MapScreen from '../src/screens/MapScreen';
@@ -2006,7 +2006,7 @@ describe('Outdoor POI Functionality', () => {
       coords: { latitude: 45.5, longitude: -73.58 },
     });
 
-    const { getByTestId } = render(<MapScreen />);
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
 
     await waitFor(() => {
       expect(getByTestId('poi-marker-poi_food_1')).toBeTruthy();
@@ -2019,6 +2019,19 @@ describe('Outdoor POI Functionality', () => {
     });
 
     fireEvent.press(getByTestId('poi-set-destination-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('poi-info-panel')).toBeNull();
+    });
+
+    // Open building selector to access View Directions button
+    fireEvent.press(getByTestId('building-selector-toggle'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -2122,4 +2135,3 @@ describe('Outdoor POI Functionality', () => {
 
     expect(queryByTestId('poi-set-destination-button')).toBeNull();
   });
-});
