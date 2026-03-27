@@ -369,6 +369,11 @@ export default function MapScreen() {
     setShowFloorPlan(false);
   };
 
+  const handleDirectionsError = useCallback((errorMessage: string) => {
+    console.warn('MapViewDirections failed:', errorMessage);
+    Alert.alert('Route Error', 'Unable to load the shuttle route.');
+  }, []);
+
   const handleClearRoute = () => {
     setStart(null);
     setDestination(null);
@@ -425,6 +430,7 @@ export default function MapScreen() {
               strokeWidth={4}
               strokeColor="#912338"
               mode="DRIVING"
+              onError={handleDirectionsError}
             />
 
             {shuttleRouteSegments.startWalking && (
@@ -437,6 +443,7 @@ export default function MapScreen() {
                 strokeColor="#555"
                 mode="WALKING"
                 lineDashPattern={[8, 8]}
+                onError={handleDirectionsError}
               />
             )}
 
@@ -450,6 +457,7 @@ export default function MapScreen() {
                 strokeColor="#555"
                 mode="WALKING"
                 lineDashPattern={[8, 8]}
+                onError={handleDirectionsError}
               />
             )}
           </>
