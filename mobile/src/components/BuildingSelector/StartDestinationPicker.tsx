@@ -72,12 +72,6 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
 
   const { userLocation, start, destination, setStart, setDestination } = locations;
 
-    const {
-      transportMode,
-      setInstructions,
-      setDirectionsGoogle,
-      setRouteInfo,
-    } = route;
 
     const mapSelectionTarget = mapSelection?.target ?? null;
     const setMapSelectionTarget = mapSelection?.setTarget;
