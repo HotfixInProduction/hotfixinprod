@@ -15,26 +15,48 @@ export type Place = {
 };
 
 
+type UserLocation = {
+  latitude: number;
+  longitude: number;
+};
+
+type RouteInfo = {
+  distance: number;
+  duration: number;
+};
+
+type MapSelectionTarget = 'start' | 'destination' | null;
+
 type StartDestinationPickerProps = {
-  userLocation: { latitude: number; longitude: number } | null;
-  start: Place | null;
-  destination: Place | null;
-  setStart: (place: Place | null) => void;
-  setDestination: (place: Place | null) => void;
-  setInstructions: (val: MapStep[]) => void;
-  transportMode: TravelMode;
-  mapSelectionTarget?: 'start' | 'destination' | null;
-  setMapSelectionTarget?: (target: 'start' | 'destination' | null) => void;
-  setDirectionsGoogle: (data: any) => void;
-  setRouteInfo: (val: {distance: number, duration: number} | null) => void;
-  enableRoomSelection?: boolean;
-  setEnableRoomSelection?: (val: boolean) => void;
-  startRoomSelection?: RoomSelection | null;
-  setStartRoomSelection?: (selection: RoomSelection | null) => void;
-  destinationRoomSelection?: RoomSelection | null;
-  setDestinationRoomSelection?: (selection: RoomSelection | null) => void;
-  canShowDirectionsAction?: boolean;
-  onShowDirections?: () => void;
+  locations: {
+    userLocation: UserLocation | null;
+    start: Place | null;
+    destination: Place | null;
+    setStart: (place: Place | null) => void;
+    setDestination: (place: Place | null) => void;
+  };
+  route: {
+    transportMode: TravelMode;
+    setInstructions: (val: MapStep[]) => void;
+    setDirectionsGoogle: (data: any) => void;
+    setRouteInfo: (val: RouteInfo | null) => void;
+  };
+  mapSelection?: {
+    target: MapSelectionTarget;
+    setTarget: (target: MapSelectionTarget) => void;
+  };
+  roomSelection?: {
+    enabled: boolean;
+    setEnabled?: (val: boolean) => void;
+    startSelection?: RoomSelection | null;
+    setStartSelection?: (selection: RoomSelection | null) => void;
+    destinationSelection?: RoomSelection | null;
+    setDestinationSelection?: (selection: RoomSelection | null) => void;
+  };
+  directionsAction?: {
+    canShow: boolean;
+    onShow: () => void;
+  };
 };
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -45,8 +67,36 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   SHUTTLE: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo, enableRoomSelection = false, setEnableRoomSelection, startRoomSelection, setStartRoomSelection, destinationRoomSelection, setDestinationRoomSelection, canShowDirectionsAction, onShowDirections }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locations, route, mapSelection, roomSelection, directionsAction, }) => {
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
+
+  const { userLocation, start, destination, setStart, setDestination } = locations;
+
+    const {
+      transportMode,
+      setInstructions,
+      setDirectionsGoogle,
+      setRouteInfo,
+    } = route;
+
+    const mapSelectionTarget = mapSelection?.target ?? null;
+    const setMapSelectionTarget = mapSelection?.setTarget;
+
+    const enableRoomSelection = roomSelection?.enabled ?? false;
+    const setEnableRoomSelection = roomSelection?.setEnabled;
+    const startRoomSelection = roomSelection?.startSelection ?? null;
+    const setStartRoomSelection = roomSelection?.setStartSelection;
+    const destinationRoomSelection = roomSelection?.destinationSelection ?? null;
+    const setDestinationRoomSelection = roomSelection?.setDestinationSelection;
+
+    const canShowDirectionsAction = directionsAction?.canShow ?? false;
+    const onShowDirections = directionsAction?.onShow;
+
+    void transportMode;
+    void setInstructions;
+    void setDirectionsGoogle;
+    void setRouteInfo;
+    void GOOGLE_DIRECTIONS_MODE;
 
   // Calculate distance between two coordinates in meters using Haversine formula
   const calculateDistance = (latitude1: number, longitude1: number, latitude2: number, longitude2: number): number => {

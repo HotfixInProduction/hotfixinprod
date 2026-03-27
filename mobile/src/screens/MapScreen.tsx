@@ -697,30 +697,40 @@ export default function MapScreen() {
         >
 
           <StartDestinationPicker
-            enableRoomSelection={enableRoomSelection}
-            setEnableRoomSelection={setEnableRoomSelection}
-            userLocation={userLocation}
-            start={start}
-            destination={destination}
-            setStart={setStart}
-            setDestination={setDestination}
-            setInstructions={setInstructions}
-            transportMode={transportMode}
-            mapSelectionTarget={mapSelectionTarget}
-            setMapSelectionTarget={(target) => {
-              setMapSelectionTarget(target);
-              if (target) {
-              setBuildingSelectorVisible(false);
-              }
+            locations={{
+              userLocation,
+              start,
+              destination,
+              setStart,
+              setDestination,
             }}
-            setDirectionsGoogle={setDirectionsGoogle}
-            setRouteInfo={setRouteInfo}
-            startRoomSelection={startRoomSelection}
-            setStartRoomSelection={setStartRoomSelection}
-            destinationRoomSelection={destinationRoomSelection}
-            setDestinationRoomSelection={setDestinationRoomSelection}
-            canShowDirectionsAction={isStartComplete && isDestinationComplete}
-            onShowDirections={() => setShowRoutePreview(true)}
+            route={{
+              transportMode,
+              setInstructions,
+              setDirectionsGoogle,
+              setRouteInfo,
+            }}
+            mapSelection={{
+              target: mapSelectionTarget,
+              setTarget: (target) => {
+                setMapSelectionTarget(target);
+                if (target) {
+                  setBuildingSelectorVisible(false);
+                }
+              },
+            }}
+            roomSelection={{
+              enabled: enableRoomSelection,
+              setEnabled: setEnableRoomSelection,
+              startSelection: startRoomSelection,
+              setStartSelection: setStartRoomSelection,
+              destinationSelection: destinationRoomSelection,
+              setDestinationSelection: setDestinationRoomSelection,
+            }}
+            directionsAction={{
+              canShow: isStartComplete && isDestinationComplete,
+              onShow: () => setShowRoutePreview(true),
+            }}
           />
         </Animated.View>
       )}
