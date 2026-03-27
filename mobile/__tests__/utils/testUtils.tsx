@@ -211,6 +211,10 @@ export const createMapDirectionsMock = () => {
           coordinates: []
         })}
       />
+      <TouchableOpacity
+        testID="trigger-directions-error"
+        onPress={() => props.onError?.('mock-directions-error')}
+      />
     </View>
   );
 };
