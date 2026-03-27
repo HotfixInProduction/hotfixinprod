@@ -111,4 +111,90 @@ describe('BuildingInfo', () => {
       expect(queryByTestId('view-floor-plan-button')).toBeNull();
     });
   });
+
+  describe('Set as Destination button', () => {
+    it('does not render when onSetAsDestination is not provided', () => {
+      const { queryByTestId } = render(
+        <BuildingInfo building={mockBuilding} onClose={() => {}} hasUserLocation={true} />
+      );
+      expect(queryByTestId('building-set-destination-button')).toBeNull();
+    });
+
+    it('does not render when hasUserLocation is false', () => {
+      const { queryByTestId } = render(
+        <BuildingInfo 
+          building={mockBuilding} 
+          onClose={() => {}} 
+          onSetAsDestination={() => {}}
+          hasUserLocation={false}
+        />
+      );
+      expect(queryByTestId('building-set-destination-button')).toBeNull();
+    });
+
+    it('renders when onSetAsDestination is provided and hasUserLocation is true', () => {
+      const { getByTestId } = render(
+        <BuildingInfo 
+          building={mockBuilding} 
+          onClose={() => {}} 
+          onSetAsDestination={() => {}}
+          hasUserLocation={true}
+        />
+      );
+      expect(getByTestId('building-set-destination-button')).toBeTruthy();
+    });
+
+    it('calls onSetAsDestination with correct place object when pressed', () => {
+      const onSetAsDestination = jest.fn();
+      const { getByTestId } = render(
+        <BuildingInfo 
+          building={mockBuilding} 
+          onClose={() => {}} 
+          onSetAsDestination={onSetAsDestination}
+          hasUserLocation={true}
+        />
+      );
+      fireEvent.press(getByTestId('building-set-destination-button'));
+      expect(onSetAsDestination).toHaveBeenCalledWith({
+        name: 'Hall Building',
+        address: '1455 De Maisonneuve Blvd. W.',
+        location: {
+          lat: 45.497285,
+          lng: -73.578975,
+        },
+      });
+    });
+
+    it('uses building id as address when address is not provided', () => {
+      const buildingNoAddress = { ...mockBuilding, address: undefined };
+      const onSetAsDestination = jest.fn();
+      const { getByTestId } = render(
+        <BuildingInfo 
+          building={buildingNoAddress} 
+          onClose={() => {}} 
+          onSetAsDestination={onSetAsDestination}
+          hasUserLocation={true}
+        />
+      );
+      fireEvent.press(getByTestId('building-set-destination-button'));
+      expect(onSetAsDestination).toHaveBeenCalledWith({
+        name: 'Hall Building',
+        address: 'Hall Building',
+        location: {
+          lat: 45.497285,
+          lng: -73.578975,
+        },
+      });
+    });
+  });
+
+  describe('Building without address', () => {
+    it('renders successfully without address', () => {
+      const buildingNoAddress = { ...mockBuilding, address: undefined };
+      const { getByTestId } = render(
+        <BuildingInfo building={buildingNoAddress} onClose={() => {}} />
+      );
+      expect(getByTestId('building-title')).toBeTruthy();
+    });
+  });
 });

@@ -12,7 +12,7 @@ export interface Building {
     label: string;
     coordinates: Coordinate[];
     labelCoord: Coordinate;
-    address: string;
+    address?: string;
     departments?: string[];
     services?: string[];
     isAccessible?: boolean;

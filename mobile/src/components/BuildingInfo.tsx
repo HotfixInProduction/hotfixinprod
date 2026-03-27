@@ -1,21 +1,39 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { Building } from '../types/building';
+import type { Place } from './BuildingSelector/StartDestinationPicker';
+import ItemListColumn from './ItemListColumn';
 
 type Props = Readonly<{
     building: Building | null;
     onClose: () => void;
     onViewFloorPlan?: () => void;
+    onSetAsDestination?: (destination: Place) => void;
+    hasUserLocation?: boolean;
 }>;
 
-export default function BuildingInfo({ building, onClose, onViewFloorPlan }: Props) {
+export default function BuildingInfo({ building, onClose, onViewFloorPlan, onSetAsDestination, hasUserLocation = false }: Props) {
     if (!building) return null;
 
     const hasDepartments = (building.departments?.length ?? 0) > 0;
     const hasServices = (building.services?.length ?? 0) > 0;
     const hasFloorPlans = (building.floorPlans && Object.keys(building.floorPlans).length > 0);
+
+    const handleSetAsDestination = () => {
+        if (onSetAsDestination) {
+            const destination: Place = {
+                name: building.id,
+                address: building.address || building.id,
+                location: {
+                    lat: building.labelCoord.latitude,
+                    lng: building.labelCoord.longitude,
+                },
+            };
+            onSetAsDestination(destination);
+        }
+    };
 
     return (
         <View style={styles.buildingModal}>
@@ -59,32 +77,34 @@ export default function BuildingInfo({ building, onClose, onViewFloorPlan }: Pro
                 </TouchableOpacity>
             )}
 
+            {onSetAsDestination && hasUserLocation && (
+                <TouchableOpacity
+                    style={styles.directionsButton}
+                    onPress={handleSetAsDestination}
+                    activeOpacity={0.85}
+                    testID="building-set-destination-button"
+                >
+                    <MaterialIcons name="directions" size={20} color="#fff" style={{ marginRight: 8 }} />
+                    <Text style={styles.directionsButtonText}>Set as Destination</Text>
+                </TouchableOpacity>
+            )}
+
             {(hasDepartments || hasServices) && (
                 <View style={styles.columnWrapper}>
                     {hasDepartments && (
-                        <View testID="departments-column" style={styles.column}>
-                            <Text style={styles.columnHeader}>Departments</Text>
-                            <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
-                                {building.departments!.map((dept) => (
-                                    <Text key={dept} style={styles.itemText}>
-                                        {dept}
-                                    </Text>
-                                ))}
-                            </ScrollView>
-                        </View>
+                        <ItemListColumn
+                            testID="departments-column"
+                            title="Departments"
+                            items={building.departments!}
+                        />
                     )}
 
                     {hasServices && (
-                        <View style={styles.column}>
-                            <Text testID="services-column" style={styles.columnHeader}>Services</Text>
-                            <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator>
-                                {building.services!.map((service) => (
-                                    <Text key={service} style={styles.itemText}>
-                                        {service}
-                                    </Text>
-                                ))}
-                            </ScrollView>
-                        </View>
+                        <ItemListColumn
+                            testID="services-column"
+                            title="Services"
+                            items={building.services!}
+                        />
                     )}
                 </View>
             )}
@@ -164,6 +184,21 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     floorPlanButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    directionsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#912338',
+        borderRadius: 12,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        marginBottom: 12,
+    },
+    directionsButtonText: {
         color: '#fff',
         fontSize: 14,
         fontWeight: '600',
