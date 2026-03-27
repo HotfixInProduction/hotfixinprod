@@ -120,22 +120,6 @@ describe('StartDestinationPicker', () => {
     (Location.reverseGeocodeAsync as jest.Mock).mockClear();
   });
 
-//   const defaultStartDestProps = {
-//     locations: {
-//       userLocation: null,
-//       start: null,
-//       destination: null,
-//       setStart: jest.fn(),
-//       setDestination: jest.fn(),
-//     },
-//     route: {
-//       transportMode: 'DRIVING' as const,
-//       setInstructions: jest.fn(),
-//       setDirectionsGoogle: jest.fn(),
-//       setRouteInfo: jest.fn(),
-//     },
-//   };
-
   it('passes correct placeholder for start building selector', () => {
     render(<StartDestinationPicker {...createProps()} />);
     const calls = (BuildingSelector as jest.Mock).mock.calls;
