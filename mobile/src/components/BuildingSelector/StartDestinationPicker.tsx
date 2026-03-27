@@ -92,12 +92,6 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
     const canShowDirectionsAction = directionsAction?.canShow ?? false;
     const onShowDirections = directionsAction?.onShow;
 
-    void transportMode;
-    void setInstructions;
-    void setDirectionsGoogle;
-    void setRouteInfo;
-    void GOOGLE_DIRECTIONS_MODE;
-
   // Calculate distance between two coordinates in meters using Haversine formula
   const calculateDistance = (latitude1: number, longitude1: number, latitude2: number, longitude2: number): number => {
     const R = 6371e3; // Earth's radius in meters
