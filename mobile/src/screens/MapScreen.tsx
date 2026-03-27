@@ -13,11 +13,20 @@ import Constants from "expo-constants";
 import RouteInfo from '../components/RouteInfo';
 import RouteInstructions from '../components/RouteInstructions';
 import { useRouteProcessor } from '../hooks/useRouteProcessor';
+import { usePOIState } from '../hooks/usePOIState';
 import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
 import { RoomSelection, Building } from '../types/building';
 import { buildings } from '../data/buildings';
+import { outdoorPOIs } from '../data/outdoorPOI';
+import type { OutdoorPOI } from '../data/outdoorPOI';
+import POIInfoPanel from '../components/POIInfoPanel';
+import POIFilter from '../components/POIFilter';
+import NearestPOIBanner from '../components/NearestPOIBanner';
+import { findNearestPOI } from '../utils/distanceUtils';
+import { getPOICategoryIcon, getPOICategoryLabel, getPOICategoryColor } from '../utils/poiMarkerUtils';
+import { useAppSettings } from '../hooks/useAppSettings';
 import {
   CAMPUSES,
   INITIAL_REGION,
@@ -27,6 +36,7 @@ import {
   type CampusKey,
 } from '../models/MapRouting';
 import MapViewDirections from 'react-native-maps-directions';
+import { createPlaceFromUserLocation, createPlaceFromBuilding, createPlaceFromPOI } from '../utils/placeUtils';
 
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -68,6 +78,20 @@ export default function MapScreen() {
   const googleMapsApiKey = Constants.expoConfig?.extra?.googleApiKey as string | undefined;
   const [enableRoomSelection, setEnableRoomSelection] = useState(false);
   const [showRoutePreview, setShowRoutePreview] = useState(false);
+  const { settings } = useAppSettings();
+  
+  // POI state
+  const {
+    selectedPOI,
+    setSelectedPOI,
+    showPOIFilter,
+    setShowPOIFilter,
+    poiFilters,
+    setPoiFilters,
+    nearestPOI,
+    setNearestPOI,
+    poiInfoSlideAnim,
+  } = usePOIState();
   
   // Room selection state for cross-building persistence
   const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
@@ -91,15 +115,7 @@ export default function MapScreen() {
     if (startRoomSelection) {
       const building = findBuildingById(startRoomSelection.buildingId);
       if (building) {
-        const place: Place = {
-          name: building.id,
-          address: building.address || building.id,
-          location: {
-            lat: building.labelCoord.latitude,
-            lng: building.labelCoord.longitude,
-          },
-        };
-        setStart(place);
+        setStart(createPlaceFromBuilding(building));
       }
     }
 
@@ -107,15 +123,7 @@ export default function MapScreen() {
     if (destinationRoomSelection) {
       const destBuilding = findBuildingById(destinationRoomSelection.buildingId);
       if (destBuilding) {
-        const place: Place = {
-          name: destBuilding.id,
-          address: destBuilding.address || destBuilding.id,
-          location: {
-            lat: destBuilding.labelCoord.latitude,
-            lng: destBuilding.labelCoord.longitude,
-          },
-        };
-        setDestination(place);
+        setDestination(createPlaceFromBuilding(destBuilding));
       }
     }
   }, [startRoomSelection, destinationRoomSelection, findBuildingById]);
@@ -258,6 +266,36 @@ export default function MapScreen() {
       }).start();
     }
   }, [buildingSelectorVisible]);
+
+  // Handle POI info panel animation
+  useEffect(() => {
+    if (selectedPOI) {
+      Animated.spring(poiInfoSlideAnim, {
+        toValue: 0,
+        useNativeDriver: true,
+        tension: 80,
+        friction: 10,
+      }).start();
+    } else {
+      Animated.timing(poiInfoSlideAnim, {
+        toValue: 400,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [selectedPOI]);
+
+  // Calculate nearest POI when user location changes
+  useEffect(() => {
+    const filteredPOIsForCampus = getFilteredPOIs();
+    const poiRange = settings?.poiRangeMeters ?? 500;
+    const nearest = findNearestPOI(userLocation, filteredPOIsForCampus, poiRange);
+    if (nearest) {
+      setNearestPOI(nearest as OutdoorPOI & { distance: number });
+    } else {
+      setNearestPOI(null);
+    }
+  }, [userLocation, selectedCampus, poiFilters, settings]);
 
   // auto-fit map to show both start and destination
   useEffect(() => {
@@ -404,8 +442,45 @@ export default function MapScreen() {
     setShowRoutePreview(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
+  // Helper function to get POIs for current campus and active filters
+  const getFilteredPOIs = useCallback(() => {
+    return outdoorPOIs.filter(
+      poi => poi.campus === selectedCampus && poiFilters.has(poi.category)
+    );
+  }, [selectedCampus, poiFilters]);
 
+  // Helper function to get POI color based on category
+  const getPOIMarkerColor = useCallback((category: OutdoorPOI['category'], isNearest: boolean = false): string => {
+    return getPOICategoryColor(category, isNearest);
+  }, []);
 
+  const handlePOISelect = useCallback((poi: OutdoorPOI) => {
+    setSelectedPOI(poi);
+  }, []);
+
+  const handleClosePOI = useCallback(() => {
+    setSelectedPOI(null);
+  }, []);
+
+  const handleSetPOIAsDestination = useCallback((poi: OutdoorPOI) => {
+    if (!userLocation) return;
+
+    setStart(createPlaceFromUserLocation(userLocation));
+    setDestination(createPlaceFromPOI(poi));
+
+    // Close POI panel
+    setSelectedPOI(null);
+  }, [userLocation]);
+
+  const handleSetBuildingAsDestination = useCallback((destination: Place) => {
+    if (!userLocation) return;
+
+    setStart(createPlaceFromUserLocation(userLocation));
+    setDestination(destination);
+
+    // Close building panel
+    setSelectedBuilding(null);
+  }, [userLocation]);
 
   const activeModal = (() => {
     if (selectedBuilding) return 'buildingInfo';
@@ -434,7 +509,7 @@ export default function MapScreen() {
           currentDelta={currentDelta}
           startBuildingId={start?.name || null}
           destinationBuildingId={destination?.name || null}
-          disabled={selectedBuilding !== null}
+          disabled={selectedBuilding !== null || activeModal === 'routeInfo'}
         />
 
         {start && destination && googleMapsApiKey && (
@@ -485,6 +560,25 @@ export default function MapScreen() {
             )}
           </>
         )}
+
+        {/* POI Markers */}
+        {getFilteredPOIs().map((poi) => {
+          const isNearest = nearestPOI?.id === poi.id;
+          const icon = getPOICategoryIcon(poi.category);
+          const label = getPOICategoryLabel(poi.category);
+          return (
+            <Marker
+              key={poi.id}
+              coordinate={poi.coordinates}
+              title={`${icon} ${poi.name}`}
+              description={`${label}${isNearest ? ' - Nearest!' : ''}`}
+              pinColor={getPOIMarkerColor(poi.category, isNearest)}
+              onPress={() => handlePOISelect(poi)}
+              testID={`poi-marker-${poi.id}`}
+              opacity={1}
+            />
+          );
+        })}
 
         {start && (
           <Marker coordinate={getCoordinates(start)!} title="Start" pinColor="blue" testID="start-marker" />
@@ -542,19 +636,42 @@ export default function MapScreen() {
           </View>
         </View>
 
+        {/* Nearest POI Banner */}
+        {settings?.showNearestPOIBanner !== false && (
+          <NearestPOIBanner
+            poi={nearestPOI}
+            onPress={() => {
+              if (nearestPOI) {
+                handlePOISelect(nearestPOI);
+              }
+            }}
+          />
+        )}
+
         {!showCompactRouteHeader && (
-          <TouchableOpacity
-            style={styles.buildingSelectorToggleButton}
-            onPress={toggleBuildingSelector}
-            activeOpacity={0.7}
-            testID="building-selector-toggle"
-          >
-            <MaterialIcons
-              name={buildingSelectorVisible ? 'close' : 'directions'}
-              size={24}
-              color="#fff"
-            />
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.buildingSelectorToggleButton}
+              onPress={toggleBuildingSelector}
+              activeOpacity={0.7}
+              testID="building-selector-toggle"
+            >
+              <MaterialIcons
+                name={buildingSelectorVisible ? 'close' : 'directions'}
+                size={24}
+                color="#fff"
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.poiFilterButton}
+              onPress={() => setShowPOIFilter(true)}
+              activeOpacity={0.7}
+              testID="poi-filter-toggle"
+            >
+              <MaterialIcons name="filter-list" size={24} color="#fff" />
+            </TouchableOpacity>
+          </>
         )}
       </SafeAreaView>
 
@@ -702,6 +819,8 @@ export default function MapScreen() {
             building={selectedBuilding}
             onClose={handleCloseBuilding}
             onViewFloorPlan={selectedBuilding?.floorPlans ? () => setShowFloorPlan(true) : undefined}
+            onSetAsDestination={handleSetBuildingAsDestination}
+            hasUserLocation={userLocation !== null}
           />
         </Animated.View>
       )}
@@ -818,6 +937,24 @@ export default function MapScreen() {
         </View>
       </Modal>
 
+      {/* POI Info Panel */}
+      <POIInfoPanel
+        poi={selectedPOI}
+        onClose={handleClosePOI}
+        slideAnim={poiInfoSlideAnim}
+        isVisible={selectedPOI !== null}
+        onSetAsDestination={handleSetPOIAsDestination}
+        hasUserLocation={userLocation !== null}
+      />
+
+      {/* POI Filter Modal */}
+      <POIFilter
+        visible={showPOIFilter}
+        onClose={() => setShowPOIFilter(false)}
+        selectedFilters={poiFilters}
+        onFilterChange={setPoiFilters}
+      />
+
       <StatusBar style="auto" />
 
       {directionsFloorPlan && (
@@ -860,6 +997,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 10, // Adjusted to align horizontally with the campus selector
     top: 55, // Same vertical alignment as campus selector
+    backgroundColor: '#912338',
+    borderRadius: 24,
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+    zIndex: 10,
+  },
+  poiFilterButton: {
+    position: 'absolute',
+    right: 10,
+    top: 55,
     backgroundColor: '#912338',
     borderRadius: 24,
     width: 48,

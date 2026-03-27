@@ -183,4 +183,96 @@ describe('useProcessedSvg', () => {
         });
     });
 
+    describe('__DEV__ console logging branches', () => {
+        let originalDev: boolean;
+        let consoleLogSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+            originalDev = (global as any).__DEV__;
+            consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+        });
+
+        afterEach(() => {
+            (global as any).__DEV__ = originalDev;
+            consoleLogSpy.mockRestore();
+            jest.clearAllMocks();
+        });
+
+        it('covers __DEV__ log when no path provided', () => {
+            (global as any).__DEV__ = true;
+
+            renderHook(() =>
+                useProcessedSvg(mockSvgContent, null, '', 'room1', 'room2')
+            );
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                expect.stringContaining('No path or pathString'),
+                expect.any(Object)
+            );
+        });
+
+        it('covers __DEV__ log when node data missing', () => {
+            (global as any).__DEV__ = true;
+            const path: NavMeshNode[] = [{ id: 'start' }, { id: 'end' }];
+
+            renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, 'M 0 0 L 100 100', 'room1', 'room2')
+            );
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Missing node data'),
+                expect.any(Object)
+            );
+        });
+
+        it('covers __DEV__ log for path coordinates', () => {
+            (global as any).__DEV__ = true;
+            const path: NavMeshNode[] = [
+                { id: 'start', data: { x: 100, y: 100 } },
+                { id: 'end', data: { x: 200, y: 200 } },
+            ];
+
+            renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, 'M 100 100 L 200 200', 'room1', 'room2')
+            );
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Path coordinates'),
+                expect.objectContaining({ pathLength: 2 })
+            );
+        });
+
+        it('covers __DEV__ log for generated path elements', () => {
+            (global as any).__DEV__ = true;
+            const path: NavMeshNode[] = [
+                { id: 'start', data: { x: 100, y: 100 } },
+                { id: 'end', data: { x: 200, y: 200 } },
+            ];
+
+            renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, 'M 100 100 L 200 200', 'room1', 'room2')
+            );
+
+            expect(consoleLogSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Generated pathElements'),
+                expect.any(String)
+            );
+        });
+
+        it('skips console logs when __DEV__ is false', () => {
+            (global as any).__DEV__ = false;
+            const path: NavMeshNode[] = [
+                { id: 'start', data: { x: 100, y: 100 } },
+                { id: 'end', data: { x: 200, y: 200 } },
+            ];
+
+            renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, 'M 100 100 L 200 200', 'room1', 'room2')
+            );
+
+            // Should not log when __DEV__ is false
+            expect(consoleLogSpy).not.toHaveBeenCalled();
+        });
+    });
+
 });

@@ -310,3 +310,88 @@ describe('useSvgPathForFloor', () => {
     expect(Pathfinding.generateSvgPathForFloor).toHaveBeenCalledWith(mockPath, 8);
   });
 });
+
+describe('__DEV__ console logging branches', () => {
+  let originalDev: boolean;
+  let consoleLogSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    originalDev = (global as any).__DEV__;
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation();
+    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    (global as any).__DEV__ = originalDev;
+    consoleLogSpy.mockRestore();
+  });
+
+  it('covers __DEV__ log when no exits found', () => {
+    (global as any).__DEV__ = true;
+    (Pathfinding.getPOIsByType as jest.Mock).mockReturnValue([]);
+    (Pathfinding.getRoomNodeId as jest.Mock)
+      .mockReturnValueOnce('Hall_F8_room_801')
+      .mockReturnValueOnce('Hall_F8_room_803');
+    // Return null path to force exit lookup
+    (Pathfinding.findPath as jest.Mock).mockReturnValue(null);
+
+    renderHook(() =>
+      useIndoorPath('Hall Building', '8', '801', '803', {
+        startBuildingId: 'Hall Building',
+        endBuildingId: 'Central Building',
+      })
+    );
+
+    // Should log when exits array is empty in cross-building context
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No building exits found'));
+  });
+
+  it('covers __DEV__ log when exits found', () => {
+    (global as any).__DEV__ = true;
+    const mockExits = [{ nodeId: 'exit_1' }];
+    (Pathfinding.getPOIsByType as jest.Mock).mockReturnValue(mockExits);
+    (Pathfinding.getRoomNodeId as jest.Mock)
+      .mockReturnValueOnce('Hall_F8_room_801')
+      .mockReturnValueOnce('Hall_F8_room_803');
+    // Return null path to force exit lookup
+    (Pathfinding.findPath as jest.Mock).mockReturnValue(null);
+
+    renderHook(() =>
+      useIndoorPath('Hall Building', '8', '801', '803', {
+        startBuildingId: 'Hall Building',
+        endBuildingId: 'Central Building',
+      })
+    );
+
+    // Should log when exits are found
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Found'));
+  });
+
+  it('covers __DEV__ log when path found', () => {
+    (global as any).__DEV__ = true;
+    const mockPath = [{ id: 'start', data: { x: 0, y: 0 } }];
+    (Pathfinding.getRoomNodeId as jest.Mock)
+      .mockReturnValueOnce('Hall_F8_room_291')
+      .mockReturnValueOnce('Hall_F8_room_292');
+    (Pathfinding.findPath as jest.Mock).mockReturnValue(mockPath);
+    (Pathfinding.getFloorsInPath as jest.Mock).mockReturnValue([8]);
+
+    renderHook(() => useIndoorPath('Hall Building', '8', '801', '803'));
+
+    // Should log when path is found
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Path found'));
+  });
+
+  it('skips console logs when __DEV__ is false', () => {
+    (global as any).__DEV__ = false;
+    (Pathfinding.getPOIsByType as jest.Mock).mockReturnValue([]);
+    (Pathfinding.getRoomNodeId as jest.Mock)
+      .mockReturnValueOnce('Hall_F8_room_291')
+      .mockReturnValueOnce('Hall_F8_room_292');
+
+    renderHook(() => useIndoorPath('Hall Building', '8', '801', '803'));
+
+    // Should not log when __DEV__ is false
+    expect(consoleLogSpy).not.toHaveBeenCalled();
+  });
+});
