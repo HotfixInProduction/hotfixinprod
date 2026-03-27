@@ -17,7 +17,7 @@ import { usePOIState } from '../hooks/usePOIState';
 import { RoutePolylineSteps } from '../components/RoutePolylineSteps';
 import type { MapStep, TravelMode } from '../types/map';
 import { useShuttleRouting } from '../hooks/useShuttleRouting';
-import { RoomSelection } from '../types/building';
+import { RoomSelection, Building } from '../types/building';
 import { buildings } from '../data/buildings';
 import { outdoorPOIs } from '../data/outdoorPOI';
 import type { OutdoorPOI } from '../data/outdoorPOI';
@@ -48,6 +48,10 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
 };
 
 export default function MapScreen() {
+  const [directionsFloorPlan, setDirectionsFloorPlan] = useState<{
+      building: Building;
+      floor?: string;
+  } | null>(null);
   const mapRef = useRef<MapView>(null);
   const [selectedCampus, setSelectedCampus] = useState<CampusKey>('downtown');
   const [selectedBuilding, setSelectedBuilding] = useState<any>(null);
@@ -72,6 +76,8 @@ export default function MapScreen() {
   const [directionsGoogle, setDirectionsGoogle] = useState<any>(null);
   const processedSteps = useRouteProcessor(directionsGoogle);
   const googleMapsApiKey = Constants.expoConfig?.extra?.googleApiKey as string | undefined;
+  const [enableRoomSelection, setEnableRoomSelection] = useState(false);
+  const [showRoutePreview, setShowRoutePreview] = useState(false);
   const { settings } = useAppSettings();
   
   // POI state
@@ -95,6 +101,14 @@ export default function MapScreen() {
   const findBuildingById = useCallback((buildingId: string) => {
     return buildings.find(b => b.id === buildingId);
   }, []);
+
+  const isStartComplete = enableRoomSelection
+      ? !!start && !!startRoomSelection?.buildingId && !!startRoomSelection?.floor && !!startRoomSelection?.room
+      : !!start;
+
+    const isDestinationComplete = enableRoomSelection
+      ? !!destination && !!destinationRoomSelection?.buildingId && !!destinationRoomSelection?.floor && !!destinationRoomSelection?.room
+      : !!destination;
 
   // Sync room selections to start/destination places for cross-building navigation
   useEffect(() => {
@@ -125,7 +139,6 @@ export default function MapScreen() {
     transportMode,
     onTransportModeChange: setTransportMode,
   });
-
   useEffect(() => {
     if (shuttleRouteInfo) {
       setRouteInfo(shuttleRouteInfo);
@@ -209,6 +222,16 @@ export default function MapScreen() {
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription.remove();
   }, []);
+
+  useEffect(() => {
+    setShowRoutePreview(false);
+  }, [
+    start,
+    destination,
+    startRoomSelection,
+    destinationRoomSelection,
+    enableRoomSelection,
+  ]);
 
   useEffect(() => {
     if (selectedBuilding) {
@@ -386,7 +409,7 @@ export default function MapScreen() {
   };
 
   const handleBuildingSelect = (building: any) => {
-    if (mapSelectionTarget && buildingSelectorVisible) {
+    if (mapSelectionTarget) {
       const place: Place = {
         name: building.id,
         address: building.address || building.id,
@@ -401,6 +424,7 @@ export default function MapScreen() {
         setDestination(place);
       }
       setMapSelectionTarget(null);
+      setBuildingSelectorVisible(true);
       return;
     }
     setSelectedBuilding(building);
@@ -415,9 +439,9 @@ export default function MapScreen() {
     setShowInstructions(false);
     setDirectionsGoogle(null);
     setShowShuttleSchedule(false);
+    setShowRoutePreview(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
   }
-
   // Helper function to get POIs for current campus and active filters
   const getFilteredPOIs = useCallback(() => {
     return outdoorPOIs.filter(
@@ -461,7 +485,7 @@ export default function MapScreen() {
   const activeModal = (() => {
     if (selectedBuilding) return 'buildingInfo';
     if (showInstructions) return 'routeInstructions';
-    if (routeInfo && start && destination) return 'routeInfo';
+    if (showRoutePreview && routeInfo && isStartComplete && isDestinationComplete) return 'routeInfo';
     return 'none';
   })();
   const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
@@ -671,29 +695,56 @@ export default function MapScreen() {
           ]}
           pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
         >
+
           <StartDestinationPicker
-            userLocation={userLocation}
-            start={start}
-            destination={destination}
-            setStart={setStart}
-            setDestination={setDestination}
-            setInstructions={setInstructions}
-            transportMode={transportMode}
-            mapSelectionTarget={mapSelectionTarget}
-            setMapSelectionTarget={setMapSelectionTarget}
-            setDirectionsGoogle={setDirectionsGoogle}
-            setRouteInfo={setRouteInfo}
+            locations={{
+              userLocation,
+              start,
+              destination,
+              setStart,
+              setDestination,
+            }}
+            route={{
+              transportMode,
+              setInstructions,
+              setDirectionsGoogle,
+              setRouteInfo,
+            }}
+            mapSelection={{
+              target: mapSelectionTarget,
+              setTarget: (target) => {
+                setMapSelectionTarget(target);
+                if (target) {
+                  setBuildingSelectorVisible(false);
+                }
+              },
+            }}
+            roomSelection={{
+              enabled: enableRoomSelection,
+              setEnabled: setEnableRoomSelection,
+              startSelection: startRoomSelection,
+              setStartSelection: setStartRoomSelection,
+              destinationSelection: destinationRoomSelection,
+              setDestinationSelection: setDestinationRoomSelection,
+            }}
+            directionsAction={{
+              canShow: isStartComplete && isDestinationComplete,
+              onShow: () => setShowRoutePreview(true),
+            }}
           />
         </Animated.View>
       )}
 
-      {mapSelectionTarget && buildingSelectorVisible && (
+      {mapSelectionTarget && (
         <View style={styles.mapSelectionBanner} testID="map-selection-banner">
           <MaterialIcons name="touch-app" size={20} color="#fff" />
           <Text style={styles.mapSelectionBannerText}>
             Tap a building to set as {mapSelectionTarget === 'start' ? 'Start' : 'Destination'}
           </Text>
-          <TouchableOpacity onPress={() => setMapSelectionTarget(null)} testID="cancel-map-selection">
+          <TouchableOpacity onPress={() => {
+              setMapSelectionTarget(null);
+              setBuildingSelectorVisible(true);
+              }} testID="cancel-map-selection">
             <MaterialIcons name="close" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
@@ -787,7 +838,15 @@ export default function MapScreen() {
       {activeModal === 'routeInstructions' && (
         <RouteInstructions
           instructions={instructions}
+          start={start}
+          destination={destination}
           onClose={() => setShowInstructions(false)}
+          onViewFloorPlan={(buildingId, floor) => {
+            const building = buildings.find(b => b.id === buildingId);
+
+            if (!building) return;
+            setDirectionsFloorPlan({ building, floor });
+          }}
         />
       )}
 
@@ -907,7 +966,19 @@ export default function MapScreen() {
       />
 
       <StatusBar style="auto" />
+
+      {directionsFloorPlan && (
+            <FloorPlanViewer
+              building={directionsFloorPlan.building}
+              floorLevel={directionsFloorPlan.floor}
+              onClose={() => setDirectionsFloorPlan(null)}
+            />
+          )}
+
     </View>
+
+
+
   );
 }
 

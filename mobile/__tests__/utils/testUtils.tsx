@@ -108,7 +108,7 @@ export const createBuildingPolygonMock = () => {
 };
 
 export const createStartDestinationPickerMock = () => {
-  const { View, TouchableOpacity, Text } = require('react-native');
+  const { View, TouchableOpacity, Text, Switch } = require('react-native');
 
   const mockStart = {
     id: 'start-place',
@@ -152,52 +152,106 @@ export const createStartDestinationPickerMock = () => {
     location: { lat: 45.4579, lng: -73.6395 },
   };
 
-  return ({ setStart, setDestination, setMapSelectionTarget, mapSelectionTarget }: any) => (
-    <View testID="start-destination-picker-mock">
-      <TouchableOpacity testID="set-start" onPress={() => setStart(mockStart)}>
-        <Text>Set Start</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="set-destination" onPress={() => setDestination(mockDestination)}>
-        <Text>Set Destination</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="set-destination-downtown" onPress={() => setDestination(mockDestinationDowntown)}>
-        <Text>Set Destination Downtown</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="set-start-far" onPress={() => setStart(mockStartFar)}>
-        <Text>Set Start Far</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="set-start-walk" onPress={() => setStart(mockStartWithWalking)}>
-        <Text>Set Start Walk</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="set-destination-walk" onPress={() => setDestination(mockDestinationWithWalking)}>
-        <Text>Set Destination Walk</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="set-start-terminal" onPress={() => setStart(mockStartTerminal)}>
-        <Text>Set Start Terminal</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="set-destination-terminal" onPress={() => setDestination(mockDestinationTerminal)}>
-        <Text>Set Destination Terminal</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="clear-start" onPress={() => setStart(null)}>
-        <Text>Clear Start</Text>
-      </TouchableOpacity>
-      <TouchableOpacity testID="clear-destination" onPress={() => setDestination(null)}>
-        <Text>Clear Destination</Text>
-      </TouchableOpacity>
-      {setMapSelectionTarget && (
-        <>
-          <TouchableOpacity testID="select-start-on-map" onPress={() => setMapSelectionTarget('start')}>
-            <Text>Select Start on Map</Text>
+  return ({ locations, mapSelection, roomSelection, directionsAction }: any) => {
+    const setStart = locations?.setStart;
+    const setDestination = locations?.setDestination;
+
+    const setMapSelectionTarget = mapSelection?.setTarget;
+    const mapSelectionTarget = mapSelection?.target;
+
+    const enableRoomSelection = roomSelection?.enabled;
+    const setEnableRoomSelection = roomSelection?.setEnabled;
+    const setStartRoomSelection = roomSelection?.setStartSelection;
+    const setDestinationRoomSelection = roomSelection?.setDestinationSelection;
+
+    const canShowDirectionsAction = directionsAction?.canShow;
+    const onShowDirections = directionsAction?.onShow;
+
+    return (
+      <View testID="start-destination-picker-mock">
+        <Text testID="picker-room-mode"> Room mode: {String(!!enableRoomSelection)}</Text>
+        <Switch
+          testID="toggle-room-selection"
+          value={!!enableRoomSelection}
+          onValueChange={setEnableRoomSelection}
+        />
+        <TouchableOpacity testID="set-start" onPress={() => setStart?.(mockStart)}>
+          <Text>Set Start</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="set-destination" onPress={() => setDestination?.(mockDestination)}>
+          <Text>Set Destination</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="set-destination-downtown" onPress={() => setDestination?.(mockDestinationDowntown)}>
+          <Text>Set Destination Downtown</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="set-start-far" onPress={() => setStart?.(mockStartFar)}>
+          <Text>Set Start Far</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="set-start-walk" onPress={() => setStart?.(mockStartWithWalking)}>
+          <Text>Set Start Walk</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="set-destination-walk" onPress={() => setDestination?.(mockDestinationWithWalking)}>
+          <Text>Set Destination Walk</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="set-start-terminal" onPress={() => setStart?.(mockStartTerminal)}>
+          <Text>Set Start Terminal</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="set-destination-terminal" onPress={() => setDestination?.(mockDestinationTerminal)}>
+          <Text>Set Destination Terminal</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="clear-start" onPress={() => setStart?.(null)}>
+          <Text>Clear Start</Text>
+        </TouchableOpacity>
+        <TouchableOpacity testID="clear-destination" onPress={() => setDestination?.(null)}>
+          <Text>Clear Destination</Text>
+        </TouchableOpacity>
+        {setMapSelectionTarget && (
+          <>
+            <TouchableOpacity testID="select-start-on-map" onPress={() => setMapSelectionTarget('start')}>
+              <Text>Select Start on Map</Text>
+            </TouchableOpacity>
+            <TouchableOpacity testID="select-destination-on-map" onPress={() => setMapSelectionTarget('destination')}>
+              <Text>Select Destination on Map</Text>
+            </TouchableOpacity>
+            {mapSelectionTarget && <Text testID="map-selection-target">{mapSelectionTarget}</Text>}
+          </>
+        )}
+        <TouchableOpacity
+          testID="set-room-start-complete"
+          onPress={() =>
+            setStartRoomSelection?.({
+              buildingId: 'mock-building-id',
+              floor: '8',
+              room: '820',
+            })
+          }
+        >
+          <Text>Set Room Start Complete</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          testID="set-room-destination-complete"
+          onPress={() =>
+            setDestinationRoomSelection?.({
+              buildingId: 'mock-building-id',
+              floor: '8',
+              room: '820',
+            })
+          }
+        >
+          <Text>Set Room Destination Complete</Text>
+        </TouchableOpacity>
+
+        {canShowDirectionsAction ? (
+          <TouchableOpacity testID="view-directions-button" onPress={onShowDirections}>
+            <Text>View Directions</Text>
           </TouchableOpacity>
-          <TouchableOpacity testID="select-destination-on-map" onPress={() => setMapSelectionTarget('destination')}>
-            <Text>Select Destination on Map</Text>
-          </TouchableOpacity>
-          {mapSelectionTarget && <Text testID="map-selection-target">{mapSelectionTarget}</Text>}
-        </>
-      )}
-    </View>
-  );
+        ) : null}
+      </View>
+    );
+  };
 };
+
 
 export const createMapDirectionsMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
@@ -351,7 +405,7 @@ export const createRouteInfoMock = () => {
 
 export const createRouteInstructionsMock = () => {
   const { View, TouchableOpacity, Text } = require('react-native');
-  return ({ instructions, onClose }: any) => (
+  return ({ instructions, onClose, onViewFloorPlan }: any) => (
     <View testID="route-instructions-mock">
       <Text>Route Instructions</Text>
       <TouchableOpacity
@@ -360,6 +414,12 @@ export const createRouteInstructionsMock = () => {
       >
         <Text>Close Instructions</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+              testID="route-instructions-view-floor-plan"
+              onPress={() => onViewFloorPlan('mock-building-id', '8')}
+            >
+              <Text>View Floor Plan</Text>
+            </TouchableOpacity>
     </View>
   );
 };

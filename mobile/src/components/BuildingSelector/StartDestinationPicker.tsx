@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Switch } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import BuildingSelector from './BuildingSelector';
 import * as Location from 'expo-location';
 import { buildings } from '../../data/buildings';
 import type { MapStep, TravelMode } from '../../types/map';
+import InlineRoomSelector from './InlineRoomSelector';
+import type { RoomSelection } from '../../types/building';
 
 export type Place = {
   name: string;
@@ -12,18 +14,49 @@ export type Place = {
   location: { lat: number; lng: number };
 };
 
+
+type UserLocation = {
+  latitude: number;
+  longitude: number;
+};
+
+type RouteInfo = {
+  distance: number;
+  duration: number;
+};
+
+type MapSelectionTarget = 'start' | 'destination' | null;
+
 type StartDestinationPickerProps = {
-  userLocation: { latitude: number; longitude: number } | null;
-  start: Place | null;
-  destination: Place | null;
-  setStart: (place: Place | null) => void;
-  setDestination: (place: Place | null) => void;
-  setInstructions: (val: MapStep[]) => void;
-  transportMode: TravelMode;
-  mapSelectionTarget?: 'start' | 'destination' | null;
-  setMapSelectionTarget?: (target: 'start' | 'destination' | null) => void;
-  setDirectionsGoogle: (data: any) => void;
-  setRouteInfo: (val: {distance: number, duration: number} | null) => void;
+  locations: {
+    userLocation: UserLocation | null;
+    start: Place | null;
+    destination: Place | null;
+    setStart: (place: Place | null) => void;
+    setDestination: (place: Place | null) => void;
+  };
+  route: {
+    transportMode: TravelMode;
+    setInstructions: (val: MapStep[]) => void;
+    setDirectionsGoogle: (data: any) => void;
+    setRouteInfo: (val: RouteInfo | null) => void;
+  };
+  mapSelection?: {
+    target: MapSelectionTarget;
+    setTarget: (target: MapSelectionTarget) => void;
+  };
+  roomSelection?: {
+    enabled: boolean;
+    setEnabled?: (val: boolean) => void;
+    startSelection?: RoomSelection | null;
+    setStartSelection?: (selection: RoomSelection | null) => void;
+    destinationSelection?: RoomSelection | null;
+    setDestinationSelection?: (selection: RoomSelection | null) => void;
+  };
+  directionsAction?: {
+    canShow: boolean;
+    onShow: () => void;
+  };
 };
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -34,8 +67,24 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   SHUTTLE: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLocation, start, destination, setStart, setDestination, setInstructions, transportMode, mapSelectionTarget, setMapSelectionTarget, setDirectionsGoogle, setRouteInfo }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locations, route, mapSelection, roomSelection, directionsAction, }) => {
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
+
+  const { userLocation, start, destination, setStart, setDestination } = locations;
+
+
+    const mapSelectionTarget = mapSelection?.target ?? null;
+    const setMapSelectionTarget = mapSelection?.setTarget;
+
+    const enableRoomSelection = roomSelection?.enabled ?? false;
+    const setEnableRoomSelection = roomSelection?.setEnabled;
+    const startRoomSelection = roomSelection?.startSelection ?? null;
+    const setStartRoomSelection = roomSelection?.setStartSelection;
+    const destinationRoomSelection = roomSelection?.destinationSelection ?? null;
+    const setDestinationRoomSelection = roomSelection?.setDestinationSelection;
+
+    const canShowDirectionsAction = directionsAction?.canShow ?? false;
+    const onShowDirections = directionsAction?.onShow;
 
   // Calculate distance between two coordinates in meters using Haversine formula
   const calculateDistance = (latitude1: number, longitude1: number, latitude2: number, longitude2: number): number => {
@@ -149,30 +198,64 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
 
   return (
     <View style={styles.container} testID="building-selector-container">
+    <View style={styles.toggleRow}>
+      <Text style={styles.toggleLabel}>Room Selection Mode</Text>
+
+      <Switch
+        value={!!enableRoomSelection}
+        onValueChange={setEnableRoomSelection}
+        trackColor={{ false: '#ddd', true: '#f3c4cc' }}
+        thumbColor={enableRoomSelection ? '#912338' : '#999'}
+      />
+    </View>
       <Text style={styles.label}>Start Building</Text>
       <View style={styles.selectorRow}>
         <View style={styles.selectorWrapper}>
           <BuildingSelector
             placeholder="Select start building"
-            onSelect={data => setStart(data)}
+            onSelect={(data) => {
+                                   setStart(data);
+                                   if (enableRoomSelection && setStartRoomSelection) {
+                                     setStartRoomSelection(
+                                       data
+                                         ? {
+                                             buildingId: data.name,
+                                             floor: '',
+                                             room: '',
+                                           }
+                                         : null
+                                     );
+                                   }
+                                 }}
             userLocation={userLocation}
             value={start?.name}
             testID="start-building-selector"
           />
         </View>
-        {start && (
+        {!enableRoomSelection && start && (
           <TouchableOpacity
             style={styles.clearButton}
-            onPress={() => setStart(null)}
+            onPress={() => {
+                setStart(null);
+                setStartRoomSelection?.(null);
+                }}
             testID="clear-start-button"
           >
             <MaterialIcons name="close" size={20} color="#666" />
           </TouchableOpacity>
         )}
       </View>
-      {start && (
+      {!enableRoomSelection && start && (
         <Text style={styles.selectedText}>Selected: {start.name}</Text>
       )}
+      {enableRoomSelection && setStartRoomSelection && (
+              <InlineRoomSelector
+                buildingId={start?.name ?? null}
+                label="Start"
+                selection={startRoomSelection ?? null}
+                onChange={setStartRoomSelection}
+              />
+     )}
       {setMapSelectionTarget && (
         <TouchableOpacity
           style={[
@@ -215,24 +298,48 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
         <View style={styles.selectorWrapper}>
           <BuildingSelector
             placeholder="Select destination building"
-            onSelect={data => setDestination(data)}
+            onSelect={(data) => {
+                                   setDestination(data);
+                                   if (enableRoomSelection && setDestinationRoomSelection) {
+                                     setDestinationRoomSelection(
+                                       data
+                                         ? {
+                                             buildingId: data.name,
+                                             floor: '',
+                                             room: '',
+                                           }
+                                         : null
+                                     );
+                                   }
+                                 }}
             userLocation={userLocation}
             value={destination?.name}
             testID="destination-building-selector"
           />
         </View>
-        {destination && (
+        {!enableRoomSelection && destination && (
           <TouchableOpacity
             style={styles.clearButton}
-            onPress={() => setDestination(null)}
+            onPress={() => {
+                setDestination(null);
+                setDestinationRoomSelection?.(null);
+                }}
             testID="clear-destination-button"
           >
             <MaterialIcons name="close" size={20} color="#666" />
           </TouchableOpacity>
         )}
       </View>
-      {destination && (
+      {!enableRoomSelection && destination && (
         <Text style={styles.selectedText}>Selected: {destination.name}</Text>
+      )}
+      {enableRoomSelection && setDestinationRoomSelection && (
+              <InlineRoomSelector
+              buildingId={destination?.name ?? null}
+              label="Destination"
+              selection={destinationRoomSelection ?? null}
+              onChange={setDestinationRoomSelection}
+              />
       )}
       {setMapSelectionTarget && (
         <TouchableOpacity
@@ -250,6 +357,16 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ userLoc
           ]}>
             {mapSelectionTarget === 'destination' ? 'Selecting on map...' : 'Select on Map'}
           </Text>
+        </TouchableOpacity>
+      )}
+      {canShowDirectionsAction && onShowDirections && (
+        <TouchableOpacity
+          style={styles.viewDirectionsButton}
+          onPress={onShowDirections}
+          testID="view-directions-button"
+        >
+          <MaterialIcons name="directions" size={18} color="#fff" />
+          <Text style={styles.viewDirectionsButtonText}>View Directions</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -342,6 +459,38 @@ const styles = StyleSheet.create({
   },
   selectOnMapTextActive: {
     color: '#fff',
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  toggleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1f1f1f',
+  },
+  viewDirectionsButton: {
+    marginTop: 14,
+    backgroundColor: '#912338',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+
+  viewDirectionsButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });
 
