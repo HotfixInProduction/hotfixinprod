@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
@@ -6,20 +6,6 @@ import { useAppSettings } from '../hooks/useAppSettings';
 
 export default function SettingsScreen() {
   const { settings, isLoading, updateSettings } = useAppSettings();
-  const [poiRange, setPoiRange] = useState(500);
-  const [showNearestPOIBanner, setShowNearestPOIBanner] = useState(true);
-
-  useEffect(() => {
-    if (settings) {
-      setPoiRange(settings.poiRangeMeters);
-      setShowNearestPOIBanner(settings.showNearestPOIBanner);
-    }
-  }, [settings]);
-
-  const handlePOIRangeChange = (value: number) => {
-    setPoiRange(value);
-    updateSettings({ poiRangeMeters: Math.round(value) });
-  };
 
   if (isLoading || !settings) {
     return (
@@ -49,8 +35,10 @@ export default function SettingsScreen() {
               minimumValue={100}
               maximumValue={2000}
               step={50}
-              value={poiRange}
-              onValueChange={handlePOIRangeChange}
+              value={settings.poiRangeMeters}
+              onValueChange={(value) => {
+                updateSettings({ poiRangeMeters: Math.round(value) });
+              }}
               minimumTrackTintColor="#912338"
               maximumTrackTintColor="#ddd"
             />
@@ -58,7 +46,7 @@ export default function SettingsScreen() {
 
           <View style={styles.rangeDisplayContainer}>
             <Text style={styles.rangeLabel}>Range:</Text>
-            <Text style={styles.rangeValue}>{Math.round(poiRange)} meters</Text>
+            <Text style={styles.rangeValue}>{Math.round(settings.poiRangeMeters)} meters</Text>
           </View>
         </View>
 
@@ -72,13 +60,12 @@ export default function SettingsScreen() {
               </Text>
             </View>
             <Switch
-              value={showNearestPOIBanner}
+              value={settings.showNearestPOIBanner}
               onValueChange={(value) => {
-                setShowNearestPOIBanner(value);
                 updateSettings({ showNearestPOIBanner: value });
               }}
               trackColor={{ false: '#d0d0d0', true: '#912338' }}
-              thumbColor={showNearestPOIBanner ? '#fff' : '#f0f0f0'}
+              thumbColor={settings.showNearestPOIBanner ? '#fff' : '#f0f0f0'}
             />
           </View>
         </View>
