@@ -2193,4 +2193,48 @@ describe('MapScreen - Active Navigation Uncovered Lines', () => {
     // Clean up
     useNavSpy.mockRestore();
   });
+
+  it('covers outdoor navigation step and indoor fallback building', () => {
+    const NavigationStateHook = require('../src/hooks/useNavigationState');
+    
+    // 1. Mock an OUTDOOR step to cover the `navigationMode` and `navigationInstruction` ternaries
+    const useNavSpy = jest.spyOn(NavigationStateHook, 'useNavigationState').mockImplementation(() => {
+      return {
+        navigationSteps: [],
+        currentStepIndex: 0,
+        isNavigating: true,
+        activeStep: { type: 'outdoor', instruction: 'Walk outside' },
+        handleStartNavigation: jest.fn(),
+        handleNextStep: jest.fn(),
+        handlePrevStep: jest.fn(),
+        handleExitNavigation: jest.fn(),
+      };
+    });
+
+    const { UNSAFE_root, rerender } = render(<MapScreen />);
+
+    // Verify it rendered RouteInstructions without crashing (covering the outdoor ternaries)
+    expect(UNSAFE_root.findByProps({ testID: 'route-instructions-mock' })).toBeTruthy();
+
+    // 2. Mock an INDOOR step with an invalid building ID to cover the `|| selectedBuilding` fallback
+    useNavSpy.mockImplementation(() => {
+      return {
+        navigationSteps: [],
+        currentStepIndex: 0,
+        isNavigating: true,
+        activeStep: { type: 'indoor', instruction: 'Walk inside', buildingId: 'UNKNOWN_BUILDING' },
+        handleStartNavigation: jest.fn(),
+        handleNextStep: jest.fn(),
+        handlePrevStep: jest.fn(),
+        handleExitNavigation: jest.fn(),
+      };
+    });
+
+    rerender(<MapScreen />);
+    
+    // Verify it rendered FloorPlanViewer without crashing (covering the unknown building fallback)
+    expect(UNSAFE_root.findByProps({ testID: 'floor-plan-viewer-mock' })).toBeTruthy();
+
+    useNavSpy.mockRestore();
+  });
 });
