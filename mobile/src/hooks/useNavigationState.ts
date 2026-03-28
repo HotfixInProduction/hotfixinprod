@@ -144,11 +144,20 @@ async function restoreRouteInfoViaApi(
     try {
         const response = await fetch(url);
         const data = await response.json();
-        if (data.routes.length > 0) {
+        
+        // Defensive checks for API response shape
+        const route = data.routes?.[0];
+        const leg = route?.legs?.[0];
+        const distance = leg?.distance?.value;
+        const duration = leg?.duration?.value;
+        
+        if (typeof distance === 'number' && typeof duration === 'number') {
             onRestoreRouteInfo({
-                distance: data.routes[0].legs[0].distance.value / 1000,
-                duration: Math.ceil(data.routes[0].legs[0].duration.value / 60),
+                distance: distance / 1000,
+                duration: Math.ceil(duration / 60),
             });
+        } else {
+            console.warn('[restoreRouteInfo] Unexpected API response shape:', data);
         }
     } catch (error) {
         console.error('[restoreRouteInfo] Failed to restore routeInfo:', error);
