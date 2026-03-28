@@ -335,29 +335,31 @@ function transformNavMeshCoordinates(x: number, y: number): { x: number; y: numb
   return { x: x * scale, y: y * scale };
 }
 
+/**
+ * Transform coordinates based on building ID
+ * Hall, VE, CC: scale 0.5, VL and others: no transformation needed
+ */
+function transformBuildingCoordinates(node: { x: number; y: number; buildingId?: string }): { x: number; y: number } {
+  if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
+    return transformNavMeshCoordinates(node.x, node.y);
+  }
+  // For VL and others - use coordinates directly (no transformation needed)
+  return { x: node.x, y: node.y };
+}
+
 export function generateSvgPath(path: NavMeshNode[]): string {
   if (path.length === 0) return '';
 
   const firstNode = path[0].data;
   if (!firstNode) return '';
 
-  // Transform coordinates based on building
-  // Hall, VE, CC: scale 0.5, VL: no transformation needed
-  const transformCoord = (node: { x: number; y: number; buildingId?: string }) => {
-    if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
-      return transformNavMeshCoordinates(node.x, node.y);
-    }
-    // For VL and others - use coordinates directly (no transformation needed)
-    return { x: node.x, y: node.y };
-  };
-
-  const firstCoord = transformCoord(firstNode);
+  const firstCoord = transformBuildingCoordinates(firstNode);
   let pathString = `M ${firstCoord.x} ${firstCoord.y}`;
   
   for (let i = 1; i < path.length; i++) {
     const nodeData = path[i].data;
     if (nodeData) {
-      const coord = transformCoord(nodeData);
+      const coord = transformBuildingCoordinates(nodeData);
       pathString += ` L ${coord.x} ${coord.y}`;
     }
   }
@@ -545,24 +547,16 @@ export function generateSvgPathForFloor(path: NavMeshNode[], targetFloor: number
   
   if (floorNodes.length === 0) return '';
   
-  // Transform coordinates based on building
-  const transformCoord = (node: { x: number; y: number; buildingId?: string }) => {
-    if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
-      return transformNavMeshCoordinates(node.x, node.y);
-    }
-    return { x: node.x, y: node.y };
-  };
-  
   const firstNode = floorNodes[0].data;
   if (!firstNode) return '';
   
-  const firstCoord = transformCoord(firstNode);
+  const firstCoord = transformBuildingCoordinates(firstNode);
   let pathString = `M ${firstCoord.x} ${firstCoord.y}`;
   
   for (let i = 1; i < floorNodes.length; i++) {
     const nodeData = floorNodes[i].data;
     if (nodeData) {
-      const coord = transformCoord(nodeData);
+      const coord = transformBuildingCoordinates(nodeData);
       pathString += ` L ${coord.x} ${coord.y}`;
     }
   }
