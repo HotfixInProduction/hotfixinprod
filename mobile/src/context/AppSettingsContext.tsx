@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import {
   AppSettings,
   loadSettingsFromStorage,
@@ -53,8 +53,14 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
     await saveSettingsToStorage(updatedSettings);
   };
 
+  // Memoize the context value to prevent unnecessary re-renders in child components
+  const contextValue = useMemo(
+    () => ({ settings, isLoading, updateSettings }),
+    [settings, isLoading]
+  );
+
   return (
-    <AppSettingsContext.Provider value={{ settings, isLoading, updateSettings }}>
+    <AppSettingsContext.Provider value={contextValue}>
       {children}
     </AppSettingsContext.Provider>
   );

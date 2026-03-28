@@ -28,6 +28,19 @@ jest.mock('react-native-config', () => ({ GOOGLE_MAPS_ANDROID_API_KEY: 'mock-goo
 jest.mock('react-native-maps-directions', () => require('./utils/testUtils').createMapDirectionsMock());
 jest.mock('../src/components/RouteInfo', () => require('./utils/testUtils').createRouteInfoMock());
 jest.mock('../src/components/RouteInstructions', () => require('./utils/testUtils').createRouteInstructionsMock());
+
+// Create a stable mock settings object that won't change on every call
+const mockSettingsObject = { poiRangeMeters: 500, showNearestPOIBanner: true };
+const mockUpdateSettingsFunction = jest.fn();
+const mockUseAppSettingsReturn = {
+  settings: mockSettingsObject,
+  isLoading: false,
+  updateSettings: mockUpdateSettingsFunction,
+};
+
+jest.mock('../src/hooks/useAppSettings', () => ({
+  useAppSettings: jest.fn(() => mockUseAppSettingsReturn),
+}));
 jest.mock('../src/components/POIInfoPanel', () => {
   const React = require('react');
   const { View, Button, Text } = require('react-native');
@@ -2024,14 +2037,13 @@ describe('Outdoor POI Functionality', () => {
       expect(queryByTestId('poi-info-panel')).toBeNull();
     });
 
-    // Open building selector to access View Directions button
-    fireEvent.press(getByTestId('building-selector-toggle'));
-
+    // After setting POI as destination, the route preview should show immediately
     await waitFor(() => {
-      expect(getByTestId('view-directions-button')).toBeTruthy();
+      expect(getByTestId('route-info-mock')).toBeTruthy();
     });
 
-    fireEvent.press(getByTestId('view-directions-button'));
+    // Can click on the route preview to continue
+    fireEvent.press(getByTestId('route-info-mock'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -2134,4 +2146,119 @@ describe('Outdoor POI Functionality', () => {
     });
 
     expect(queryByTestId('poi-set-destination-button')).toBeNull();
+  });
+
+  describe('Route Preview from POI and Building Selection', () => {
+    it('shows route preview when POI is set as destination from info panel', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockResolvedValue({
+        coords: { latitude: 45.497, longitude: -73.579 },
+      });
+
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      // First, make the building selector panel visible to set start
+      fireEvent.press(getByTestId('building-selector-toggle'));
+
+      // Set start location
+      fireEvent.press(getByTestId('set-start'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-marker-poi_food_1')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-info-panel')).toBeTruthy();
+      });
+
+      // When POI is set as destination, it should close the POI panel and set the route preview
+      fireEvent.press(getByTestId('poi-set-destination-button'));
+
+      await waitFor(() => {
+        // POI panel should be closed
+        expect(queryByTestId('poi-info-panel')).toBeNull();
+      });
+
+      // The route should now be set up (user location as start, POI as destination)
+      // This shows a compact route preview
+      await waitFor(() => {
+        expect(getByTestId('route-info-mock')).toBeTruthy();
+      });
+    });
+
+    it('shows route preview when building is set as destination via selector', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockResolvedValue({
+        coords: { latitude: 45.497, longitude: -73.579 },
+      });
+
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+
+      // Set start location first
+      fireEvent.press(getByTestId('set-start'));
+
+      // Trigger selecting a building as destination
+      fireEvent.press(getByTestId('set-destination'));
+
+      await waitFor(() => {
+        // The route should be set with user location as start and building as destination
+        expect(getByTestId('view-directions-button')).toBeTruthy();
+      });
+    });
+
+    it('closes POI info panel after setting as destination', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockResolvedValue({
+        coords: { latitude: 45.497, longitude: -73.579 },
+      });
+
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId('poi-marker-poi_food_1')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-info-panel')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('poi-set-destination-button'));
+
+      await waitFor(() => {
+        expect(queryByTestId('poi-info-panel')).toBeNull();
+      });
+    });
+
+    it('closes building info panel after setting as destination', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockResolvedValue({
+        coords: { latitude: 45.497, longitude: -73.579 },
+      });
+
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('select-start-on-map'));
+      fireEvent.press(getByTestId('cancel-map-selection'));
+
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(getByTestId('building-close')).toBeTruthy();
+      });
+
+      // Simulate building being set as destination from popup menu
+      fireEvent.press(getByTestId('building-set-destination-button'));
+
+      await waitFor(() => {
+        // Building info should be closed after setting as destination
+        expect(queryByTestId('building-title')).toBeNull();
+      });
+    });
   });
