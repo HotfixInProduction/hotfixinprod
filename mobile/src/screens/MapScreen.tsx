@@ -179,19 +179,6 @@ export default function MapScreen() {
     }
   }, [isShuttleRoute]);
 
-  useEffect(() => {
-    if (start) {
-      console.log('Start building selected:', start);
-    }
-  }, [start]);
-
-
-  useEffect(() => {
-    if (destination) {
-      console.log('Destination building selected:', destination);
-    }
-  }, [destination]);
-
   const centerOnUser = async () => {
     try {
       const { coords } = await Location.getCurrentPositionAsync({});
@@ -370,8 +357,6 @@ export default function MapScreen() {
 
       if (!start || !destination || !googleMapsApiKey) return;
 
-      console.log("Fetching new route for mode:", transportMode);
-
       const params = new URLSearchParams({
         origin: `${start.location.lat},${start.location.lng}`,
         destination: `${destination.location.lat},${destination.location.lng}`,
@@ -392,7 +377,6 @@ export default function MapScreen() {
           distance: data.routes[0].legs[0].distance.value / 1000,
           duration: Math.ceil(data.routes[0].legs[0].duration.value / 60),
         });
-        console.log(data.routes[0].legs[0].steps);
       } catch (error) {
         console.error("Fetch failed", error);
       }

@@ -105,12 +105,10 @@ function searchRoomInIndex(
   for (const label of variants) {
     const nodeId = roomIndex[label];
     if (nodeId !== undefined) {
-      console.log(`[getRoomNodeId] Found "${roomLabel}" as "${label}" -> ${nodeId}`);
       return nodeId;
     }
   }
   
-  console.log(`[getRoomNodeId] Room "${roomLabel}" not found. Tried:`, variants);
   return null;
 }
 
@@ -128,20 +126,17 @@ export function getRoomNodeId(
 ): string | null {
   const navMesh = getNavMeshByKey(buildingId, _floorLevel);
   if (!navMesh) {
-    console.log(`[getRoomNodeId] NavMesh not found for building="${buildingId}"`);
     return null;
   }
   
   const roomIndex = getRoomIndex(navMesh);
   if (!roomIndex) {
-    console.log(`[getRoomNodeId] No room index found in navmesh for building="${buildingId}"`);
     return null;
   }
 
   // Try the room label directly first
   const directNodeId = roomIndex[roomLabel];
   if (directNodeId !== undefined) {
-    console.log(`[getRoomNodeId] Found "${roomLabel}" directly -> ${directNodeId}`);
     return directNodeId;
   }
   
@@ -151,7 +146,6 @@ export function getRoomNodeId(
     return searchRoomInIndex(roomIndex, roomLabel, prefix);
   }
   
-  console.log(`[getRoomNodeId] Room "${roomLabel}" not found in building "${buildingId}"`);
   return null;
 }
 
@@ -347,25 +341,11 @@ export function generateSvgPath(path: NavMeshNode[]): string {
   const firstNode = path[0].data;
   if (!firstNode) return '';
 
-  // Log all nodes in the path for debugging
-  console.log('[generateSvgPath] Path nodes:', path.map((n, i) => ({
-    index: i,
-    id: n.id,
-    x: n.data?.x,
-    y: n.data?.y,
-    type: (n.data as { type?: string })?.type,
-    buildingId: (n.data as { buildingId?: string })?.buildingId,
-    floor: (n.data as { floor?: number })?.floor,
-    label: (n.data as { label?: string })?.label,
-  })));
-
   // Transform coordinates based on building
   // Hall, VE, CC: scale 0.5, VL: no transformation needed
-  const transformCoord = (node: { x: number; y: number; buildingId?: string; type?: string; label?: string }) => {
+  const transformCoord = (node: { x: number; y: number; buildingId?: string }) => {
     if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
-      const transformed = transformNavMeshCoordinates(node.x, node.y);
-      console.log(`[transformCoord] ${node.buildingId} ${node.type} ${node.label}: (${node.x}, ${node.y}) -> (${transformed.x.toFixed(1)}, ${transformed.y.toFixed(1)})`);
-      return transformed;
+      return transformNavMeshCoordinates(node.x, node.y);
     }
     // For VL and others - use coordinates directly (no transformation needed)
     return { x: node.x, y: node.y };
@@ -382,7 +362,6 @@ export function generateSvgPath(path: NavMeshNode[]): string {
     }
   }
 
-  console.log('[generateSvgPath] Final pathString:', pathString.substring(0, 200));
   return pathString;
 }
 

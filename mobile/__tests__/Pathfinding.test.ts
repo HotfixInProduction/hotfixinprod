@@ -1205,18 +1205,13 @@ describe('getRoomIndex internal function coverage', () => {
       return originalGet.call(this, key);
     });
 
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
     // This will trigger the `return null` fallback in `getRoomIndex` 
-    // and the `No room index found...` branch in `getRoomNodeId`
+    // and the null return in `getRoomNodeId`
     const nodeId = getRoomNodeId('Mock Building', '1', '123');
     
     mapSpy.mockRestore();
     
     expect(nodeId).toBeNull();
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No room index found'));
-    
-    consoleSpy.mockRestore();
   });
 });
 

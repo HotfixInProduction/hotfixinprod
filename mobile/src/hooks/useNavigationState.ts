@@ -176,21 +176,11 @@ export function useNavigationState({
     const activeStep = isNavigating ? navigationSteps[currentStepIndex] : null;
 
     const handleStartNavigation = useCallback(() => {
-        console.log('[handleStartNavigation] Called');
-        console.log('[handleStartNavigation] isExitingRef.current:', isExitingRef.current);
-
         // Prevent auto-restart right after exit
         if (isExitingRef.current) {
-            console.log('[handleStartNavigation] Blocked - currently exiting');
             isExitingRef.current = false;
             return;
         }
-
-        console.log('[handleStartNavigation] transportMode:', transportMode);
-        console.log('[handleStartNavigation] navigationSteps.length:', navigationSteps.length);
-        console.log('[handleStartNavigation] startRoomSelection:', startRoomSelection);
-        console.log('[handleStartNavigation] destinationRoomSelection:', destinationRoomSelection);
-        console.log('[handleStartNavigation] instructions.length:', instructions.length);
 
         if (transportMode === 'SHUTTLE') {
             onShowShuttleSchedule();
@@ -199,7 +189,6 @@ export function useNavigationState({
 
         // If we already have navigation steps and just exited, reuse them
         if (navigationSteps.length > 0) {
-            console.log('[handleStartNavigation] Reusing existing navigation steps');
             setCurrentStepIndex(0);
             return;
         }
@@ -240,7 +229,6 @@ export function useNavigationState({
     }, [currentStepIndex]);
 
     const handleExitNavigation = useCallback(() => {
-        console.log('[handleExitNavigation] Called');
         isExitingRef.current = true;
         setCurrentStepIndex(-1);
         setNavigationSteps([]);

@@ -549,7 +549,7 @@ export default function FloorPlanViewer({
                                     xml={svgWithPaths}
                                     width={screenWidth - 40}
                                     height={screenWidth - 40}
-                                    onError={(e) => console.log('SVG Error: ', e)}
+                                    onError={(e) => console.warn('SVG Error:', e)}
                                 />
                                 {/* Amenity overlay on top of SVG */}
                                 <AmenityOverlay

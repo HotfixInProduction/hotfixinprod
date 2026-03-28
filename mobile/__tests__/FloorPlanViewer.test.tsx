@@ -115,7 +115,7 @@ describe('FloorPlanViewer', () => {
         });
 
         it('handles SVG error log', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
             
             const { getByTestId } = render(
                 <FloorPlanViewer building={mockBuilding} floorLevel="8" onClose={mockOnClose} />
@@ -125,7 +125,7 @@ describe('FloorPlanViewer', () => {
             
             svgMock.props.onError(new Error('Test SVG Error'));
             
-            expect(consoleSpy).toHaveBeenCalledWith("SVG Error: ", expect.any(Error));
+            expect(consoleSpy).toHaveBeenCalledWith("SVG Error:", expect.any(Error));
             consoleSpy.mockRestore();
         });
     });
