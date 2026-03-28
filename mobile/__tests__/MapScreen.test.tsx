@@ -1097,7 +1097,7 @@ describe('Transportation Modes', () => {
         }),
       } as Response) 
     );
-    const { getByTestId, queryByTestId, getAllByTestId } = render(<MapScreen />);
+    const { getByTestId, queryAllByTestId } = render(<MapScreen />);
 
     fireEvent.press(getByTestId('building-selector-toggle'));
     fireEvent.press(getByTestId('set-start-walk'));
@@ -1116,9 +1116,8 @@ describe('Transportation Modes', () => {
     fireEvent.press(getByTestId('route-info-mode-shuttle'));
 
     await waitFor(() => {
-      expect(queryByTestId('map-directions')).toBeNull();
+      expect(queryAllByTestId('map-directions')).toHaveLength(2);
       expect(getByTestId('map-directions-shuttle')).toBeTruthy();
-      expect(getAllByTestId('map-polyline')).toHaveLength(2);
       expect(getByTestId('route-info-mode').props.children).toContain('SHUTTLE');
     });
   });
@@ -1338,6 +1337,34 @@ describe('MapScreen Edge Cases', () => {
 });
 
 describe('MapScreen Shuttle Coverage', () => {
+  it('shows a fallback alert when shuttle path fails to load', async () => {
+    const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    const { getByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start-terminal'));
+    fireEvent.press(getByTestId('set-destination-terminal'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-mode-shuttle'));
+
+    await waitFor(() => {
+      expect(getByTestId('map-directions-shuttle')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('trigger-directions-error'));
+
+    await waitFor(() => {
+      expect(consoleWarnSpy).toHaveBeenCalledWith('MapViewDirections failed:', 'mock-directions-error');
+      expect(Alert.alert).toHaveBeenCalledWith('Route Error', 'Unable to load the shuttle route.');
+    });
+
+    consoleWarnSpy.mockRestore();
+  });
+
   it('opens shuttle schedule, renders timetable rows, and closes via button and onRequestClose', async () => {
     const OriginalDate = Date;
     const fixedNow = new OriginalDate('2026-03-02T10:00:00');

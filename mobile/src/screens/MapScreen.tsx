@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus, ScrollView } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Marker, Polyline } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -441,6 +441,11 @@ export default function MapScreen() {
     setShowFloorPlan(false);
   };
 
+  const handleDirectionsError = useCallback((errorMessage: string) => {
+    console.warn('MapViewDirections failed:', errorMessage);
+    Alert.alert('Route Error', 'Unable to load the shuttle route.');
+  }, []);
+
   const handleClearRoute = () => {
     setStart(null);
     setDestination(null);
@@ -530,45 +535,45 @@ export default function MapScreen() {
           <RoutePolylineSteps processedSteps={processedSteps} />
         )}
 
-        {shuttleRouteSegments && (
+        {shuttleRouteSegments && googleMapsApiKey && (
           <>
-            {googleMapsApiKey ? (
-              <MapViewDirections
-                key="map-directions-shuttle"
-                origin={shuttleRouteSegments.originTerminal}
-                destination={shuttleRouteSegments.destinationTerminal}
-                waypoints={SHUTTLE_SHERBROOKE_WAYPOINTS}
-                apikey={googleMapsApiKey}
-                strokeWidth={4}
-                strokeColor="#912338"
-                mode="DRIVING"
-              />
-            ) : (
-              <Polyline
-                key="map-directions-shuttle-fallback"
-                coordinates={[shuttleRouteSegments.originTerminal, shuttleRouteSegments.destinationTerminal]}
-                strokeWidth={4}
-                strokeColor="#912338"
-              />
-            )}
+            <MapViewDirections
+              key="map-directions-shuttle"
+              origin={shuttleRouteSegments.originTerminal}
+              destination={shuttleRouteSegments.destinationTerminal}
+              waypoints={SHUTTLE_SHERBROOKE_WAYPOINTS}
+              apikey={googleMapsApiKey}
+              strokeWidth={4}
+              strokeColor="#912338"
+              mode="DRIVING"
+              onError={handleDirectionsError}
+            />
 
             {shuttleRouteSegments.startWalking && (
-              <Polyline
+              <MapViewDirections
                 key="map-directions-shuttle-start-walking"
-                coordinates={shuttleRouteSegments.startWalking}
+                origin={shuttleRouteSegments.startWalking[0]}
+                destination={shuttleRouteSegments.startWalking[1]}
+                apikey={googleMapsApiKey}
                 strokeWidth={3}
                 strokeColor="#555"
+                mode="WALKING"
                 lineDashPattern={[8, 8]}
+                onError={handleDirectionsError}
               />
             )}
 
             {shuttleRouteSegments.destinationWalking && (
-              <Polyline
+              <MapViewDirections
                 key="map-directions-shuttle-destination-walking"
-                coordinates={shuttleRouteSegments.destinationWalking}
+                origin={shuttleRouteSegments.destinationWalking[0]}
+                destination={shuttleRouteSegments.destinationWalking[1]}
+                apikey={googleMapsApiKey}
                 strokeWidth={3}
                 strokeColor="#555"
+                mode="WALKING"
                 lineDashPattern={[8, 8]}
+                onError={handleDirectionsError}
               />
             )}
           </>

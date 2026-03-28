@@ -87,8 +87,8 @@ const WALK_SEGMENT_VISIBILITY_THRESHOLD_METERS = 40;
 
 const SHUTTLE_TERMINALS: Record<CampusKey, ShuttleTerminal> = {
   downtown: {
-    latitude: 45.497285416040164,
-    longitude: -73.57897485280246,
+    latitude: 45.497105,
+    longitude: -73.578501,
   },
   loyola: {
     latitude: 45.4579,

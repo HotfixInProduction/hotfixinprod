@@ -144,7 +144,7 @@ export const createStartDestinationPickerMock = () => {
   const mockStartTerminal = {
     id: 'start-terminal',
     name: 'start-terminal',
-    location: { lat: 45.497285416040164, lng: -73.57897485280246 },
+    location: { lat: 45.497105, lng: -73.578501 },
   };
   const mockDestinationTerminal = {
     id: 'destination-terminal',
@@ -265,6 +265,10 @@ export const createMapDirectionsMock = () => {
           duration: 25,
           coordinates: []
         })}
+      />
+      <TouchableOpacity
+        testID="trigger-directions-error"
+        onPress={() => props.onError?.('mock-directions-error')}
       />
     </View>
   );
