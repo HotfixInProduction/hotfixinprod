@@ -13,7 +13,7 @@ interface AppSettingsContextType {
 
 const AppSettingsContext = createContext<AppSettingsContextType | undefined>(undefined);
 
-export function AppSettingsProvider({ children }: { children: ReactNode }) {
+export function AppSettingsProvider({ children }: { readonly children: ReactNode }) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
