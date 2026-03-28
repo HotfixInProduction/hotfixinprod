@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { render, fireEvent, waitFor, act,  screen } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert, Linking } from 'react-native';
 import MapScreen from '../src/screens/MapScreen';
 import RouteInstructions from '../src/components/RouteInstructions';
