@@ -213,21 +213,6 @@ export function useNavigationState({
         }
     }, [transportMode, startRoomSelection, destinationRoomSelection, instructions, navigationSteps, onShowShuttleSchedule, onShowInstructions]);
 
-    const handleNextStep = useCallback(() => {
-        if (currentStepIndex < navigationSteps.length - 1) {
-            setCurrentStepIndex(currentStepIndex + 1);
-        } else {
-            // Last step - exit navigation
-            onExit();
-        }
-    }, [currentStepIndex, navigationSteps.length, onExit]);
-
-    const handlePrevStep = useCallback(() => {
-        if (currentStepIndex > 0) {
-            setCurrentStepIndex(currentStepIndex - 1);
-        }
-    }, [currentStepIndex]);
-
     const handleExitNavigation = useCallback(() => {
         isExitingRef.current = true;
         setCurrentStepIndex(-1);
@@ -239,6 +224,21 @@ export function useNavigationState({
             restoreRouteInfoViaApi(start, destination, googleMapsApiKey, transportMode, onRestoreRouteInfo);
         }
     }, [onExit, onRestoreRouteInfo, start, destination, googleMapsApiKey, transportMode]);
+
+    const handleNextStep = useCallback(() => {
+        if (currentStepIndex < navigationSteps.length - 1) {
+            setCurrentStepIndex(currentStepIndex + 1);
+        } else {
+            // Last step - exit navigation
+            handleExitNavigation();
+        }
+    }, [currentStepIndex, navigationSteps.length, handleExitNavigation]);
+
+    const handlePrevStep = useCallback(() => {
+        if (currentStepIndex > 0) {
+            setCurrentStepIndex(currentStepIndex - 1);
+        }
+    }, [currentStepIndex]);
 
     return {
         navigationSteps,
