@@ -105,12 +105,10 @@ function searchRoomInIndex(
   for (const label of variants) {
     const nodeId = roomIndex[label];
     if (nodeId !== undefined) {
-      console.log(`[getRoomNodeId] Found "${roomLabel}" as "${label}" -> ${nodeId}`);
       return nodeId;
     }
   }
   
-  console.log(`[getRoomNodeId] Room "${roomLabel}" not found. Tried:`, variants);
   return null;
 }
 
@@ -128,20 +126,17 @@ export function getRoomNodeId(
 ): string | null {
   const navMesh = getNavMeshByKey(buildingId, _floorLevel);
   if (!navMesh) {
-    console.log(`[getRoomNodeId] NavMesh not found for building="${buildingId}"`);
     return null;
   }
   
   const roomIndex = getRoomIndex(navMesh);
   if (!roomIndex) {
-    console.log(`[getRoomNodeId] No room index found in navmesh for building="${buildingId}"`);
     return null;
   }
 
   // Try the room label directly first
   const directNodeId = roomIndex[roomLabel];
   if (directNodeId !== undefined) {
-    console.log(`[getRoomNodeId] Found "${roomLabel}" directly -> ${directNodeId}`);
     return directNodeId;
   }
   
@@ -151,7 +146,6 @@ export function getRoomNodeId(
     return searchRoomInIndex(roomIndex, roomLabel, prefix);
   }
   
-  console.log(`[getRoomNodeId] Room "${roomLabel}" not found in building "${buildingId}"`);
   return null;
 }
 
@@ -341,48 +335,35 @@ function transformNavMeshCoordinates(x: number, y: number): { x: number; y: numb
   return { x: x * scale, y: y * scale };
 }
 
+/**
+ * Transform coordinates based on building ID
+ * Hall, VE, CC: scale 0.5, VL and others: no transformation needed
+ */
+function transformBuildingCoordinates(node: { x: number; y: number; buildingId?: string }): { x: number; y: number } {
+  if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
+    return transformNavMeshCoordinates(node.x, node.y);
+  }
+  // For VL and others - use coordinates directly (no transformation needed)
+  return { x: node.x, y: node.y };
+}
+
 export function generateSvgPath(path: NavMeshNode[]): string {
   if (path.length === 0) return '';
 
   const firstNode = path[0].data;
   if (!firstNode) return '';
 
-  // Log all nodes in the path for debugging
-  console.log('[generateSvgPath] Path nodes:', path.map((n, i) => ({
-    index: i,
-    id: n.id,
-    x: n.data?.x,
-    y: n.data?.y,
-    type: (n.data as { type?: string })?.type,
-    buildingId: (n.data as { buildingId?: string })?.buildingId,
-    floor: (n.data as { floor?: number })?.floor,
-    label: (n.data as { label?: string })?.label,
-  })));
-
-  // Transform coordinates based on building
-  // Hall, VE, CC: scale 0.5, VL: no transformation needed
-  const transformCoord = (node: { x: number; y: number; buildingId?: string; type?: string; label?: string }) => {
-    if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
-      const transformed = transformNavMeshCoordinates(node.x, node.y);
-      console.log(`[transformCoord] ${node.buildingId} ${node.type} ${node.label}: (${node.x}, ${node.y}) -> (${transformed.x.toFixed(1)}, ${transformed.y.toFixed(1)})`);
-      return transformed;
-    }
-    // For VL and others - use coordinates directly (no transformation needed)
-    return { x: node.x, y: node.y };
-  };
-
-  const firstCoord = transformCoord(firstNode);
+  const firstCoord = transformBuildingCoordinates(firstNode);
   let pathString = `M ${firstCoord.x} ${firstCoord.y}`;
   
   for (let i = 1; i < path.length; i++) {
     const nodeData = path[i].data;
     if (nodeData) {
-      const coord = transformCoord(nodeData);
+      const coord = transformBuildingCoordinates(nodeData);
       pathString += ` L ${coord.x} ${coord.y}`;
     }
   }
 
-  console.log('[generateSvgPath] Final pathString:', pathString.substring(0, 200));
   return pathString;
 }
 
@@ -566,24 +547,16 @@ export function generateSvgPathForFloor(path: NavMeshNode[], targetFloor: number
   
   if (floorNodes.length === 0) return '';
   
-  // Transform coordinates based on building
-  const transformCoord = (node: { x: number; y: number; buildingId?: string }) => {
-    if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
-      return transformNavMeshCoordinates(node.x, node.y);
-    }
-    return { x: node.x, y: node.y };
-  };
-  
   const firstNode = floorNodes[0].data;
   if (!firstNode) return '';
   
-  const firstCoord = transformCoord(firstNode);
+  const firstCoord = transformBuildingCoordinates(firstNode);
   let pathString = `M ${firstCoord.x} ${firstCoord.y}`;
   
   for (let i = 1; i < floorNodes.length; i++) {
     const nodeData = floorNodes[i].data;
     if (nodeData) {
-      const coord = transformCoord(nodeData);
+      const coord = transformBuildingCoordinates(nodeData);
       pathString += ` L ${coord.x} ${coord.y}`;
     }
   }
@@ -622,4 +595,21 @@ export function getPOINodeId(
   
   const floorNum = Number.parseInt(floorLevel, 10);
   return findPOIInNewFormat(navMesh.poiIndex, poiLabel, buildingId, floorNum);
+}
+
+export function generateIndoorInstruction(nodes: NavMeshNode[], isLastFloor: boolean): string {
+  if (!nodes || nodes.length === 0) return 'Follow the path';
+  
+  const lastNode = nodes.at(-1);
+  if (!lastNode) return 'Follow the path';
+  
+  const nodeType = (lastNode.data as any)?.type;
+
+  if (isLastFloor && nodeType === 'building_entry_exit') return 'Head to the building exit';
+  if (nodeType === 'elevator' || nodeType === 'elevator_door') return 'Proceed to the elevator';
+  if (nodeType === 'stairs' || nodeType === 'stair_landing') return 'Take the stairs';
+  if (nodeType === 'escalator' || nodeType === 'escalator_up' || nodeType === 'escalator_down') return 'Take the escalator';
+  if (isLastFloor && nodeType) return 'Arrive at destination';
+
+  return 'Follow the path';
 }

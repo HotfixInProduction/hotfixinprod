@@ -115,7 +115,7 @@ describe('FloorPlanViewer', () => {
         });
 
         it('handles SVG error log', () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+            const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
             
             const { getByTestId } = render(
                 <FloorPlanViewer building={mockBuilding} floorLevel="8" onClose={mockOnClose} />
@@ -125,7 +125,7 @@ describe('FloorPlanViewer', () => {
             
             svgMock.props.onError(new Error('Test SVG Error'));
             
-            expect(consoleSpy).toHaveBeenCalledWith("SVG Error: ", expect.any(Error));
+            expect(consoleSpy).toHaveBeenCalledWith("SVG Error:", expect.any(Error));
             consoleSpy.mockRestore();
         });
     });
@@ -1444,4 +1444,44 @@ describe('FloorPlanViewer', () => {
             expect(getByText('H802')).toBeTruthy();
         });
     });
+
+    
+    describe('Active Navigation State Overrides', () => {
+        it('uses activeNavigationStep properties and triggers onExitNavigation', () => {
+            const mockOnExitNavigation = jest.fn();
+            const activeNavStep: any = {
+                type: 'indoor',
+                buildingId: 'Hall Building',
+                floor: 8,
+                path: [{ x: 10, y: 10 }], // Mock path array
+                instruction: 'Turn right',
+            };
+
+            const navBuilding = createMockBuilding({
+                floorPlans: {
+                    '8': '<svg><rect inkscape:label="801" /></svg>',
+                },
+            });
+
+            const { getByTestId } = render(
+                <FloorPlanViewer 
+                    building={navBuilding} 
+                    floorLevel="8" 
+                    onClose={jest.fn()} // This should NOT be called
+                    activeNavigationStep={activeNavStep}
+                    onExitNavigation={mockOnExitNavigation} // This SHOULD be called
+                />
+            );
+
+            // Just by rendering with activeNavigationStep, we cover the displayFloor, 
+            // activePath, displayRawSvgContent, and undefined room ternaries.
+
+            // Now press the close button to cover the onExitNavigation ternary
+            const closeBtn = getByTestId('floor-plan-close');
+            fireEvent.press(closeBtn);
+            
+            expect(mockOnExitNavigation).toHaveBeenCalled();
+        });
+    });
+
 });

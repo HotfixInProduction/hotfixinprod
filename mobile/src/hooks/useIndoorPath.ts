@@ -5,7 +5,7 @@ import { NavMeshNode } from '../types/building';
 /**
  * Find the nearest exit node for a building
  */
-function findNearestExit(buildingId: string): string | null {
+export function findNearestExit(buildingId: string): string | null {
   const exits = getPOIsByType(buildingId, '1', 'building_entry_exit');
   
   if (exits.length === 0) {
@@ -22,7 +22,7 @@ function findNearestExit(buildingId: string): string | null {
 /**
  * Log and return a path with floor information
  */
-function logAndReturnPath(path: NavMeshNode[] | null, logPrefix: string): NavMeshNode[] | null {
+export function logAndReturnPath(path: NavMeshNode[] | null, logPrefix: string): NavMeshNode[] | null {
   if (path) {
     const floors = getFloorsInPath(path);
     // istanbul ignore next - __DEV__ is removed in production builds
@@ -34,7 +34,7 @@ function logAndReturnPath(path: NavMeshNode[] | null, logPrefix: string): NavMes
 /**
  * Find path from a room to building exit (for cross-building navigation)
  */
-function findPathToExit(
+export function findPathToExit(
   buildingId: string,
   floorLevel: string,
   roomLabel: string,
@@ -65,7 +65,7 @@ function findPathToExit(
 /**
  * Find path from building entry to a room (for cross-building navigation)
  */
-function findPathFromEntry(
+export function findPathFromEntry(
   buildingId: string,
   floorLevel: string,
   roomLabel: string,
@@ -96,7 +96,7 @@ function findPathFromEntry(
 /**
  * Find path between two rooms in the same building
  */
-function findPathBetweenRooms(
+export function findPathBetweenRooms(
   buildingId: string,
   floorLevel: string,
   startRoom: string,
@@ -123,7 +123,7 @@ function findPathBetweenRooms(
 /**
  * Handle cross-building navigation path finding
  */
-function findCrossBuildingPath(
+export function findCrossBuildingPath(
   currentBuildingId: string,
   floorLevel: string,
   startRoom: string,
@@ -203,6 +203,23 @@ export function usePathSegments(path: NavMeshNode[] | null): Array<{ floor: numb
     if (!path || path.length === 0) return [];
     return splitPathByFloor(path);
   }, [path]);
+}
+
+/**
+ * Filter segments to strip out empty elevator shaft floors
+ */
+export function filterWalkingSegments(segments: Array<{ floor: number; nodes: NavMeshNode[] }>) {
+  return segments.filter((segment, index) => {
+    // Keep first and last segments
+    if (index === 0 || index === segments.length - 1) return true;
+    
+    // Keep segments with more than just transition nodes
+    const hasWalkingNodes = segment.nodes.some(node => {
+      const type = (node.data as any)?.type;
+      return !['elevator', 'elevator_door', 'stair_landing', 'stairs', 'escalator', 'escalator_up', 'escalator_down'].includes(type);
+    });
+    return hasWalkingNodes;
+  });
 }
 
 /**

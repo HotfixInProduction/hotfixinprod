@@ -8,7 +8,8 @@ import {
   getFloorFromNodeId,
   splitPathByFloor,
   getFloorsInPath,
-  generateSvgPathForFloor
+  generateSvgPathForFloor,
+  generateIndoorInstruction
 } from '../src/utils/Pathfinding';
 import { JsonNode } from 'ngraph.fromjson';
 import path from 'ngraph.path';
@@ -1204,18 +1205,13 @@ describe('getRoomIndex internal function coverage', () => {
       return originalGet.call(this, key);
     });
 
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
     // This will trigger the `return null` fallback in `getRoomIndex` 
-    // and the `No room index found...` branch in `getRoomNodeId`
+    // and the null return in `getRoomNodeId`
     const nodeId = getRoomNodeId('Mock Building', '1', '123');
     
     mapSpy.mockRestore();
     
     expect(nodeId).toBeNull();
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No room index found'));
-    
-    consoleSpy.mockRestore();
   });
 });
 
@@ -1263,5 +1259,92 @@ describe('CC Building navmesh tests', () => {
       expect(segments.length).toBe(1);
       expect(segments[0].floor).toBe(1);
     }
+  });
+});
+
+describe('generateIndoorInstruction', () => {
+  it('should return "Follow the path" for empty or null nodes', () => {
+    expect(generateIndoorInstruction([], true)).toBe('Follow the path');
+    expect(generateIndoorInstruction(null as any, true)).toBe('Follow the path');
+    expect(generateIndoorInstruction(undefined as any, false)).toBe('Follow the path');
+  });
+
+  it('should return "Follow the path" if the last node has no data', () => {
+    const nodes: NavMeshNode[] = [{ id: 'node_1', data: undefined as any }];
+    expect(generateIndoorInstruction(nodes, true)).toBe('Follow the path');
+  });
+
+  it('should instruct to head to the building exit when on the last floor', () => {
+    const nodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'building_entry_exit' } as any }];
+    expect(generateIndoorInstruction(nodes, true)).toBe('Head to the building exit');
+  });
+
+  it('should return "Follow the path" for a building exit if not on the last floor', () => {
+    const nodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'building_entry_exit' } as any }];
+    // If we're not on the last floor, we shouldn't tell them to exit the building yet
+    expect(generateIndoorInstruction(nodes, false)).toBe('Follow the path');
+  });
+
+  it('should instruct to proceed to the elevator regardless of floor status', () => {
+    const elevatorNodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'elevator' } as any }];
+    const elevatorDoorNodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'elevator_door' } as any }];
+    
+    expect(generateIndoorInstruction(elevatorNodes, false)).toBe('Proceed to the elevator');
+    expect(generateIndoorInstruction(elevatorDoorNodes, true)).toBe('Proceed to the elevator');
+  });
+
+  it('should instruct to take the stairs regardless of floor status', () => {
+    const stairNodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'stairs' } as any }];
+    const stairLandingNodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'stair_landing' } as any }];
+    
+    expect(generateIndoorInstruction(stairNodes, false)).toBe('Take the stairs');
+    expect(generateIndoorInstruction(stairLandingNodes, true)).toBe('Take the stairs');
+  });
+
+  it('should instruct to take the escalator regardless of direction or floor status', () => {
+    const escalatorNodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'escalator' } as any }];
+    const escalatorUpNodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'escalator_up' } as any }];
+    const escalatorDownNodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'escalator_down' } as any }];
+    
+    expect(generateIndoorInstruction(escalatorNodes, false)).toBe('Take the escalator');
+    expect(generateIndoorInstruction(escalatorUpNodes, true)).toBe('Take the escalator');
+    expect(generateIndoorInstruction(escalatorDownNodes, false)).toBe('Take the escalator');
+  });
+
+  it('should return "Arrive at destination" if on the last floor and node is generic', () => {
+    const nodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'room' } as any }];
+    expect(generateIndoorInstruction(nodes, true)).toBe('Arrive at destination');
+  });
+
+  it('should return "Follow the path" if not on the last floor and node is generic', () => {
+    const nodes: NavMeshNode[] = [{ id: 'node_1', data: { type: 'room' } as any }];
+    expect(generateIndoorInstruction(nodes, false)).toBe('Follow the path');
+  });
+
+  it('should fallback to "Follow the path" if the node has no type property', () => {
+    const nodes: NavMeshNode[] = [{ id: 'node_1', data: { x: 100, y: 100 } as any }];
+    expect(generateIndoorInstruction(nodes, false)).toBe('Follow the path');
+  });
+
+  it('should evaluate only the last node in a multi-node path', () => {
+    const nodes: NavMeshNode[] = [
+      { id: 'node_1', data: { type: 'elevator' } as any }, // Will be ignored
+      { id: 'node_2', data: { type: 'stairs' } as any }    // Should trigger 'Take the stairs'
+    ];
+    expect(generateIndoorInstruction(nodes, false)).toBe('Take the stairs');
+  });
+
+  it('should return "Follow the path" if the last node evaluates to undefined or null (e.g. sparse arrays)', () => {
+    // Array with length > 0 but explicitly containing undefined
+    const nodesWithUndefined = [undefined as unknown as NavMeshNode];
+    expect(generateIndoorInstruction(nodesWithUndefined, true)).toBe('Follow the path');
+
+    // Array with length > 0 but explicitly containing null
+    const nodesWithNull = [null as unknown as NavMeshNode];
+    expect(generateIndoorInstruction(nodesWithNull, false)).toBe('Follow the path');
+
+    // A sparse array (length is 1, but the index is empty)
+    const sparseNodes = new Array(1) as NavMeshNode[];
+    expect(generateIndoorInstruction(sparseNodes, true)).toBe('Follow the path');
   });
 });
