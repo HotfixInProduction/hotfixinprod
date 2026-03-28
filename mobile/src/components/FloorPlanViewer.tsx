@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    View, Text, TouchableOpacity, StyleSheet, Modal,
+    View, Text, TouchableOpacity, StyleSheet, 
     ScrollView, Dimensions, Switch,
 } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -12,7 +12,15 @@ import { useAmenities, AmenityElement } from '../hooks/useAmenities';
 import AmenityInfoModal from './AmenityInfoModal';
 import AmenityOverlay from './AmenityOverlay';
 import CrossBuildingRoomPicker from './CrossBuildingRoomPicker';
-import { Building, RoomSelection } from '../types/building';
+import { Building, RoomSelection, NavMeshNode } from '../types/building';
+
+export type IndoorNavigationStep = {
+    type: 'indoor';
+    buildingId: string;
+    floor: number;
+    path: NavMeshNode[];
+    instruction: string;
+};
 
 type Props = Readonly<{
     building: Building | null;
@@ -24,6 +32,13 @@ type Props = Readonly<{
     destinationRoomSelection?: RoomSelection | null;
     onStartRoomChange?: (selection: RoomSelection | null) => void;
     onDestinationRoomChange?: (selection: RoomSelection | null) => void;
+    // Navigation Props
+    activeNavigationStep?: IndoorNavigationStep | null;
+    onNextStep?: () => void;
+    onPrevStep?: () => void;
+    onExitNavigation?: () => void;
+    isFirstStep?: boolean;
+    isLastStep?: boolean;
 }>;
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -158,6 +173,176 @@ function CrossBuildingIndicator({
     );
 }
 
+// Extracted FloorSelector component
+function FloorSelector({
+    availableFloors,
+    currentFloor,
+    onFloorChange,
+}: Readonly<{
+    availableFloors: string[];
+    currentFloor: string;
+    onFloorChange: (floor: string) => void;
+}>) {
+    if (availableFloors.length <= 1) return null;
+    
+    return (
+        <View style={styles.floorSelectorRow}>
+            <Text style={styles.selectorLabel}>Floor</Text>
+            <View style={styles.floorButtons}>
+                {availableFloors.map((floor) => (
+                    <TouchableOpacity
+                        key={floor}
+                        style={[
+                            styles.floorBtn,
+                            currentFloor === floor && styles.floorBtnActive,
+                        ]}
+                        onPress={() => onFloorChange(floor)}
+                        activeOpacity={0.75}
+                        testID={`floor-btn-${floor}`}
+                    >
+                        <Text
+                            style={[
+                                styles.floorBtnText,
+                                currentFloor === floor && styles.floorBtnTextActive,
+                            ]}
+                        >
+                            {floor}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+    );
+}
+
+// Extracted RoomSelectors component
+function RoomSelectors({
+    buildingPrefix,
+    effectiveStartRoom,
+    effectiveDestRoom,
+    startRoomBuildingLabel,
+    destRoomBuildingLabel,
+    onStartPress,
+    onEndPress,
+}: Readonly<{
+    buildingPrefix: string;
+    effectiveStartRoom: string;
+    effectiveDestRoom: string;
+    startRoomBuildingLabel: string | null;
+    destRoomBuildingLabel: string | null;
+    onStartPress: () => void;
+    onEndPress: () => void;
+}>) {
+    return (
+        <>
+            <View style={styles.roomSelectorRow}>
+                <RoomButton
+                    type="start"
+                    buildingPrefix={buildingPrefix}
+                    effectiveRoom={effectiveStartRoom}
+                    buildingLabel={startRoomBuildingLabel}
+                    onPress={onStartPress}
+                />
+
+                <View style={styles.arrowDivider}>
+                    <MaterialCommunityIcons name="arrow-right" size={16} color="#AAA" />
+                </View>
+
+                <RoomButton
+                    type="end"
+                    buildingPrefix={buildingPrefix}
+                    effectiveRoom={effectiveDestRoom}
+                    buildingLabel={destRoomBuildingLabel}
+                    onPress={onEndPress}
+                />
+            </View>
+            <View style={styles.crossBuildingHintRow}>
+                <MaterialCommunityIcons name="information" size={14} color="#888" />
+                <Text style={styles.crossBuildingHintText}>
+                    Tap to select any room on any floor
+                </Text>
+            </View>
+        </>
+    );
+}
+
+// Extracted AccessibilityToggle component
+function AccessibilityToggle({
+    accessibleOnly,
+    onToggle,
+}: Readonly<{
+    accessibleOnly: boolean;
+    onToggle: (value: boolean) => void;
+}>) {
+    return (
+        <View style={styles.accessibilityRow}>
+            <View style={styles.accessibilityLabel}>
+                <MaterialCommunityIcons 
+                    name="wheelchair-accessibility" 
+                    size={18} 
+                    color={accessibleOnly ? '#912338' : '#666'} 
+                />
+                <Text style={[styles.accessibilityText, accessibleOnly && styles.accessibilityTextActive]}>
+                    Accessible route
+                </Text>
+            </View>
+            <Switch
+                value={accessibleOnly}
+                onValueChange={onToggle}
+                trackColor={{ false: '#E0E0E0', true: '#F8BBD9' }}
+                thumbColor={accessibleOnly ? '#912338' : '#BDBDBD'}
+                testID="accessibility-toggle"
+            />
+        </View>
+    );
+}
+
+// Extracted NavigationIndicators component
+function NavigationIndicators({
+    isCrossBuilding,
+    isStartBuilding,
+    startBuildingId,
+    destBuildingId,
+    pathFloors,
+    accessibleOnly,
+    activePath,
+    isMultiFloorPath,
+    startRoom,
+    nextRoom,
+}: Readonly<{
+    isCrossBuilding: boolean;
+    isStartBuilding: boolean;
+    startBuildingId: string | undefined;
+    destBuildingId: string | undefined;
+    pathFloors: number[];
+    accessibleOnly: boolean;
+    activePath: any;
+    isMultiFloorPath: boolean;
+    startRoom: string;
+    nextRoom: string;
+}>) {
+    return (
+        <>
+            {isCrossBuilding && startBuildingId && destBuildingId && (
+                <CrossBuildingIndicator
+                    isStartBuilding={isStartBuilding}
+                    otherBuildingId={isStartBuilding ? destBuildingId : startBuildingId}
+                />
+            )}
+            <MultiFloorIndicator
+                pathFloors={pathFloors}
+                accessibleOnly={accessibleOnly}
+            />
+            <PathStatus
+                path={activePath}
+                isMultiFloorPath={isMultiFloorPath}
+                startRoom={startRoom}
+                nextRoom={nextRoom}
+            />
+        </>
+    );
+}
+
 export default function FloorPlanViewer({
     building,
     floorLevel,
@@ -168,6 +353,13 @@ export default function FloorPlanViewer({
     destinationRoomSelection,
     onStartRoomChange,
     onDestinationRoomChange,
+    // Navigation props
+    activeNavigationStep,
+    onNextStep,
+    onPrevStep,
+    onExitNavigation,
+    isFirstStep,
+    isLastStep,
 }: Props) {
     const {
         currentFloor,
@@ -189,6 +381,9 @@ export default function FloorPlanViewer({
     // Amenity state
     const [selectedAmenity, setSelectedAmenity] = useState<AmenityElement | null>(null);
     const amenities = useAmenities(rawSvgContent);
+    
+    // Navigation mode
+    const isNavigating = !!activeNavigationStep;
     
     // Handle room selection with external state persistence
     const handleStartRoomSelect = (selection: RoomSelection) => {
@@ -224,8 +419,8 @@ export default function FloorPlanViewer({
     const startBuildingId = startRoomSelection?.buildingId ?? building?.id;
     const destBuildingId = destinationRoomSelection?.buildingId ?? building?.id;
     
-    // Find path (supports multi-floor for Hall Building and cross-building navigation)
-    const path = useIndoorPath(
+    // Standard path finding (non-navigation mode)
+    const standardPath = useIndoorPath(
         building?.id,
         currentFloor,
         effectiveStartRoom,
@@ -237,14 +432,25 @@ export default function FloorPlanViewer({
         }
     );
     
+    // NAVIGATION OVERRIDES - use navigation step data when navigating
+    const displayFloor = isNavigating ? activeNavigationStep.floor.toString() : currentFloor;
+    const activePath = isNavigating ? activeNavigationStep.path : standardPath;
+    const displayRawSvgContent = isNavigating ? building?.floorPlans?.[displayFloor] : rawSvgContent;
+    
     // Get floors involved in the path
-    const pathFloors = usePathFloors(path);
+    const pathFloors = usePathFloors(activePath);
     
     // Generate path string for the current floor only
-    const currentFloorNum = Number.parseInt(currentFloor, 10);
-    const pathString = useSvgPathForFloor(path, currentFloorNum);
+    const displayFloorNum = Number.parseInt(displayFloor, 10);
+    const pathString = useSvgPathForFloor(activePath, displayFloorNum);
 
-    const svgWithPaths = useProcessedSvg(rawSvgContent, path, pathString, startRoom, nextRoom);
+    const svgWithPaths = useProcessedSvg(
+        displayRawSvgContent,
+        activePath,
+        pathString,
+        isNavigating ? undefined : startRoom,
+        isNavigating ? undefined : nextRoom
+    );
     
     // Check if this is a multi-floor path
     const isMultiFloorPath = pathFloors.length > 1;
@@ -263,21 +469,20 @@ export default function FloorPlanViewer({
 
     return (
         <>
-            <Modal visible={true} transparent animationType="fade" onRequestClose={onClose}>
-                <View style={styles.overlay}>
-                    <View style={styles.container}>
+            <View style={styles.overlay}>
+                <View style={styles.container}>
 
                         {/* ── Header ── */}
                         <View style={styles.header}>
                             <View style={styles.headerContent}>
                                 <Text style={styles.title}>
-                                    {building.id} - Floor {currentFloor}
+                                    {building.id} - Floor {displayFloor}
                                 </Text>
                                 <Text style={styles.subtitle}>{building.address}</Text>
                             </View>
                             <TouchableOpacity
                                 style={styles.closeButton}
-                                onPress={onClose}
+                                onPress={isNavigating && onExitNavigation ? onExitNavigation : onClose}
                                 activeOpacity={0.7}
                                 testID="floor-plan-close"
                             >
@@ -285,109 +490,51 @@ export default function FloorPlanViewer({
                             </TouchableOpacity>
                         </View>
 
-                        {/* ── Floor selector ── */}
-                        {availableFloors.length > 1 && (
-                            <View style={styles.floorSelectorRow}>
-                                <Text style={styles.selectorLabel}>Floor</Text>
-                                <View style={styles.floorButtons}>
-                                    {availableFloors.map((floor) => (
-                                        <TouchableOpacity
-                                            key={floor}
-                                            style={[
-                                                styles.floorBtn,
-                                                currentFloor === floor && styles.floorBtnActive,
-                                            ]}
-                                            onPress={() => setCurrentFloor(floor)}
-                                            activeOpacity={0.75}
-                                            testID={`floor-btn-${floor}`}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.floorBtnText,
-                                                    currentFloor === floor && styles.floorBtnTextActive,
-                                                ]}
-                                            >
-                                                {floor}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
+                        {/* ── Floor selector (hidden during navigation) ── */}
+                        {!isNavigating && (
+                            <FloorSelector
+                                availableFloors={availableFloors}
+                                currentFloor={currentFloor}
+                                onFloorChange={setCurrentFloor}
+                            />
                         )}
 
-                        {/* ── Room selectors ── */}
-                        <View style={styles.roomSelectorRow}>
-                            <RoomButton
-                                type="start"
+                        {/* ── Room selectors (hidden during navigation) ── */}
+                        {!isNavigating && (
+                            <RoomSelectors
                                 buildingPrefix={buildingPrefix}
-                                effectiveRoom={effectiveStartRoom}
-                                buildingLabel={startRoomBuildingLabel}
-                                onPress={() => setRoomPickerOpen('start')}
+                                effectiveStartRoom={effectiveStartRoom}
+                                effectiveDestRoom={effectiveDestRoom}
+                                startRoomBuildingLabel={startRoomBuildingLabel}
+                                destRoomBuildingLabel={destRoomBuildingLabel}
+                                onStartPress={() => setRoomPickerOpen('start')}
+                                onEndPress={() => setRoomPickerOpen('end')}
                             />
+                        )}
 
-                            <View style={styles.arrowDivider}>
-                                <MaterialCommunityIcons name="arrow-right" size={16} color="#AAA" />
-                            </View>
-
-                            <RoomButton
-                                type="end"
-                                buildingPrefix={buildingPrefix}
-                                effectiveRoom={effectiveDestRoom}
-                                buildingLabel={destRoomBuildingLabel}
-                                onPress={() => setRoomPickerOpen('end')}
+                        {/* ── Accessibility toggle (hidden during navigation) ── */}
+                        {!isNavigating && (
+                            <AccessibilityToggle
+                                accessibleOnly={accessibleOnly}
+                                onToggle={setAccessibleOnly}
                             />
-                        </View>
+                        )}
 
-                        {/* ── Cross-building hint ── */}
-                        <View style={styles.crossBuildingHintRow}>
-                            <MaterialCommunityIcons name="information" size={14} color="#888" />
-                            <Text style={styles.crossBuildingHintText}>
-                                Tap to select any room on any floor
-                            </Text>
-                        </View>
-
-                        {/* ── Accessibility toggle ── */}
-                        <View style={styles.accessibilityRow}>
-                            <View style={styles.accessibilityLabel}>
-                                <MaterialCommunityIcons 
-                                    name="wheelchair-accessibility" 
-                                    size={18} 
-                                    color={accessibleOnly ? '#912338' : '#666'} 
-                                />
-                                <Text style={[styles.accessibilityText, accessibleOnly && styles.accessibilityTextActive]}>
-                                    Accessible route
-                                </Text>
-                            </View>
-                            <Switch
-                                value={accessibleOnly}
-                                onValueChange={setAccessibleOnly}
-                                trackColor={{ false: '#E0E0E0', true: '#F8BBD9' }}
-                                thumbColor={accessibleOnly ? '#912338' : '#BDBDBD'}
-                                testID="accessibility-toggle"
-                            />
-                        </View>
-
-                        {/* ── Cross-building indicator ── */}
-                        {isCrossBuilding && startBuildingId && destBuildingId && (
-                            <CrossBuildingIndicator
+                        {/* ── Navigation indicators (hidden during navigation) ── */}
+                        {!isNavigating && (
+                            <NavigationIndicators
+                                isCrossBuilding={isCrossBuilding}
                                 isStartBuilding={isStartBuilding}
-                                otherBuildingId={isStartBuilding ? destBuildingId : startBuildingId}
+                                startBuildingId={startBuildingId}
+                                destBuildingId={destBuildingId}
+                                pathFloors={pathFloors}
+                                accessibleOnly={accessibleOnly}
+                                activePath={activePath}
+                                isMultiFloorPath={isMultiFloorPath}
+                                startRoom={startRoom}
+                                nextRoom={nextRoom}
                             />
                         )}
-                        
-                        {/* ── Multi-floor path indicator ── */}
-                        <MultiFloorIndicator
-                            pathFloors={pathFloors}
-                            accessibleOnly={accessibleOnly}
-                        />
-                        
-                        {/* ── Path status ── */}
-                        <PathStatus
-                            path={path}
-                            isMultiFloorPath={isMultiFloorPath}
-                            startRoom={startRoom}
-                            nextRoom={nextRoom}
-                        />
 
                         {/* ── SVG floor plan ── */}
                         <ScrollView
@@ -414,9 +561,10 @@ export default function FloorPlanViewer({
                                 />
                             </View>
                         </ScrollView>
-                    </View>
+
+                        {/* Navigation controls are now in RouteInstructions */}
                 </View>
-            </Modal>
+            </View>
 
             {/* Start-room picker */}
             {building && (
@@ -454,9 +602,15 @@ export default function FloorPlanViewer({
 
 const styles = StyleSheet.create({
     overlay: {
-        flex: 1,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-start',
+        zIndex: 100,
+        elevation: 100,
     },
     container: {
         backgroundColor: '#fff',
@@ -704,4 +858,5 @@ const styles = StyleSheet.create({
         position: 'relative',
         overflow: 'visible',
     },
+
 });

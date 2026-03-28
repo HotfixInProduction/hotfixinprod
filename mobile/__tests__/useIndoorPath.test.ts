@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react-native';
 import { 
+  filterWalkingSegments,
   useIndoorPath, 
   usePathFloors, 
   usePathSegments, 
@@ -393,5 +394,32 @@ describe('__DEV__ console logging branches', () => {
 
     // Should not log when __DEV__ is false
     expect(consoleLogSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('filterWalkingSegments', () => {
+  it('keeps the first and last segments regardless of node types', () => {
+    const segments = [
+      { floor: 1, nodes: [{ data: { type: 'elevator' } }] as any },
+      { floor: 2, nodes: [{ data: { type: 'stairs' } }] as any },
+      { floor: 3, nodes: [{ data: { type: 'escalator' } }] as any },
+    ];
+    const result = filterWalkingSegments(segments);
+    
+    expect(result).toHaveLength(2); // Keeps index 0 and 2, removes 1
+    expect(result[0].floor).toBe(1);
+    expect(result[1].floor).toBe(3);
+  });
+
+  it('keeps intermediate segments if they have walking nodes', () => {
+    const segments = [
+      { floor: 1, nodes: [{ data: { type: 'elevator' } }] as any },
+      { floor: 2, nodes: [{ data: { type: 'room' } }, { data: { type: 'elevator' } }] as any },
+      { floor: 3, nodes: [{ data: { type: 'stairs' } }] as any },
+    ];
+    const result = filterWalkingSegments(segments);
+    
+    expect(result).toHaveLength(3); // Keeps all because middle floor has a 'room'
+    expect(result[1].floor).toBe(2);
   });
 });

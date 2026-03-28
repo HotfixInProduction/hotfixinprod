@@ -623,3 +623,20 @@ export function getPOINodeId(
   const floorNum = Number.parseInt(floorLevel, 10);
   return findPOIInNewFormat(navMesh.poiIndex, poiLabel, buildingId, floorNum);
 }
+
+export function generateIndoorInstruction(nodes: NavMeshNode[], isLastFloor: boolean): string {
+  if (!nodes || nodes.length === 0) return 'Follow the path';
+  
+  const lastNode = nodes.at(-1);
+  if (!lastNode) return 'Follow the path';
+  
+  const nodeType = (lastNode.data as any)?.type;
+
+  if (isLastFloor && nodeType === 'building_entry_exit') return 'Head to the building exit';
+  if (nodeType === 'elevator' || nodeType === 'elevator_door') return 'Proceed to the elevator';
+  if (nodeType === 'stairs' || nodeType === 'stair_landing') return 'Take the stairs';
+  if (nodeType === 'escalator' || nodeType === 'escalator_up' || nodeType === 'escalator_down') return 'Take the escalator';
+  if (isLastFloor && nodeType) return 'Arrive at destination';
+
+  return 'Follow the path';
+}

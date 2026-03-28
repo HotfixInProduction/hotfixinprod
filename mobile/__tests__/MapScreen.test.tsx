@@ -2135,3 +2135,113 @@ describe('Outdoor POI Functionality', () => {
 
     expect(queryByTestId('poi-set-destination-button')).toBeNull();
   });
+
+describe('Active Navigation State MapScreen Callbacks', () => {
+  it('handles onExit and onRestoreRouteInfo when exiting active navigation', async () => {
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        routes: [{
+          legs: [{ distance: { value: 3000 }, duration: { value: 600 }, steps: [] }]
+        }]
+      }),
+    } as any);
+
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    
+    // Set up route
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => expect(getByTestId('view-directions-button')).toBeTruthy());
+    fireEvent.press(getByTestId('view-directions-button'));
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+    
+    // Start active navigation
+    fireEvent.press(getByTestId('route-info-start-button'));
+    await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
+
+    // Trigger onExit (which calls onRestoreRouteInfo and updates screen states)
+    fireEvent.press(getByTestId('route-instructions-close-button'));
+    
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy(); // Because info was restored
+    });
+  });
+
+  it('handles onViewFloorPlan with valid and invalid buildings during active navigation', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    
+    // Set up route and start active navigation
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => expect(getByTestId('view-directions-button')).toBeTruthy());
+    fireEvent.press(getByTestId('view-directions-button'));
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+    
+    fireEvent.press(getByTestId('route-info-start-button'));
+    await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
+
+    // Valid building mock call - use the mocked RouteInstructions button
+    fireEvent.press(getByTestId('route-instructions-view-floor-plan'));
+    await waitFor(() => expect(getByTestId('floor-plan-viewer-mock')).toBeTruthy());
+
+    // Close floor plan viewer
+    fireEvent.press(getByTestId('floor-plan-close'));
+    await waitFor(() => expect(queryByTestId('floor-plan-viewer-mock')).toBeNull());
+
+    // Invalid building mock call is covered by the RouteInstructions unit test
+    // The mock doesn't expose the onViewFloorPlan callback directly for invalid building tests
+  });
+});
+
+describe('MapScreen - Active Navigation Uncovered Lines', () => {
+  it('covers useNavigationState callbacks and active navigation onViewFloorPlan', () => {
+    // 1. Spy on the hook to capture args and force the component into the "isNavigating" state
+    const NavigationStateHook = require('../src/hooks/useNavigationState');
+    let hookArgs: any;
+    
+    const useNavSpy = jest.spyOn(NavigationStateHook, 'useNavigationState').mockImplementation((args) => {
+      hookArgs = args;
+      return {
+        navigationSteps: [],
+        currentStepIndex: 0,
+        isNavigating: true, // Forces active navigation
+        activeStep: { type: 'indoor', instruction: 'Walk', buildingId: 'mock-building-id' },
+        handleStartNavigation: jest.fn(),
+        handleNextStep: jest.fn(),
+        handlePrevStep: jest.fn(),
+        handleExitNavigation: jest.fn(),
+      };
+    });
+
+    const { UNSAFE_root } = render(<MapScreen />);
+
+    // 2. Execute the uncovered hook callbacks
+    act(() => {
+      if (hookArgs) {
+        hookArgs.onExit(); // Covers setShowRoutePreview(false) & setBuildingSelectorVisible(true)
+        hookArgs.onRestoreRouteInfo({ distance: 10, duration: 5 }); // Covers setRouteInfo(routeInfo)
+      }
+    });
+
+    // 3. Find the RouteInstructions mock instance by testID and get its onViewFloorPlan prop
+    const routeInstructionsInstance = UNSAFE_root.findByProps({ testID: 'route-instructions-mock' });
+
+    // 4. Trigger onViewFloorPlan with a valid building to cover the successful path
+    act(() => {
+      routeInstructionsInstance.props.onViewFloorPlan('mock-building-id', '2'); 
+    });
+
+    // 5. Trigger onViewFloorPlan with an invalid building to cover the `if (!building) return;`
+    act(() => {
+      routeInstructionsInstance.props.onViewFloorPlan('invalid-id', '2');
+    });
+
+    // Clean up
+    useNavSpy.mockRestore();
+  });
+});

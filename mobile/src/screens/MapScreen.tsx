@@ -38,6 +38,7 @@ import {
 import MapViewDirections from 'react-native-maps-directions';
 import { createPlaceFromUserLocation, createPlaceFromBuilding, createPlaceFromPOI } from '../utils/placeUtils';
 
+import { useNavigationState } from '../hooks/useNavigationState';
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   DRIVING: 'driving',
@@ -96,6 +97,33 @@ export default function MapScreen() {
   // Room selection state for cross-building persistence
   const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
   const [destinationRoomSelection, setDestinationRoomSelection] = useState<RoomSelection | null>(null);
+
+  // Navigation state using custom hook
+  const {
+    navigationSteps,
+    currentStepIndex,
+    isNavigating,
+    activeStep,
+    handleStartNavigation,
+    handleNextStep,
+    handlePrevStep,
+    handleExitNavigation,
+  } = useNavigationState({
+    transportMode,
+    startRoomSelection,
+    destinationRoomSelection,
+    instructions,
+    start,
+    destination,
+    googleMapsApiKey,
+    onShowShuttleSchedule: () => setShowShuttleSchedule(true),
+    onShowInstructions: () => setShowInstructions(true),
+    onExit: () => {
+      setShowRoutePreview(false);
+      setBuildingSelectorVisible(true);
+    },
+    onRestoreRouteInfo: (routeInfo) => setRouteInfo(routeInfo),
+  });
 
   // Helper function to find building by ID
   const findBuildingById = useCallback((buildingId: string) => {
@@ -483,12 +511,13 @@ export default function MapScreen() {
   }, [userLocation]);
 
   const activeModal = (() => {
+    if (isNavigating) return 'navigation';
     if (selectedBuilding) return 'buildingInfo';
     if (showInstructions) return 'routeInstructions';
     if (showRoutePreview && routeInfo && isStartComplete && isDestinationComplete) return 'routeInfo';
     return 'none';
   })();
-  const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions';
+  const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions' || activeModal === 'navigation';
 
   return (
     <View style={styles.container}>
@@ -863,17 +892,52 @@ export default function MapScreen() {
             nextDepartureTimeLabel: shuttleData.nextDepartureTimeLabel,
           } : null}
           onOpenShuttleSchedule={() => setShowShuttleSchedule(true)}
-          onStart={() => {
-            if (transportMode === 'SHUTTLE') {
-              setShowShuttleSchedule(true);
-              return;
-            }
-            setShowInstructions(true);
-          }}
+          onStart={handleStartNavigation}
           onClose={handleClearRoute}
         />
         </View>
       )}
+
+      {/* RouteInstructions during navigation (both indoor and outdoor steps) */}
+      {isNavigating && (
+        <RouteInstructions
+          instructions={instructions}
+          start={start}
+          destination={destination}
+          onClose={handleExitNavigation}
+          onViewFloorPlan={(buildingId, floor) => {
+            const building = buildings.find(b => b.id === buildingId);
+            if (!building) return;
+            setDirectionsFloorPlan({ building, floor });
+          }}
+          navigationMode={activeStep?.type === 'outdoor' ? 'outdoor' : 'indoor'}
+          navigationInstruction={activeStep?.type === 'indoor' ? (activeStep).instruction : undefined}
+          onNextStep={handleNextStep}
+          onPrevStep={handlePrevStep}
+          isFirstStep={currentStepIndex === 0}
+          isLastStep={currentStepIndex === navigationSteps.length - 1}
+        />
+      )}
+
+      {/* Active Navigation Indoor FloorPlanViewer */}
+      {activeStep?.type === 'indoor' && (
+        <FloorPlanViewer
+          building={findBuildingById((activeStep).buildingId) || selectedBuilding}
+          onClose={handleExitNavigation}
+          startRoomSelection={startRoomSelection}
+          destinationRoomSelection={destinationRoomSelection}
+          onStartRoomChange={setStartRoomSelection}
+          onDestinationRoomChange={setDestinationRoomSelection}
+          activeNavigationStep={activeStep}
+          onNextStep={handleNextStep}
+          onPrevStep={handlePrevStep}
+          onExitNavigation={handleExitNavigation}
+          isFirstStep={currentStepIndex === 0}
+          isLastStep={currentStepIndex === navigationSteps.length - 1}
+        />
+      )}
+
+      {/* Outdoor navigation controls are now in RouteInstructions */}
 
       <Modal
         visible={showShuttleSchedule && Boolean(shuttleData)}
