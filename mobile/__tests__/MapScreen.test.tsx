@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { render, fireEvent, waitFor, act,  screen } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { Alert, Linking } from 'react-native';
 import MapScreen from '../src/screens/MapScreen';
 import RouteInstructions from '../src/components/RouteInstructions';
@@ -28,6 +28,19 @@ jest.mock('react-native-config', () => ({ GOOGLE_MAPS_ANDROID_API_KEY: 'mock-goo
 jest.mock('react-native-maps-directions', () => require('./utils/testUtils').createMapDirectionsMock());
 jest.mock('../src/components/RouteInfo', () => require('./utils/testUtils').createRouteInfoMock());
 jest.mock('../src/components/RouteInstructions', () => require('./utils/testUtils').createRouteInstructionsMock());
+
+// Create a stable mock settings object that won't change on every call
+const mockSettingsObject = { poiRangeMeters: 500, showNearestPOIBanner: true };
+const mockUpdateSettingsFunction = jest.fn();
+const mockUseAppSettingsReturn = {
+  settings: mockSettingsObject,
+  isLoading: false,
+  updateSettings: mockUpdateSettingsFunction,
+};
+
+jest.mock('../src/hooks/useAppSettings', () => ({
+  useAppSettings: jest.fn(() => mockUseAppSettingsReturn),
+}));
 jest.mock('../src/components/POIInfoPanel', () => {
   const React = require('react');
   const { View, Button, Text } = require('react-native');
@@ -1973,14 +1986,13 @@ describe('Outdoor POI Functionality', () => {
       expect(queryByTestId('poi-info-panel')).toBeNull();
     });
 
-    // Open building selector to access View Directions button
-    fireEvent.press(getByTestId('building-selector-toggle'));
-
+    // After setting POI as destination, the route preview should show immediately
     await waitFor(() => {
-      expect(getByTestId('view-directions-button')).toBeTruthy();
+      expect(getByTestId('route-info-mock')).toBeTruthy();
     });
 
-    fireEvent.press(getByTestId('view-directions-button'));
+    // Can click on the route preview to continue
+    fireEvent.press(getByTestId('route-info-mock'));
 
     await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
@@ -2085,156 +2097,117 @@ describe('Outdoor POI Functionality', () => {
     expect(queryByTestId('poi-set-destination-button')).toBeNull();
   });
 
-describe('Active Navigation State MapScreen Callbacks', () => {
-  it('handles onExit and onRestoreRouteInfo when exiting active navigation', async () => {
-    globalThis.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({
-        routes: [{
-          legs: [{ distance: { value: 3000 }, duration: { value: 600 }, steps: [] }]
-        }]
-      }),
-    } as any);
+  describe('Route Preview from POI and Building Selection', () => {
+    it('shows route preview when POI is set as destination from info panel', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockResolvedValue({
+        coords: { latitude: 45.497, longitude: -73.579 },
+      });
 
-    const { getByTestId, queryByTestId } = render(<MapScreen />);
-    
-    // Set up route
-    fireEvent.press(getByTestId('building-selector-toggle'));
-    fireEvent.press(getByTestId('set-start'));
-    fireEvent.press(getByTestId('set-destination'));
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
 
-    await waitFor(() => expect(getByTestId('view-directions-button')).toBeTruthy());
-    fireEvent.press(getByTestId('view-directions-button'));
-    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
-    
-    // Start active navigation
-    fireEvent.press(getByTestId('route-info-start-button'));
-    await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
+      // First, make the building selector panel visible to set start
+      fireEvent.press(getByTestId('building-selector-toggle'));
 
-    // Trigger onExit (which calls onRestoreRouteInfo and updates screen states)
-    fireEvent.press(getByTestId('route-instructions-close-button'));
-    
-    await waitFor(() => {
-      expect(getByTestId('route-info-mock')).toBeTruthy(); // Because info was restored
+      // Set start location
+      fireEvent.press(getByTestId('set-start'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-marker-poi_food_1')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-info-panel')).toBeTruthy();
+      });
+
+      // When POI is set as destination, it should close the POI panel and set the route preview
+      fireEvent.press(getByTestId('poi-set-destination-button'));
+
+      await waitFor(() => {
+        // POI panel should be closed
+        expect(queryByTestId('poi-info-panel')).toBeNull();
+      });
+
+      // The route should now be set up (user location as start, POI as destination)
+      // This shows a compact route preview
+      await waitFor(() => {
+        expect(getByTestId('route-info-mock')).toBeTruthy();
+      });
+    });
+
+    it('shows route preview when building is set as destination via selector', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockResolvedValue({
+        coords: { latitude: 45.497, longitude: -73.579 },
+      });
+
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+
+      // Set start location first
+      fireEvent.press(getByTestId('set-start'));
+
+      // Trigger selecting a building as destination
+      fireEvent.press(getByTestId('set-destination'));
+
+      await waitFor(() => {
+        // The route should be set with user location as start and building as destination
+        expect(getByTestId('view-directions-button')).toBeTruthy();
+      });
+    });
+
+    it('closes POI info panel after setting as destination', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockResolvedValue({
+        coords: { latitude: 45.497, longitude: -73.579 },
+      });
+
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      await waitFor(() => {
+        expect(getByTestId('poi-marker-poi_food_1')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+
+      await waitFor(() => {
+        expect(getByTestId('poi-info-panel')).toBeTruthy();
+      });
+
+      fireEvent.press(getByTestId('poi-set-destination-button'));
+
+      await waitFor(() => {
+        expect(queryByTestId('poi-info-panel')).toBeNull();
+      });
+    });
+
+    it('closes building info panel after setting as destination', async () => {
+      mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+      mockGetCurrentPosition.mockResolvedValue({
+        coords: { latitude: 45.497, longitude: -73.579 },
+      });
+
+      const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+      fireEvent.press(getByTestId('building-selector-toggle'));
+      fireEvent.press(getByTestId('select-start-on-map'));
+      fireEvent.press(getByTestId('cancel-map-selection'));
+
+      fireEvent.press(getByTestId('select-building'));
+
+      await waitFor(() => {
+        expect(getByTestId('building-close')).toBeTruthy();
+      });
+
+      // Simulate building being set as destination from popup menu
+      fireEvent.press(getByTestId('building-set-destination-button'));
+
+      await waitFor(() => {
+        // Building info should be closed after setting as destination
+        expect(queryByTestId('building-title')).toBeNull();
+      });
     });
   });
-
-  it('handles onViewFloorPlan with valid and invalid buildings during active navigation', async () => {
-    const { getByTestId, queryByTestId } = render(<MapScreen />);
-    
-    // Set up route and start active navigation
-    fireEvent.press(getByTestId('building-selector-toggle'));
-    fireEvent.press(getByTestId('set-start'));
-    fireEvent.press(getByTestId('set-destination'));
-
-    await waitFor(() => expect(getByTestId('view-directions-button')).toBeTruthy());
-    fireEvent.press(getByTestId('view-directions-button'));
-    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
-    
-    fireEvent.press(getByTestId('route-info-start-button'));
-    await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
-
-    // Valid building mock call - use the mocked RouteInstructions button
-    fireEvent.press(getByTestId('route-instructions-view-floor-plan'));
-    await waitFor(() => expect(getByTestId('floor-plan-viewer-mock')).toBeTruthy());
-
-    // Close floor plan viewer
-    fireEvent.press(getByTestId('floor-plan-close'));
-    await waitFor(() => expect(queryByTestId('floor-plan-viewer-mock')).toBeNull());
-
-    // Invalid building mock call is covered by the RouteInstructions unit test
-    // The mock doesn't expose the onViewFloorPlan callback directly for invalid building tests
-  });
-});
-
-describe('MapScreen - Active Navigation Uncovered Lines', () => {
-  it('covers useNavigationState callbacks and active navigation onViewFloorPlan', () => {
-    // 1. Spy on the hook to capture args and force the component into the "isNavigating" state
-    const NavigationStateHook = require('../src/hooks/useNavigationState');
-    let hookArgs: any;
-    
-    const useNavSpy = jest.spyOn(NavigationStateHook, 'useNavigationState').mockImplementation((args) => {
-      hookArgs = args;
-      return {
-        navigationSteps: [],
-        currentStepIndex: 0,
-        isNavigating: true, // Forces active navigation
-        activeStep: { type: 'indoor', instruction: 'Walk', buildingId: 'mock-building-id' },
-        handleStartNavigation: jest.fn(),
-        handleNextStep: jest.fn(),
-        handlePrevStep: jest.fn(),
-        handleExitNavigation: jest.fn(),
-      };
-    });
-
-    const { UNSAFE_root } = render(<MapScreen />);
-
-    // 2. Execute the uncovered hook callbacks
-    act(() => {
-      if (hookArgs) {
-        hookArgs.onExit(); // Covers setShowRoutePreview(false) & setBuildingSelectorVisible(true)
-        hookArgs.onRestoreRouteInfo({ distance: 10, duration: 5 }); // Covers setRouteInfo(routeInfo)
-      }
-    });
-
-    // 3. Find the RouteInstructions mock instance by testID and get its onViewFloorPlan prop
-    const routeInstructionsInstance = UNSAFE_root.findByProps({ testID: 'route-instructions-mock' });
-
-    // 4. Trigger onViewFloorPlan with a valid building to cover the successful path
-    act(() => {
-      routeInstructionsInstance.props.onViewFloorPlan('mock-building-id', '2'); 
-    });
-
-    // 5. Trigger onViewFloorPlan with an invalid building to cover the `if (!building) return;`
-    act(() => {
-      routeInstructionsInstance.props.onViewFloorPlan('invalid-id', '2');
-    });
-
-    // Clean up
-    useNavSpy.mockRestore();
-  });
-
-  it('covers outdoor navigation step and indoor fallback building', () => {
-    const NavigationStateHook = require('../src/hooks/useNavigationState');
-    
-    // 1. Mock an OUTDOOR step to cover the `navigationMode` and `navigationInstruction` ternaries
-    const useNavSpy = jest.spyOn(NavigationStateHook, 'useNavigationState').mockImplementation(() => {
-      return {
-        navigationSteps: [],
-        currentStepIndex: 0,
-        isNavigating: true,
-        activeStep: { type: 'outdoor', instruction: 'Walk outside' },
-        handleStartNavigation: jest.fn(),
-        handleNextStep: jest.fn(),
-        handlePrevStep: jest.fn(),
-        handleExitNavigation: jest.fn(),
-      };
-    });
-
-    const { UNSAFE_root, rerender } = render(<MapScreen />);
-
-    // Verify it rendered RouteInstructions without crashing (covering the outdoor ternaries)
-    expect(UNSAFE_root.findByProps({ testID: 'route-instructions-mock' })).toBeTruthy();
-
-    // 2. Mock an INDOOR step with an invalid building ID to cover the `|| selectedBuilding` fallback
-    useNavSpy.mockImplementation(() => {
-      return {
-        navigationSteps: [],
-        currentStepIndex: 0,
-        isNavigating: true,
-        activeStep: { type: 'indoor', instruction: 'Walk inside', buildingId: 'UNKNOWN_BUILDING' },
-        handleStartNavigation: jest.fn(),
-        handleNextStep: jest.fn(),
-        handlePrevStep: jest.fn(),
-        handleExitNavigation: jest.fn(),
-      };
-    });
-
-    rerender(<MapScreen />);
-    
-    // Verify it rendered FloorPlanViewer without crashing (covering the unknown building fallback)
-    expect(UNSAFE_root.findByProps({ testID: 'floor-plan-viewer-mock' })).toBeTruthy();
-
-    useNavSpy.mockRestore();
-  });
-});

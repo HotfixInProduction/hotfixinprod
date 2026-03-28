@@ -1,5 +1,7 @@
+import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react-native';
 import { useAppSettings } from '../src/hooks/useAppSettings';
+import { AppSettingsProvider } from '../src/context/AppSettingsContext';
 import * as SettingsStorage from '../src/models/SettingsStorage';
 
 jest.mock('../src/models/SettingsStorage', () => ({
@@ -15,19 +17,23 @@ describe('useAppSettings', () => {
     jest.clearAllMocks();
   });
 
+  const wrapper = ({ children }: { children: React.ReactNode }) => (
+    <AppSettingsProvider>{children}</AppSettingsProvider>
+  );
+
   it('initializes with null settings and loading state', () => {
-    mockLoadSettings.mockResolvedValueOnce({ poiRangeMeters: 500 });
-    const { result } = renderHook(() => useAppSettings());
+    mockLoadSettings.mockResolvedValueOnce({ poiRangeMeters: 500, showNearestPOIBanner: true });
+    const { result } = renderHook(() => useAppSettings(), { wrapper });
     
     expect(result.current.settings).toBeNull();
     expect(result.current.isLoading).toBe(true);
   });
 
   it('loads settings on mount', async () => {
-    const mockSettings = { poiRangeMeters: 750 };
+    const mockSettings = { poiRangeMeters: 750, showNearestPOIBanner: false };
     mockLoadSettings.mockResolvedValueOnce(mockSettings);
 
-    const { result } = renderHook(() => useAppSettings());
+    const { result } = renderHook(() => useAppSettings(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -41,7 +47,7 @@ describe('useAppSettings', () => {
     const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     mockLoadSettings.mockRejectedValueOnce(new Error('Load failed'));
 
-    const { result } = renderHook(() => useAppSettings());
+    const { result } = renderHook(() => useAppSettings(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -57,11 +63,11 @@ describe('useAppSettings', () => {
   });
 
   it('updates settings and persists to storage', async () => {
-    const initialSettings = { poiRangeMeters: 500 };
+    const initialSettings = { poiRangeMeters: 500, showNearestPOIBanner: true };
     mockLoadSettings.mockResolvedValueOnce(initialSettings);
     mockSaveSettings.mockResolvedValueOnce(undefined);
 
-    const { result } = renderHook(() => useAppSettings());
+    const { result } = renderHook(() => useAppSettings(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -73,28 +79,37 @@ describe('useAppSettings', () => {
       await result.current.updateSettings(updatedSettings);
     });
 
-    expect(result.current.settings).toEqual(updatedSettings);
-    expect(mockSaveSettings).toHaveBeenCalledWith(updatedSettings);
+    expect(result.current.settings).toEqual({
+      ...initialSettings,
+      ...updatedSettings,
+    });
+    expect(mockSaveSettings).toHaveBeenCalledWith({
+      ...initialSettings,
+      ...updatedSettings,
+    });
   });
 
   it('merges partial updates with existing settings', async () => {
-    const initialSettings = { poiRangeMeters: 500 };
+    const initialSettings = { poiRangeMeters: 500, showNearestPOIBanner: true };
     mockLoadSettings.mockResolvedValueOnce(initialSettings);
     mockSaveSettings.mockResolvedValueOnce(undefined);
 
-    const { result } = renderHook(() => useAppSettings());
+    const { result } = renderHook(() => useAppSettings(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    const partialUpdate = { poiRangeMeters: 800 };
+    const partialUpdate = { showNearestPOIBanner: false };
 
     await act(async () => {
       await result.current.updateSettings(partialUpdate);
     });
 
-    expect(result.current.settings).toEqual(partialUpdate);
+    expect(result.current.settings).toEqual({
+      poiRangeMeters: 500,
+      showNearestPOIBanner: false,
+    });
   });
 
   it('does not update settings if not loaded', async () => {
@@ -103,7 +118,7 @@ describe('useAppSettings', () => {
       return new Promise(() => {});
     });
 
-    const { result } = renderHook(() => useAppSettings());
+    const { result } = renderHook(() => useAppSettings(), { wrapper });
 
     // Settings are still null
     expect(result.current.settings).toBeNull();

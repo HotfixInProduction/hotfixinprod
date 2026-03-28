@@ -23,6 +23,15 @@ jest.mock('@react-navigation/bottom-tabs', () => require('./utils/testUtils').cr
 // Mock other components used in MapScreen to avoid deep rendering issues if needed
 jest.mock('../src/components/BuildingSelector/StartDestinationPicker', () => require('./utils/testUtils').createStartDestinationPickerMock());
 
+// Mock SettingsStorage for AppSettingsProvider
+jest.mock('../src/models/SettingsStorage', () => ({
+  loadSettingsFromStorage: jest.fn().mockResolvedValue({ 
+    poiRangeMeters: 500, 
+    showNearestPOIBanner: true 
+  }),
+  saveSettingsToStorage: jest.fn().mockResolvedValue(undefined),
+}));
+
 const { Alert } = require('react-native');
 jest.spyOn(Alert, 'alert');
 

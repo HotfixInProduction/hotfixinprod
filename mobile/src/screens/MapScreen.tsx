@@ -241,8 +241,6 @@ export default function MapScreen() {
   useEffect(() => {
     setShowRoutePreview(false);
   }, [
-    start,
-    destination,
     startRoomSelection,
     destinationRoomSelection,
     enableRoomSelection,
@@ -479,6 +477,7 @@ export default function MapScreen() {
 
     setStart(createPlaceFromUserLocation(userLocation));
     setDestination(createPlaceFromPOI(poi));
+    setShowRoutePreview(true);
 
     // Close POI panel
     setSelectedPOI(null);
@@ -489,6 +488,7 @@ export default function MapScreen() {
 
     setStart(createPlaceFromUserLocation(userLocation));
     setDestination(destination);
+    setShowRoutePreview(true);
 
     // Close building panel
     setSelectedBuilding(null);
