@@ -1,5 +1,6 @@
 ﻿﻿import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
@@ -30,6 +31,8 @@ const ScheduleScreen: React.FC = () => {
   const displayClasses = state.isAuthenticated ? state.events : [];
   const nextClass = useNextClass(displayClasses, currentTime);
   const monday = getMondayOfWeek(currentTime);
+
+  const navigation = useNavigation<any>();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -71,8 +74,27 @@ const ScheduleScreen: React.FC = () => {
         />
       )}
 
-      {nextClass && <NextClassCard nextClass={nextClass} />}
-
+{nextClass && (
+  <NextClassCard
+    nextClass={nextClass}
+    onDirectionsPress={(selectedClass) => {
+      navigation.navigate('Map', {
+        nextClass: {
+          id: selectedClass.id,
+          title: selectedClass.title,
+          location: selectedClass.location,
+          building: selectedClass.building,
+          room: selectedClass.room,
+          startTime: selectedClass.startTime.toISOString(),
+          endTime: selectedClass.endTime.toISOString(),
+          dayOfWeek: selectedClass.dayOfWeek,
+          color: selectedClass.color,
+        },
+        startFromCurrentLocation: true,
+      });
+    }}
+  />
+)}
       <View style={styles.gridWrapper}>
         <WeekDayHeader
           timeColWidth={TIME_COL_WIDTH}

@@ -5,6 +5,7 @@ import { ClassEvent } from '../../types/calendar';
 
 interface Props {
   nextClass: ClassEvent;
+  onDirectionsPress: (nextClass: ClassEvent) => void;
 }
 
 function formatTime(date: Date): string {
@@ -19,7 +20,7 @@ function getTimeUntilClass(start: Date): string {
   return h > 0 ? `in ${h}h ${m}m` : `in ${m}m`;
 }
 
-export default function NextClassCard({ nextClass }: Readonly<Props>) {
+export default function NextClassCard({ nextClass, onDirectionsPress }: Readonly<Props>) {
   return (
     <View style={styles.card}>
       <View style={styles.content}>
@@ -34,7 +35,7 @@ export default function NextClassCard({ nextClass }: Readonly<Props>) {
             <Text style={styles.countdown}>{getTimeUntilClass(nextClass.startTime)}</Text>
           </Text>
         </View>
-        <TouchableOpacity style={styles.directionsBtn}>
+        <TouchableOpacity style={styles.directionsBtn} onPress={() => onDirectionsPress(nextClass)}>
           <MaterialIcons name="directions" size={22} color="#fff" />
         </TouchableOpacity>
       </View>
