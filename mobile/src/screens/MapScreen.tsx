@@ -575,7 +575,11 @@ const handleDirectionsToNextClass = useCallback((nextClass: ClassEvent) => {
 
   setDestination(createPlaceFromBuilding(building));
 
-  if (floor && nextClass.room && building.floorPlans?.[floor]) {
+  const hasFloorPlanForFloor =
+    !!building.floorPlans &&
+    Object.prototype.hasOwnProperty.call(building.floorPlans, floor);
+
+  if (floor && nextClass.room && hasFloorPlanForFloor) {
     setDestinationRoomSelection({
       buildingId: building.id,
       floor,
