@@ -1108,6 +1108,7 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
             <TouchableOpacity
               style={[styles.modalButton, styles.primaryButton]}
               onPress={() => setShowShuttleSchedule(false)}
+              testID="close-shuttle-schedule"
             >
               <Text style={styles.primaryButtonText}>Close schedule</Text>
             </TouchableOpacity>
