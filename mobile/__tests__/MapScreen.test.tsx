@@ -529,8 +529,6 @@ describe('MapScreen', () => {
           expect(getByTestId('view-directions-button')).toBeTruthy();
         });
 
-        // If your StartDestinationPicker mock exposes room-selection state text,
-        // this assertion becomes useful. If not, keeping the route alive still covers the branch.
         expect(getByTestId('start-marker')).toBeTruthy();
         expect(getByTestId('destination-marker')).toBeTruthy();
       });

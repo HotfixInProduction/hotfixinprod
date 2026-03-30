@@ -577,7 +577,7 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
 
   const hasFloorPlanForFloor =
     !!building.floorPlans &&
-    Object.prototype.hasOwnProperty.call(building.floorPlans, floor);
+    Object.hasOwn(building.floorPlans, floor);
 
   if (floor && nextClass.room && hasFloorPlanForFloor) {
     setDestinationRoomSelection({
