@@ -37,6 +37,9 @@ const mockUseAppSettingsReturn = {
   isLoading: false,
   updateSettings: mockUpdateSettingsFunction,
 };
+const mockUseRoute = jest.fn(() => ({
+  params: {},
+}));
 
 jest.mock('../src/hooks/useAppSettings', () => ({
   useAppSettings: jest.fn(() => mockUseAppSettingsReturn),
@@ -130,11 +133,13 @@ jest.mock('../src/data/buildings', () => ({
       name: 'Mock Building',
       address: '123 Mock St',
       labelCoord: { latitude: 45.123, longitude: -73.123 },
+      floorPlans: { '8': 'mock-floor-8.svg' },
     },
     {
       id: 'mock-no-address',
       name: 'Mock Building Without Address',
       labelCoord: { latitude: 45.124, longitude: -73.124 },
+      floorPlans: { '1': 'mock-floor-1.svg' },
     }
   ]
 }));
@@ -169,6 +174,9 @@ jest.mock('../src/data/outdoorPOI', () => ({
     }
   ]
 }));
+jest.mock('@react-navigation/native', () => ({
+  useRoute: () => mockUseRoute(),
+}));
 jest.mock('../src/components/FloorPlanViewer', () => {
   const React = require('react');
   const { View, Button, Text } = require('react-native');
@@ -177,12 +185,12 @@ jest.mock('../src/components/FloorPlanViewer', () => {
       <View testID="floor-plan-viewer-mock">
         <Text>Hall Building - Floor 8</Text>
         <Button testID="floor-plan-close" title="Close" onPress={props.onClose} />
-        <Button testID="trigger-start-room" title="Start" onPress={() => props.onStartRoomChange({ buildingId: 'mock-building-id', floorId: '8', roomId: '820' })} />
-        <Button testID="trigger-dest-room" title="Dest" onPress={() => props.onDestinationRoomChange({ buildingId: 'mock-building-id', floorId: '8', roomId: '820' })} />
-        <Button testID="trigger-start-no-address" title="Start No Addr" onPress={() => props.onStartRoomChange({ buildingId: 'mock-no-address', floorId: '1', roomId: '101' })} />
-        <Button testID="trigger-dest-no-address" title="Dest No Addr" onPress={() => props.onDestinationRoomChange({ buildingId: 'mock-no-address', floorId: '1', roomId: '101' })} />
-        <Button testID="trigger-invalid-start" title="Inv Start" onPress={() => props.onStartRoomChange({ buildingId: 'INVALID', floorId: '8', roomId: '999' })} />
-        <Button testID="trigger-invalid-dest" title="Inv Dest" onPress={() => props.onDestinationRoomChange({ buildingId: 'INVALID', floorId: '8', roomId: '999' })} />
+        <Button testID="trigger-start-room" title="Start" onPress={() => props.onStartRoomChange({ buildingId: 'mock-building-id', floor: '8', room: '820' })} />
+        <Button testID="trigger-dest-room" title="Dest" onPress={() => props.onDestinationRoomChange({ buildingId: 'mock-building-id', floor: '8', room: '820' })} />
+        <Button testID="trigger-start-no-address" title="Start No Addr" onPress={() => props.onStartRoomChange({ buildingId: 'mock-no-address', floor: '1', room: '101' })} />
+        <Button testID="trigger-dest-no-address" title="Dest No Addr" onPress={() => props.onDestinationRoomChange({ buildingId: 'mock-no-address', floor: '1', room: '101' })} />
+        <Button testID="trigger-invalid-start" title="Inv Start" onPress={() => props.onStartRoomChange({ buildingId: 'INVALID', floor: '8', room: '999' })} />
+        <Button testID="trigger-invalid-dest" title="Inv Dest" onPress={() => props.onDestinationRoomChange({ buildingId: 'INVALID', floor: '8', room: '999' })} />
       </View>
     );
   };
@@ -1346,6 +1354,12 @@ describe('MapScreen Shuttle Coverage', () => {
     fireEvent.press(getByTestId('set-destination-terminal'));
 
     await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
+    await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
     });
 
@@ -2093,13 +2107,13 @@ describe('Outdoor POI Functionality', () => {
       coords: { latitude: 45.497, longitude: -73.579 },
     });
 
-    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    const { getByTestId, getByText } = render(<MapScreen />);
 
     await waitFor(() => {
       expect(getByTestId('nearest-poi-banner')).toBeTruthy();
     });
 
-    fireEvent.press(getByTestId('nearest-poi-banner'));
+    fireEvent.press(getByText('Nearest POI'));
 
     await waitFor(() => {
       expect(getByTestId('poi-info-panel')).toBeTruthy();

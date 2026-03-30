@@ -40,7 +40,7 @@ import { createPlaceFromUserLocation, createPlaceFromBuilding, createPlaceFromPO
 
 import { useNavigationState } from '../hooks/useNavigationState';
 import { useRoute } from '@react-navigation/native';
-import type { ClassEvent } from '../types/calendar';
+import type { ClassEvent, NextClassRouteParam } from '../types/calendar';
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   DRIVING: 'driving',
@@ -83,7 +83,7 @@ export default function MapScreen() {
   const [showRoutePreview, setShowRoutePreview] = useState(false);
   const { settings } = useAppSettings();
   const route = useRoute<any>();
-  const nextClassFromParams = route.params?.nextClass as ClassEvent | undefined;
+  const nextClassFromParams = route.params?.nextClass as NextClassRouteParam | undefined;
   const startFromCurrentLocation = route.params?.startFromCurrentLocation as boolean | undefined;
   
   // POI state
@@ -518,7 +518,7 @@ export default function MapScreen() {
     return trimmed.length > 0 ? trimmed.charAt(0) : '';
   }, []);
 
-  const findBuildingForClassEvent = useCallback((classEvent: ClassEvent) => {
+  const findBuildingForClassEvent = useCallback((classEvent: NextClassRouteParam) => {
     const raw = classEvent.building?.trim() || classEvent.location?.trim();
     if (!raw) return undefined;
 
@@ -538,7 +538,7 @@ export default function MapScreen() {
   }, []);
 
 
-const handleDirectionsToNextClass = useCallback((nextClass: ClassEvent) => {
+const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam) => {
   if (!userLocation) {
     Alert.alert('Location needed', 'Please enable location to get directions to your next class.');
     return;

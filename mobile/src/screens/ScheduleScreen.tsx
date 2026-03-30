@@ -21,6 +21,7 @@ import NextClassCard from '../components/GoogleCalendar/NextClassCard';
 import WeekDayHeader from '../components/GoogleCalendar/WeekDayHeader';
 import TimeColumn from '../components/GoogleCalendar/TimeColumn';
 import DayColumn from '../components/GoogleCalendar/DayColumn';
+import type { NextClassRouteParam } from '../types/calendar';
 
 const ScheduleScreen: React.FC = () => {
   // Compute once per mount so fake timers in tests control the dates.
@@ -78,18 +79,20 @@ const ScheduleScreen: React.FC = () => {
   <NextClassCard
     nextClass={nextClass}
     onDirectionsPress={(selectedClass) => {
+      const nextClassParam: NextClassRouteParam = {
+        id: selectedClass.id,
+        title: selectedClass.title,
+        location: selectedClass.location,
+        building: selectedClass.building,
+        room: selectedClass.room,
+        startTime: selectedClass.startTime.toISOString(),
+        endTime: selectedClass.endTime.toISOString(),
+        dayOfWeek: selectedClass.dayOfWeek,
+        color: selectedClass.color,
+      };
+
       navigation.navigate('Map', {
-        nextClass: {
-          id: selectedClass.id,
-          title: selectedClass.title,
-          location: selectedClass.location,
-          building: selectedClass.building,
-          room: selectedClass.room,
-          startTime: selectedClass.startTime.toISOString(),
-          endTime: selectedClass.endTime.toISOString(),
-          dayOfWeek: selectedClass.dayOfWeek,
-          color: selectedClass.color,
-        },
+        nextClass: nextClassParam,
         startFromCurrentLocation: true,
       });
     }}

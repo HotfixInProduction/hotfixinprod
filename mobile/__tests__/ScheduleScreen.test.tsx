@@ -5,6 +5,7 @@ import ScheduleScreen from '../src/screens/ScheduleScreen';
 const mockSelectCalendar = jest.fn();
 const mockConnect = jest.fn();
 const mockDisconnect = jest.fn();
+const mockNavigate = jest.fn();
 
 const mockCalendars = [
   { id: 'primary', summary: 'My Calendar', backgroundColor: '#4A90E2', primary: true },
@@ -51,6 +52,12 @@ jest.mock('@expo/vector-icons', () => {
     MaterialIcons: (props: any) => <Text {...props}>{props.name}</Text>,
   };
 });
+
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    navigate: mockNavigate,
+  }),
+}));
 
 describe('ScheduleScreen', () => {
   beforeEach(() => {
@@ -147,6 +154,30 @@ describe('ScheduleScreen', () => {
 
       const icons = UNSAFE_getAllByType(MaterialIcons);
       expect(icons.some((icon: any) => icon.props.name === 'directions')).toBe(true);
+    });
+
+    it('navigates to Map with serialized nextClass data when directions is pressed', () => {
+      const { getByText } = render(<ScheduleScreen />);
+
+      fireEvent.press(getByText('directions'));
+
+      expect(mockNavigate).toHaveBeenCalledWith(
+        'Map',
+        expect.objectContaining({
+          nextClass: expect.objectContaining({
+            id: 'event-1',
+            title: 'Test Class',
+            location: 'Hall 101',
+            building: 'Hall',
+            room: '101',
+            dayOfWeek: 1,
+            color: '#4A90E2',
+            startTime: expect.any(String),
+            endTime: expect.any(String),
+          }),
+          startFromCurrentLocation: true,
+        })
+      );
     });
   });
 

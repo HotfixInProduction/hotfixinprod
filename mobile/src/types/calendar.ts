@@ -50,3 +50,15 @@ export interface GoogleCalendarState {
   calendars: GoogleCalendarListEntry[];
   selectedCalendarId: string;
 }
+
+export interface NextClassRouteParam {
+  id: string;
+  title: string;
+  location: string;
+  building: string;
+  room: string;
+  startTime: string;
+  endTime: string;
+  dayOfWeek: number;
+  color: string;
+}
