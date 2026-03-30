@@ -39,6 +39,8 @@ import MapViewDirections from 'react-native-maps-directions';
 import { createPlaceFromUserLocation, createPlaceFromBuilding, createPlaceFromPOI } from '../utils/placeUtils';
 
 import { useNavigationState } from '../hooks/useNavigationState';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import type { NextClassRouteParam } from '../types/calendar';
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   DRIVING: 'driving',
@@ -80,6 +82,10 @@ export default function MapScreen() {
   const [enableRoomSelection, setEnableRoomSelection] = useState(false);
   const [showRoutePreview, setShowRoutePreview] = useState(false);
   const { settings } = useAppSettings();
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
+  const nextClassFromParams = route.params?.nextClass as NextClassRouteParam | undefined;
+  const startFromCurrentLocation = route.params?.startFromCurrentLocation as boolean | undefined;
   
   // POI state
   const {
@@ -130,13 +136,16 @@ export default function MapScreen() {
     return buildings.find(b => b.id === buildingId);
   }, []);
 
-  const isStartComplete = enableRoomSelection
-      ? !!start && !!startRoomSelection?.buildingId && !!startRoomSelection?.floor && !!startRoomSelection?.room
-      : !!start;
+  const isStartComplete = !!start;
 
-    const isDestinationComplete = enableRoomSelection
-      ? !!destination && !!destinationRoomSelection?.buildingId && !!destinationRoomSelection?.floor && !!destinationRoomSelection?.room
-      : !!destination;
+  const hasDestinationRoomSelection =
+    !!destinationRoomSelection?.buildingId &&
+    !!destinationRoomSelection?.floor &&
+    !!destinationRoomSelection?.room;
+
+  const isDestinationComplete = enableRoomSelection
+    ? !!destination && hasDestinationRoomSelection
+    : !!destination;
 
   // Sync room selections to start/destination places for cross-building navigation
   useEffect(() => {
@@ -381,7 +390,7 @@ export default function MapScreen() {
     };
     fetchDirections();
   }, [start, destination, googleMapsApiKey, setInstructions, transportMode]);
-  
+
 
   const handleCloseBuilding = () => {
     Animated.timing(buildingInfoSlideAnim, {
@@ -507,6 +516,107 @@ export default function MapScreen() {
     return 'none';
   })();
   const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions' || activeModal === 'navigation';
+
+  const getFloorFromRoom = useCallback((room: string): string => {
+    const trimmed = room.trim();
+    return trimmed.length > 0 ? trimmed.charAt(0) : '';
+  }, []);
+
+  const findBuildingForClassEvent = useCallback((classEvent: NextClassRouteParam) => {
+    const raw = classEvent.building?.trim() || classEvent.location?.trim();
+    if (!raw) return undefined;
+
+    const normalized = raw.toLowerCase();
+
+    return buildings.find((b) => {
+      const id = (b.id ?? '').trim().toLowerCase();
+      const label = (b.label ?? '').trim().toLowerCase();
+
+      return (
+        id === normalized ||
+        label === normalized ||
+        normalized.startsWith(`${label}-`) ||
+        normalized.startsWith(`${id.toLowerCase()} `)
+      );
+    });
+  }, []);
+
+
+const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam) => {
+  if (!userLocation) {
+    Alert.alert('Location needed', 'Please enable location to get directions to your next class.');
+    return;
+  }
+
+  const building = findBuildingForClassEvent(nextClass);
+
+  if (!building) {
+    Alert.alert(
+      'Building not found',
+      `Could not match ${nextClass.building ?? nextClass.location ?? 'this class location'} to a campus building.`
+    );
+    return;
+  }
+
+  const floor = getFloorFromRoom(nextClass.room);
+
+  console.log('Next class room routing:', {
+    buildingId: building.id,
+    floor,
+    room: nextClass.room,
+  });
+
+  setInstructions([]);
+  setRouteInfo(null);
+  setDirectionsGoogle(null);
+  setShowInstructions(false);
+  setShowShuttleSchedule(false);
+
+  setEnableRoomSelection(true);
+
+  setStart(createPlaceFromUserLocation(userLocation));
+  setStartRoomSelection(null);
+
+  setDestination(createPlaceFromBuilding(building));
+
+  const hasFloorPlanForFloor =
+    !!building.floorPlans &&
+    Object.hasOwn(building.floorPlans, floor);
+
+  if (floor && nextClass.room && hasFloorPlanForFloor) {
+    setDestinationRoomSelection({
+      buildingId: building.id,
+      floor,
+      room: nextClass.room,
+    });
+  } else {
+    setDestinationRoomSelection(null);
+  }
+
+  setSelectedBuilding(null);
+  setShowFloorPlan(false);
+
+  setBuildingSelectorVisible(true);
+
+  setShowRoutePreview(false);
+}, [userLocation, findBuildingForClassEvent, getFloorFromRoom]);
+
+    useEffect(() => {
+      if (!nextClassFromParams || !startFromCurrentLocation || !userLocation) return;
+
+      handleDirectionsToNextClass(nextClassFromParams);
+
+      navigation.setParams({
+        nextClass: undefined,
+        startFromCurrentLocation: undefined,
+      });
+    }, [
+      nextClassFromParams,
+      startFromCurrentLocation,
+      userLocation,
+      handleDirectionsToNextClass,
+      navigation,
+    ]);
 
   return (
     <View style={styles.container}>
@@ -655,15 +765,20 @@ export default function MapScreen() {
         </View>
 
         {/* Nearest POI Banner */}
-        {settings?.showNearestPOIBanner !== false && (
-          <NearestPOIBanner
-            poi={nearestPOI}
-            onPress={() => {
-              if (nearestPOI) {
-                handlePOISelect(nearestPOI);
-              }
-            }}
-          />
+        {settings?.showNearestPOIBanner !== false &&
+          !buildingSelectorVisible &&
+          !showRoutePreview &&
+          !showCompactRouteHeader &&
+          !start &&
+          !destination && (
+            <NearestPOIBanner
+              poi={nearestPOI}
+              onPress={() => {
+                if (nearestPOI) {
+                  handlePOISelect(nearestPOI);
+                }
+              }}
+            />
         )}
 
         {!showCompactRouteHeader && (

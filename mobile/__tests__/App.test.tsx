@@ -17,7 +17,20 @@ jest.mock('../src/components/BuildingPolygon', () => require('./utils/testUtils'
 jest.mock('react-native-config', () => ({ GOOGLE_MAPS_API_KEY: 'mock-google-maps-key', }));
 
 // Mock React Navigation
-jest.mock('@react-navigation/native', () => require('./utils/testUtils').createNavigationMock());
+const mockNavigate = jest.fn();
+const mockUseRoute = jest.fn(() => ({
+  params: {},
+}));
+jest.mock('@react-navigation/native', () => {
+  const navigationMock = require('./utils/testUtils').createNavigationMock();
+  return {
+    ...navigationMock,
+    useNavigation: () => ({
+      navigate: mockNavigate,
+    }),
+    useRoute: () => mockUseRoute(),
+  };
+});
 jest.mock('@react-navigation/bottom-tabs', () => require('./utils/testUtils').createBottomTabsMock());
 
 // Mock other components used in MapScreen to avoid deep rendering issues if needed
