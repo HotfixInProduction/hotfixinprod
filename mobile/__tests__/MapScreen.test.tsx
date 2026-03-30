@@ -556,7 +556,7 @@ describe('MapScreen', () => {
           },
         });
 
-        const { getByTestId } = render(<MapScreen />);
+        const { getByTestId, queryByTestId } = render(<MapScreen />);
 
         await waitFor(() => {
           expect(getByTestId('start-marker')).toBeTruthy();
