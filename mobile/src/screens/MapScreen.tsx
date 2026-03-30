@@ -135,13 +135,23 @@ export default function MapScreen() {
     return buildings.find(b => b.id === buildingId);
   }, []);
 
-  const isStartComplete = enableRoomSelection
-      ? !!start && !!startRoomSelection?.buildingId && !!startRoomSelection?.floor && !!startRoomSelection?.room
-      : !!start;
+  const hasStartRoomSelection =
+    !!startRoomSelection?.buildingId &&
+    !!startRoomSelection?.floor &&
+    !!startRoomSelection?.room;
 
-    const isDestinationComplete = enableRoomSelection
-      ? !!destination && !!destinationRoomSelection?.buildingId && !!destinationRoomSelection?.floor && !!destinationRoomSelection?.room
-      : !!destination;
+  const hasDestinationRoomSelection =
+    !!destinationRoomSelection?.buildingId &&
+    !!destinationRoomSelection?.floor &&
+    !!destinationRoomSelection?.room;
+
+  const isStartComplete = enableRoomSelection
+    ? !!start
+    : !!start;
+
+  const isDestinationComplete = enableRoomSelection
+    ? !!destination && hasDestinationRoomSelection
+    : !!destination;
 
   // Sync room selections to start/destination places for cross-building navigation
   useEffect(() => {
@@ -568,7 +578,7 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
   setShowInstructions(false);
   setShowShuttleSchedule(false);
 
-  setEnableRoomSelection(false);
+  setEnableRoomSelection(true);
 
   setStart(createPlaceFromUserLocation(userLocation));
   setStartRoomSelection(null);

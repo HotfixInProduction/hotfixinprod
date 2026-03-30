@@ -564,7 +564,7 @@ describe('MapScreen', () => {
         });
 
         await waitFor(() => {
-          expect(getByTestId('view-directions-button')).toBeTruthy();
+          expect(queryByTestId('view-directions-button')).toBeNull();
         });
       });
 
