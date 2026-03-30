@@ -39,7 +39,7 @@ import MapViewDirections from 'react-native-maps-directions';
 import { createPlaceFromUserLocation, createPlaceFromBuilding, createPlaceFromPOI } from '../utils/placeUtils';
 
 import { useNavigationState } from '../hooks/useNavigationState';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NextClassRouteParam } from '../types/calendar';
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
@@ -83,6 +83,7 @@ export default function MapScreen() {
   const [showRoutePreview, setShowRoutePreview] = useState(false);
   const { settings } = useAppSettings();
   const route = useRoute<any>();
+  const navigation = useNavigation<any>();
   const nextClassFromParams = route.params?.nextClass as NextClassRouteParam | undefined;
   const startFromCurrentLocation = route.params?.startFromCurrentLocation as boolean | undefined;
   
@@ -604,11 +605,17 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
       if (!nextClassFromParams || !startFromCurrentLocation || !userLocation) return;
 
       handleDirectionsToNextClass(nextClassFromParams);
+
+      navigation.setParams({
+        nextClass: undefined,
+        startFromCurrentLocation: undefined,
+      });
     }, [
       nextClassFromParams,
       startFromCurrentLocation,
       userLocation,
       handleDirectionsToNextClass,
+      navigation,
     ]);
 
   return (

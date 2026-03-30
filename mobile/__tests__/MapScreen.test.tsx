@@ -40,7 +40,7 @@ const mockUseAppSettingsReturn = {
 const mockUseRoute = jest.fn(() => ({
   params: {},
 }));
-
+const mockSetParams = jest.fn();
 jest.mock('../src/hooks/useAppSettings', () => ({
   useAppSettings: jest.fn(() => mockUseAppSettingsReturn),
 }));
@@ -174,8 +174,13 @@ jest.mock('../src/data/outdoorPOI', () => ({
     }
   ]
 }));
+
+
 jest.mock('@react-navigation/native', () => ({
   useRoute: () => mockUseRoute(),
+  useNavigation: () => ({
+    setParams: mockSetParams,
+  }),
 }));
 jest.mock('../src/components/FloorPlanViewer', () => {
   const React = require('react');
@@ -224,6 +229,7 @@ setupAppStateMock();
 describe('MapScreen', () => {
   beforeEach(() => {
     resetAllMocks();
+    mockSetParams.mockClear();
     (Linking as any).openSettings = mockOpenSettings;
   });
 
