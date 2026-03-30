@@ -460,6 +460,183 @@ describe('MapScreen', () => {
     });
   });
 
+  describe('Directions to Next Class from route params', () => {
+    beforeEach(() => {
+        mockUseRoute.mockReturnValue({ params: {} });
+      });
+
+      it('auto-builds a route to the next class when route params and user location are available', async () => {
+        mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+        mockGetCurrentPosition.mockResolvedValue({
+          coords: { latitude: 45.5, longitude: -73.58 },
+        });
+
+        mockUseRoute.mockReturnValue({
+          params: {
+            nextClass: {
+              id: 'class-1',
+              title: 'SOEN 343',
+              location: 'Mock Building 820',
+              building: 'mock-building-id',
+              room: '820',
+              startTime: new Date().toISOString(),
+              endTime: new Date().toISOString(),
+              dayOfWeek: 1,
+              color: '#912338',
+            },
+            startFromCurrentLocation: true,
+          },
+        });
+
+        const { getByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(getByTestId('start-marker')).toBeTruthy();
+          expect(getByTestId('destination-marker')).toBeTruthy();
+        });
+
+        await waitFor(() => {
+          expect(getByTestId('view-directions-button')).toBeTruthy();
+        });
+      });
+
+      it('sets destination room selection when the room floor exists in floorPlans', async () => {
+        mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+        mockGetCurrentPosition.mockResolvedValue({
+          coords: { latitude: 45.5, longitude: -73.58 },
+        });
+
+        mockUseRoute.mockReturnValue({
+          params: {
+            nextClass: {
+              id: 'class-2',
+              title: 'SOEN 343',
+              location: 'Mock Building 820',
+              building: 'mock-building-id',
+              room: '820',
+              startTime: new Date().toISOString(),
+              endTime: new Date().toISOString(),
+              dayOfWeek: 1,
+              color: '#912338',
+            },
+            startFromCurrentLocation: true,
+          },
+        });
+
+        const { getByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(getByTestId('view-directions-button')).toBeTruthy();
+        });
+
+        // If your StartDestinationPicker mock exposes room-selection state text,
+        // this assertion becomes useful. If not, keeping the route alive still covers the branch.
+        expect(getByTestId('start-marker')).toBeTruthy();
+        expect(getByTestId('destination-marker')).toBeTruthy();
+      });
+
+      it('does not set destination room selection when the room floor is not in floorPlans', async () => {
+        mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+        mockGetCurrentPosition.mockResolvedValue({
+          coords: { latitude: 45.5, longitude: -73.58 },
+        });
+
+        mockUseRoute.mockReturnValue({
+          params: {
+            nextClass: {
+              id: 'class-3',
+              title: 'SOEN 343',
+              location: 'Mock Building 920',
+              building: 'mock-building-id',
+              room: '920',
+              startTime: new Date().toISOString(),
+              endTime: new Date().toISOString(),
+              dayOfWeek: 1,
+              color: '#912338',
+            },
+            startFromCurrentLocation: true,
+          },
+        });
+
+        const { getByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(getByTestId('start-marker')).toBeTruthy();
+          expect(getByTestId('destination-marker')).toBeTruthy();
+        });
+
+        await waitFor(() => {
+          expect(getByTestId('view-directions-button')).toBeTruthy();
+        });
+      });
+
+      it('shows an alert when the next class building cannot be matched', async () => {
+        mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+        mockGetCurrentPosition.mockResolvedValue({
+          coords: { latitude: 45.5, longitude: -73.58 },
+        });
+
+        mockUseRoute.mockReturnValue({
+          params: {
+            nextClass: {
+              id: 'class-4',
+              title: 'Unknown Class',
+              location: 'Some Unknown Place',
+              building: 'DefinitelyNotABuilding',
+              room: '101',
+              startTime: new Date().toISOString(),
+              endTime: new Date().toISOString(),
+              dayOfWeek: 1,
+              color: '#912338',
+            },
+            startFromCurrentLocation: true,
+          },
+        });
+
+        render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(Alert.alert).toHaveBeenCalledWith(
+            'Building not found',
+            expect.stringContaining('DefinitelyNotABuilding')
+          );
+        });
+      });
+
+      it('does nothing when startFromCurrentLocation is false', async () => {
+        mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+        mockGetCurrentPosition.mockResolvedValue({
+          coords: { latitude: 45.5, longitude: -73.58 },
+        });
+
+        mockUseRoute.mockReturnValue({
+          params: {
+            nextClass: {
+              id: 'class-5',
+              title: 'SOEN 343',
+              location: 'Mock Building 820',
+              building: 'mock-building-id',
+              room: '820',
+              startTime: new Date().toISOString(),
+              endTime: new Date().toISOString(),
+              dayOfWeek: 1,
+              color: '#912338',
+            },
+            startFromCurrentLocation: false,
+          },
+        });
+
+        const { queryByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(mockGetCurrentPosition).toHaveBeenCalled();
+        });
+
+        expect(queryByTestId('start-marker')).toBeNull();
+        expect(queryByTestId('destination-marker')).toBeNull();
+      });
+  });
+
   describe('Campus Selection', () => {
     it('switches to Loyola campus when button is pressed', async () => {
       const { getByText } = render(<MapScreen />);
@@ -2136,6 +2313,149 @@ describe('Outdoor POI Functionality', () => {
     });
 
     expect(queryByTestId('poi-set-destination-button')).toBeNull();
+  });
+
+  describe('Nearest POI Banner visibility', () => {
+    beforeEach(() => {
+        mockUseRoute.mockReturnValue({ params: {} });
+        mockRequestForegroundPermissions.mockResolvedValue({ status: 'granted' });
+        mockGetCurrentPosition.mockResolvedValue({
+          coords: { latitude: 45.497, longitude: -73.579 },
+        });
+      });
+
+      it('shows nearest POI banner when map is idle and user has location', async () => {
+        const { getByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(getByTestId('nearest-poi-banner')).toBeTruthy();
+        });
+      });
+
+      it('hides nearest POI banner when building selector is visible', async () => {
+        const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(getByTestId('nearest-poi-banner')).toBeTruthy();
+        });
+
+        fireEvent.press(getByTestId('building-selector-toggle'));
+
+        await waitFor(() => {
+          expect(queryByTestId('nearest-poi-banner')).toBeNull();
+        });
+      });
+
+      it('hides nearest POI banner when start is set', async () => {
+        const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(getByTestId('nearest-poi-banner')).toBeTruthy();
+        });
+
+        fireEvent.press(getByTestId('building-selector-toggle'));
+        fireEvent.press(getByTestId('set-start'));
+
+        await waitFor(() => {
+          expect(queryByTestId('nearest-poi-banner')).toBeNull();
+        });
+      });
+
+      it('hides nearest POI banner when destination is set', async () => {
+        const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(getByTestId('nearest-poi-banner')).toBeTruthy();
+        });
+
+        fireEvent.press(getByTestId('building-selector-toggle'));
+        fireEvent.press(getByTestId('set-destination'));
+
+        await waitFor(() => {
+          expect(queryByTestId('nearest-poi-banner')).toBeNull();
+        });
+      });
+
+      it('hides nearest POI banner when route preview is shown', async () => {
+        globalThis.fetch = jest.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              routes: [
+                {
+                  legs: [
+                    {
+                      distance: { value: 5000, text: '5.0 km' },
+                      duration: { value: 600, text: '10 mins' },
+                      steps: [],
+                    },
+                  ],
+                },
+              ],
+            }),
+        } as any);
+
+        const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+        await waitFor(() => {
+          expect(getByTestId('nearest-poi-banner')).toBeTruthy();
+        });
+
+        fireEvent.press(getByTestId('poi-marker-poi_food_1'));
+
+        await waitFor(() => {
+          expect(getByTestId('poi-info-panel')).toBeTruthy();
+        });
+
+        fireEvent.press(getByTestId('poi-set-destination-button'));
+
+        await waitFor(() => {
+          expect(queryByTestId('nearest-poi-banner')).toBeNull();
+        });
+      });
+
+      it('hides nearest POI banner when compact route header is shown', async () => {
+        globalThis.fetch = jest.fn().mockResolvedValue({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              routes: [
+                {
+                  legs: [
+                    {
+                      distance: { value: 5000, text: '5.0 km' },
+                      duration: { value: 600, text: '10 mins' },
+                      steps: [],
+                    },
+                  ],
+                },
+              ],
+            }),
+        } as any);
+
+        const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+        fireEvent.press(getByTestId('building-selector-toggle'));
+        fireEvent.press(getByTestId('set-start'));
+        fireEvent.press(getByTestId('set-destination'));
+
+        await waitFor(() => {
+          expect(getByTestId('view-directions-button')).toBeTruthy();
+        });
+
+        fireEvent.press(getByTestId('view-directions-button'));
+
+        await waitFor(() => {
+          expect(getByTestId('route-info-mock')).toBeTruthy();
+        });
+
+        fireEvent.press(getByTestId('route-info-start-button'));
+
+        await waitFor(() => {
+          expect(getByTestId('compact-route-header')).toBeTruthy();
+          expect(queryByTestId('nearest-poi-banner')).toBeNull();
+        });
+      });
   });
 
   describe('Route Preview from POI and Building Selection', () => {

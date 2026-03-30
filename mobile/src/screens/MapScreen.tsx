@@ -40,7 +40,7 @@ import { createPlaceFromUserLocation, createPlaceFromBuilding, createPlaceFromPO
 
 import { useNavigationState } from '../hooks/useNavigationState';
 import { useRoute } from '@react-navigation/native';
-import type { ClassEvent, NextClassRouteParam } from '../types/calendar';
+import type { NextClassRouteParam } from '../types/calendar';
 
 const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   DRIVING: 'driving',
