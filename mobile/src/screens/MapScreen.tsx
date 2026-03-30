@@ -135,19 +135,12 @@ export default function MapScreen() {
     return buildings.find(b => b.id === buildingId);
   }, []);
 
-  const hasStartRoomSelection =
-    !!startRoomSelection?.buildingId &&
-    !!startRoomSelection?.floor &&
-    !!startRoomSelection?.room;
+  const isStartComplete = !!start;
 
   const hasDestinationRoomSelection =
     !!destinationRoomSelection?.buildingId &&
     !!destinationRoomSelection?.floor &&
     !!destinationRoomSelection?.room;
-
-  const isStartComplete = enableRoomSelection
-    ? !!start
-    : !!start;
 
   const isDestinationComplete = enableRoomSelection
     ? !!destination && hasDestinationRoomSelection
