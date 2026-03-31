@@ -1346,6 +1346,12 @@ describe('MapScreen Shuttle Coverage', () => {
     fireEvent.press(getByTestId('set-destination-terminal'));
 
     await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
+    await waitFor(() => {
       expect(getByTestId('route-info-mock')).toBeTruthy();
     });
 
