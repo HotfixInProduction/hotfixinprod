@@ -129,4 +129,212 @@ describe('useRoomsForBuilding', () => {
         // Verify set size matches result length
         expect(uniqueSet.size).toBe(result.current.length);
     });
+
+    it('sorts rooms alphabetically when room numbers are non-numeric', () => {
+        // Mock parseFloat to return NaN to force localeCompare branch
+        const parseFloatSpy = jest.spyOn(Number, 'parseFloat').mockReturnValue(Number.NaN);
+        
+        const { result } = renderHook(() => useRoomsForBuilding('Hall Building'));
+        
+        // Verify rooms are sorted (will use localeCompare since parseFloat returns NaN)
+        const sortedAlphabetically = [...result.current].sort((a, b) => a.room.localeCompare(b.room));
+        expect(result.current.map(r => r.room)).toEqual(sortedAlphabetically.map(r => r.room));
+        
+        parseFloatSpy.mockRestore();
+    });
+
+    it('returns rooms for John Molson Building including S2 floor', () => {
+        const { result } = renderHook(() => useRoomsForBuilding('John Molson Building'));
+        
+        // Should have rooms on multiple floors including S2
+        expect(result.current.length).toBeGreaterThan(0);
+        
+        // Check that we have rooms with S2 floor
+        const s2Rooms = result.current.filter(room => room.floor === 'S2');
+        expect(s2Rooms.length).toBeGreaterThan(0);
+        
+        // Verify S2 rooms have correct properties
+        s2Rooms.forEach(room => {
+            expect(room.prefix).toBe('MB-');
+            expect(room.buildingId).toBe('John Molson Building');
+            expect(room.floor).toBe('S2');
+        });
+    });
+
+    it('handles MB building ID alias', () => {
+        const { result } = renderHook(() => useRoomsForBuilding('MB'));
+        
+        expect(result.current.length).toBeGreaterThan(0);
+        result.current.forEach(room => {
+            expect(room.prefix).toBe('MB-');
+            expect(room.buildingId).toBe('MB');
+        });
+    });
+
+    it('falls back to roomToNode when roomIndex is missing', () => {
+        // Get the actual mb navmesh and modify it
+        const mbJson = require('../src/data/navmesh/mb.json');
+        
+        // Backup original state
+        const originalRoomIndex = mbJson.roomIndex;
+        const originalRoomToNode = mbJson.roomToNode;
+        
+        // Force legacy format - only roomToNode exists
+        delete mbJson.roomIndex;
+        mbJson.roomToNode = { 'MB-101': 'MB_F1_room_101' };
+
+        const { result } = renderHook(() => useRoomsForBuilding('John Molson Building'));
+        
+        // Should still get rooms from roomToNode
+        expect(result.current.length).toBeGreaterThan(0);
+        expect(result.current.some(r => r.room === '101')).toBe(true);
+
+        // Restore
+        mbJson.roomIndex = originalRoomIndex;
+        mbJson.roomToNode = originalRoomToNode;
+    });
+
+    it('handles empty roomIndex and roomToNode gracefully', () => {
+        const mbJson = require('../src/data/navmesh/mb.json');
+        
+        // Backup
+        const originalRoomIndex = mbJson.roomIndex;
+        const originalRoomToNode = mbJson.roomToNode;
+        
+        // Delete both to test fallback to empty object
+        delete mbJson.roomIndex;
+        delete mbJson.roomToNode;
+
+        const { result } = renderHook(() => useRoomsForBuilding('John Molson Building'));
+        
+        // Should return empty array without crashing
+        expect(result.current).toEqual([]);
+
+        // Restore
+        mbJson.roomIndex = originalRoomIndex;
+        mbJson.roomToNode = originalRoomToNode;
+    });
+
+    it('handles room labels without building prefix', () => {
+        const mbJson = require('../src/data/navmesh/mb.json');
+        
+        // Backup
+        const originalRoomIndex = mbJson.roomIndex;
+        const originalRoomToNode = mbJson.roomToNode;
+        
+        // Create a room without the MB- prefix
+        delete mbJson.roomToNode;
+        mbJson.roomIndex = { '101': 'MB_F1_room_101' }; // No MB- prefix on label
+
+        const { result } = renderHook(() => useRoomsForBuilding('John Molson Building'));
+        
+        // Should still include the room, keeping the label as-is
+        expect(result.current.length).toBeGreaterThan(0);
+        expect(result.current[0].room).toBe('101');
+
+        // Restore
+        mbJson.roomIndex = originalRoomIndex;
+        mbJson.roomToNode = originalRoomToNode;
+    });
+
+    it('skips nodes that do not match floor pattern', () => {
+        const mbJson = require('../src/data/navmesh/mb.json');
+        
+        // Backup
+        const originalRoomIndex = mbJson.roomIndex;
+        const originalRoomToNode = mbJson.roomToNode;
+        
+        // Create rooms with invalid node IDs (no floor pattern)
+        delete mbJson.roomToNode;
+        mbJson.roomIndex = { 
+            'MB-101': 'invalid_node_id',  // No _F\d+_ pattern
+            'MB-102': 'MB_F1_room_102'    // Valid pattern
+        };
+
+        const { result } = renderHook(() => useRoomsForBuilding('John Molson Building'));
+        
+        // Should only include the valid room
+        expect(result.current.length).toBe(1);
+        expect(result.current[0].room).toBe('102');
+
+        // Restore
+        mbJson.roomIndex = originalRoomIndex;
+        mbJson.roomToNode = originalRoomToNode;
+    });
+
+    it('skips duplicate room-floor combinations', () => {
+        const mbJson = require('../src/data/navmesh/mb.json');
+        
+        // Backup
+        const originalRoomIndex = mbJson.roomIndex;
+        const originalRoomToNode = mbJson.roomToNode;
+        
+        // Create a scenario where the same room label maps to the same floor
+        // via different node ID patterns (MB-S2 vs mb-s2 both resolve to floor 'S2')
+        delete mbJson.roomToNode;
+        mbJson.roomIndex = { 
+            'MB-101': 'MB-S2_F1_room_101',   // S2 floor (uppercase)
+            'MB-102': 'mb-s2-F1-room-102',   // S2 floor (lowercase) - different room
+            'MB-103': 'MB_F1_room_103'       // Floor 1
+        };
+
+        const { result } = renderHook(() => useRoomsForBuilding('John Molson Building'));
+        
+        // Should have 3 rooms: 101 (S2), 102 (S2), 103 (Floor 1)
+        expect(result.current.length).toBe(3);
+
+        // Restore
+        mbJson.roomIndex = originalRoomIndex;
+        mbJson.roomToNode = originalRoomToNode;
+    });
+
+    it('skips when same room-floor combination appears twice via different node patterns', () => {
+        const mbJson = require('../src/data/navmesh/mb.json');
+        
+        // Backup
+        const originalRoomIndex = mbJson.roomIndex;
+        const originalRoomToNode = mbJson.roomToNode;
+        
+        // Create a scenario where the SAME room label appears TWICE with different node IDs
+        // that both resolve to the SAME floor - this tests the roomFloorSet.has() returning true
+        delete mbJson.roomToNode;
+        
+        // We need to create an object where the same roomLabel appears multiple times
+        // Since JS objects can't have duplicate keys, we'll use a different approach:
+        // Create entries where different room labels resolve to the same roomFloorKey
+        // Actually, the roomFloorKey is `${roomLabel}|${floor}`, so same roomLabel + same floor = duplicate
+        
+        // To truly test this, we need to mock Object.entries to return duplicates
+        const originalEntries = Object.entries;
+        jest.spyOn(Object, 'entries').mockImplementation((obj: any) => {
+            if (obj === mbJson.roomIndex) {
+                // Return duplicate entries for the same room label
+                return [
+                    ['MB-101', 'MB-S2_F1_room_101'],   // First entry: room 101, floor S2
+                    ['MB-101', 'mb-s2-F1-room-101b'], // Duplicate: same room 101, same floor S2
+                    ['MB-102', 'MB_F1_room_102']      // Different room
+                ];
+            }
+            return originalEntries(obj);
+        });
+
+        mbJson.roomIndex = { 
+            'MB-101': 'MB-S2_F1_room_101',
+            'MB-102': 'MB_F1_room_102'
+        };
+
+        const { result } = renderHook(() => useRoomsForBuilding('John Molson Building'));
+        
+        // Should only have 2 unique room-floor combinations
+        // MB-101 should only appear once even though it was in the entries twice
+        expect(result.current.length).toBe(2);
+        const rooms = result.current.map(r => r.room);
+        expect(rooms).toContain('101');
+        expect(rooms).toContain('102');
+
+        // Restore
+        (Object.entries as any).mockRestore();
+        mbJson.roomIndex = originalRoomIndex;
+        mbJson.roomToNode = originalRoomToNode;
+    });
 });

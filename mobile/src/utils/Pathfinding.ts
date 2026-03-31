@@ -168,7 +168,6 @@ export function getRoomNodeId(
     return result;
   }
   
-  console.log(`[getRoomNodeId] No prefix found for buildingId="${buildingId}"`);
   return null;
 }
 
