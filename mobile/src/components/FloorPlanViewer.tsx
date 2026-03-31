@@ -343,6 +343,29 @@ function NavigationIndicators({
     );
 }
 
+/**
+ * Get display floor from raw floor value
+ * Converts floor 0 to "S2" for MB building
+ */
+function getDisplayFloor(rawFloor: string, buildingId: string | undefined): string {
+    return rawFloor === '0' && buildingId === 'John Molson Building' ? 'S2' : rawFloor;
+}
+
+/**
+ * Convert display floor to numeric for navmesh lookup
+ * S2 maps to floor 0
+ */
+function getFloorNumber(displayFloor: string): number {
+    return displayFloor === 'S2' ? 0 : Number.parseInt(displayFloor, 10);
+}
+
+/**
+ * Get building label for cross-building room display
+ */
+function getBuildingLabel(selection: RoomSelection | null | undefined, currentBuildingId: string | undefined): string | null {
+    return selection && selection.buildingId !== currentBuildingId ? selection.buildingId : null;
+}
+
 export default function FloorPlanViewer({
     building,
     floorLevel,
@@ -408,12 +431,8 @@ export default function FloorPlanViewer({
     const effectiveDestRoom = destinationRoomSelection ? destinationRoomSelection.room : nextRoom;
     
     // Get building label for display when selection is from different building
-    const startRoomBuildingLabel = startRoomSelection && startRoomSelection.buildingId !== building?.id 
-        ? startRoomSelection.buildingId 
-        : null;
-    const destRoomBuildingLabel = destinationRoomSelection && destinationRoomSelection.buildingId !== building?.id 
-        ? destinationRoomSelection.buildingId 
-        : null;
+    const startRoomBuildingLabel = getBuildingLabel(startRoomSelection, building?.id);
+    const destRoomBuildingLabel = getBuildingLabel(destinationRoomSelection, building?.id);
 
     // Determine building IDs for cross-building navigation
     const startBuildingId = startRoomSelection?.buildingId ?? building?.id;
@@ -434,8 +453,7 @@ export default function FloorPlanViewer({
     
     // NAVIGATION OVERRIDES - use navigation step data when navigating
     const rawDisplayFloor = isNavigating ? activeNavigationStep.floor.toString() : currentFloor;
-    // Convert floor 0 to "S2" for MB building (S2 is stored as floor 0 in navmesh but "S2" in floorPlans)
-    const displayFloor = rawDisplayFloor === '0' && building?.id === 'John Molson Building' ? 'S2' : rawDisplayFloor;
+    const displayFloor = getDisplayFloor(rawDisplayFloor, building?.id);
     const activePath = isNavigating ? activeNavigationStep.path : standardPath;
     const displayRawSvgContent = isNavigating ? building?.floorPlans?.[displayFloor] : rawSvgContent;
     
@@ -443,8 +461,7 @@ export default function FloorPlanViewer({
     const pathFloors = usePathFloors(activePath);
     
     // Generate path string for the current floor only
-    // Map S2 to floor 0 for navmesh lookup (S2 is stored as floor 0 in navmesh)
-    const displayFloorNum = displayFloor === 'S2' ? 0 : Number.parseInt(displayFloor, 10);
+    const displayFloorNum = getFloorNumber(displayFloor);
     const pathString = useSvgPathForFloor(activePath, displayFloorNum);
 
     const svgWithPaths = useProcessedSvg(
@@ -463,7 +480,6 @@ export default function FloorPlanViewer({
     const isStartBuilding = building?.id === startBuildingId;
 
     // Calculate SVG scale factor
-    // SVG coordinate system is 1024x1024, displayed at (screenWidth - 40) x (screenWidth - 40)
     const displaySvgSize = screenWidth - 40;
     const originalSvgSize = 1024;
     const svgScale = displaySvgSize / originalSvgSize;

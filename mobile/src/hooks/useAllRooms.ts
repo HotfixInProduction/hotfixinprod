@@ -54,6 +54,44 @@ function compareRooms(a: RoomWithBuilding, b: RoomWithBuilding): number {
 }
 
 /**
+ * Extract floor from node ID
+ * Standard pattern: "Hall_F8_room_291" -> "8"
+ * MB-S2 pattern: "MB-S2_F1_..." -> "S2"
+ */
+function extractFloorFromNodeId(nodeId: string): string | null {
+  // Check for MB-S2 pattern first
+  if (nodeId.startsWith('MB-S2') || nodeId.startsWith('mb-s2')) {
+    return 'S2';
+  }
+  
+  const floorMatch = /_F(\d+)_/.exec(nodeId);
+  return floorMatch ? floorMatch[1] : null;
+}
+
+/**
+ * Create a room object with building metadata
+ */
+function createRoomEntry(
+  roomLabel: string,
+  floor: string,
+  config: BuildingConfig,
+  buildingId: string
+): RoomWithBuilding {
+  const cleanLabel =
+    config.prefix && roomLabel.startsWith(config.prefix)
+      ? roomLabel.substring(config.prefix.length)
+      : roomLabel;
+
+  return {
+    room: cleanLabel,
+    prefix: config.prefix,
+    buildingId,
+    floor,
+    displayLabel: `${config.prefix}${cleanLabel} (Floor ${floor})`,
+  };
+}
+
+/**
  * Get all rooms for a specific building across all floors
  */
 function getRoomsForBuildingFromNavMesh(buildingId: string): RoomWithBuilding[] {
@@ -67,46 +105,15 @@ function getRoomsForBuildingFromNavMesh(buildingId: string): RoomWithBuilding[] 
   const roomFloorSet = new Set<string>();
 
   for (const [roomLabel, nodeId] of Object.entries(roomIndex)) {
-    // Parse node ID to get floor number
-    // Standard pattern: "Hall_F8_room_291" -> 8
-    // MB-S2 pattern: "MB-S2_F1_..." -> S2 (floor 0 in navmesh, but displayed as "S2")
-    const floorRegex = /_F(\d+)_/;
-    const s2Regex = /MB-S2_F(\d+)_/;
+    const floor = extractFloorFromNodeId(nodeId);
     
-    let floor: string | null = null;
+    if (!floor) continue;
     
-    // Check for MB-S2 pattern first
-    if (nodeId.startsWith('MB-S2') || nodeId.startsWith('mb-s2')) {
-      // MB-S2 uses "S2" as floor identifier
-      floor = 'S2';
-    } else {
-      const floorMatch = floorRegex.exec(nodeId);
-      if (floorMatch) {
-        floor = floorMatch[1];
-      }
-    }
+    const roomFloorKey = `${roomLabel}|${floor}`;
+    if (roomFloorSet.has(roomFloorKey)) continue;
     
-    if (floor) {
-      const roomFloorKey = `${roomLabel}|${floor}`;
-
-      if (!roomFloorSet.has(roomFloorKey)) {
-        roomFloorSet.add(roomFloorKey);
-
-        // Remove building prefix from room label
-        const cleanLabel =
-          config.prefix && roomLabel.startsWith(config.prefix)
-            ? roomLabel.substring(config.prefix.length)
-            : roomLabel;
-
-        rooms.push({
-          room: cleanLabel,
-          prefix: config.prefix,
-          buildingId,
-          floor,
-          displayLabel: `${config.prefix}${cleanLabel} (Floor ${floor})`,
-        });
-      }
-    }
+    roomFloorSet.add(roomFloorKey);
+    rooms.push(createRoomEntry(roomLabel, floor, config, buildingId));
   }
 
   return rooms.sort(compareRooms);
