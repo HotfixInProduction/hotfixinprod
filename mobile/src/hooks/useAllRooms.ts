@@ -3,6 +3,7 @@ import hallNavMeshJson from '../data/navmesh/hall.json';
 import ccNavMeshJson from '../data/navmesh/cc.json';
 import veNavMeshJson from '../data/navmesh/ve.json';
 import vlNavMeshJson from '../data/navmesh/vl.json';
+import mbNavMeshJson from '../data/navmesh/mb.json';
 
 // NavMesh format with roomIndex (new) or roomToNode (legacy)
 type NavMesh = {
@@ -25,6 +26,8 @@ const buildingConfigs: Record<string, BuildingConfig> = {
   'VE': { navMesh: veNavMeshJson as NavMesh, prefix: 'VE-' },
   'Vanier Library Building': { navMesh: vlNavMeshJson as NavMesh, prefix: 'VL-' },
   'VL': { navMesh: vlNavMeshJson as NavMesh, prefix: 'VL-' },
+  'John Molson Building': { navMesh: mbNavMeshJson as NavMesh, prefix: 'MB-' },
+  'MB': { navMesh: mbNavMeshJson as NavMesh, prefix: 'MB-' },
 };
 
 export interface RoomWithBuilding {
@@ -64,11 +67,26 @@ function getRoomsForBuildingFromNavMesh(buildingId: string): RoomWithBuilding[] 
   const roomFloorSet = new Set<string>();
 
   for (const [roomLabel, nodeId] of Object.entries(roomIndex)) {
-    // Parse node ID to get floor number: "Hall_F8_room_291" -> 8
+    // Parse node ID to get floor number
+    // Standard pattern: "Hall_F8_room_291" -> 8
+    // MB-S2 pattern: "MB-S2_F1_..." -> S2 (floor 0 in navmesh, but displayed as "S2")
     const floorRegex = /_F(\d+)_/;
-    const floorMatch = floorRegex.exec(nodeId);
-    if (floorMatch) {
-      const floor = floorMatch[1];
+    const s2Regex = /MB-S2_F(\d+)_/;
+    
+    let floor: string | null = null;
+    
+    // Check for MB-S2 pattern first
+    if (nodeId.startsWith('MB-S2') || nodeId.startsWith('mb-s2')) {
+      // MB-S2 uses "S2" as floor identifier
+      floor = 'S2';
+    } else {
+      const floorMatch = floorRegex.exec(nodeId);
+      if (floorMatch) {
+        floor = floorMatch[1];
+      }
+    }
+    
+    if (floor) {
       const roomFloorKey = `${roomLabel}|${floor}`;
 
       if (!roomFloorSet.has(roomFloorKey)) {

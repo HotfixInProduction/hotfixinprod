@@ -433,7 +433,9 @@ export default function FloorPlanViewer({
     );
     
     // NAVIGATION OVERRIDES - use navigation step data when navigating
-    const displayFloor = isNavigating ? activeNavigationStep.floor.toString() : currentFloor;
+    const rawDisplayFloor = isNavigating ? activeNavigationStep.floor.toString() : currentFloor;
+    // Convert floor 0 to "S2" for MB building (S2 is stored as floor 0 in navmesh but "S2" in floorPlans)
+    const displayFloor = rawDisplayFloor === '0' && building?.id === 'John Molson Building' ? 'S2' : rawDisplayFloor;
     const activePath = isNavigating ? activeNavigationStep.path : standardPath;
     const displayRawSvgContent = isNavigating ? building?.floorPlans?.[displayFloor] : rawSvgContent;
     
@@ -441,7 +443,8 @@ export default function FloorPlanViewer({
     const pathFloors = usePathFloors(activePath);
     
     // Generate path string for the current floor only
-    const displayFloorNum = Number.parseInt(displayFloor, 10);
+    // Map S2 to floor 0 for navmesh lookup (S2 is stored as floor 0 in navmesh)
+    const displayFloorNum = displayFloor === 'S2' ? 0 : Number.parseInt(displayFloor, 10);
     const pathString = useSvgPathForFloor(activePath, displayFloorNum);
 
     const svgWithPaths = useProcessedSvg(
