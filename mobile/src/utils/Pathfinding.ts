@@ -62,8 +62,10 @@ const BUILDING_PREFIXES: Record<string, string> = {
   'Hall Building': 'H',
   'Central Building': 'CC',
   'Vanier Extension': 'VE',
+  'Vanier Library Building': 'VL',
   'John Molson Building': 'MB',
   'MB': 'MB',
+  'VL': 'VL',
 };
 
 /**
