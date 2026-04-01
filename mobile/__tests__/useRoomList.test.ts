@@ -29,6 +29,14 @@ jest.mock('../src/data/navmesh/vl.json', () => ({
   },
 }), { virtual: true });
 
+jest.mock('../src/data/navmesh/mb.json', () => ({
+  roomIndex: {
+    'MB-1.210': 'MB_F1_room_210',
+    'MB-S2.210': 'mb-s2-210',
+    'MB-S2.245': 'mb-s2-245',
+  },
+}), { virtual: true });
+
 import { useRoomList } from '../src/hooks/useRoomList';
 
 describe('useRoomList', () => {
@@ -346,6 +354,26 @@ describe('useRoomList', () => {
                 useRoomList('', 'VL', '1')
             );
             expect(result.current).toContain('101');
+        });
+
+        it('extracts S2 floor rooms from MB navmesh', () => {
+            // This test covers the S2 floor branch in extractRoomsFromNavMesh
+            const { result } = renderHook(() => 
+                useRoomList('', 'John Molson Building', 'S2')
+            );
+            
+            // Should return S2 rooms from the navmesh
+            expect(result.current.length).toBeGreaterThan(0);
+        });
+
+        it('extracts S2 floor rooms using floor "0" as alias', () => {
+            // Floor "0" should also match S2 rooms
+            const { result } = renderHook(() => 
+                useRoomList('', 'John Molson Building', '0')
+            );
+            
+            // Should return S2 rooms from the navmesh
+            expect(result.current.length).toBeGreaterThan(0);
         });
     });
 });

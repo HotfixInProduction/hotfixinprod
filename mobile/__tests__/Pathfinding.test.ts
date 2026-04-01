@@ -672,6 +672,19 @@ describe('getRoomNodeId edge cases', () => {
     const nodeId = getRoomNodeId('John Molson Building', 'S2', 'someroom');
     expect(nodeId).toBeNull();
   });
+
+  it('should return null for building in navMeshes but not in BUILDING_PREFIXES', () => {
+    // Vanier Library Building is in navMeshes but not in BUILDING_PREFIXES
+    // This tests the uncovered line: return null (when prefix is undefined)
+    const nodeId = getRoomNodeId('Vanier Library Building', '1', '101');
+    expect(nodeId).toBeNull();
+  });
+
+  it('should return null for VL alias not in BUILDING_PREFIXES', () => {
+    // VL is in navMeshes but not in BUILDING_PREFIXES
+    const nodeId = getRoomNodeId('VL', '1', '101');
+    expect(nodeId).toBeNull();
+  });
 });
 
 describe('generateLabelVariants via getRoomNodeId', () => {

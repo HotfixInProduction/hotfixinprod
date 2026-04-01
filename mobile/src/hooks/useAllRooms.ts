@@ -3,6 +3,7 @@ import hallNavMeshJson from '../data/navmesh/hall.json';
 import ccNavMeshJson from '../data/navmesh/cc.json';
 import veNavMeshJson from '../data/navmesh/ve.json';
 import vlNavMeshJson from '../data/navmesh/vl.json';
+import mbNavMeshJson from '../data/navmesh/mb.json';
 
 // NavMesh format with roomIndex (new) or roomToNode (legacy)
 type NavMesh = {
@@ -25,6 +26,8 @@ const buildingConfigs: Record<string, BuildingConfig> = {
   'VE': { navMesh: veNavMeshJson as NavMesh, prefix: 'VE-' },
   'Vanier Library Building': { navMesh: vlNavMeshJson as NavMesh, prefix: 'VL-' },
   'VL': { navMesh: vlNavMeshJson as NavMesh, prefix: 'VL-' },
+  'John Molson Building': { navMesh: mbNavMeshJson as NavMesh, prefix: 'MB-' },
+  'MB': { navMesh: mbNavMeshJson as NavMesh, prefix: 'MB-' },
 };
 
 export interface RoomWithBuilding {
@@ -51,6 +54,44 @@ function compareRooms(a: RoomWithBuilding, b: RoomWithBuilding): number {
 }
 
 /**
+ * Extract floor from node ID
+ * Standard pattern: "Hall_F8_room_291" -> "8"
+ * MB-S2 pattern: "MB-S2_F1_..." -> "S2"
+ */
+function extractFloorFromNodeId(nodeId: string): string | null {
+  // Check for MB-S2 pattern first
+  if (nodeId.startsWith('MB-S2') || nodeId.startsWith('mb-s2')) {
+    return 'S2';
+  }
+  
+  const floorMatch = /_F(\d+)_/.exec(nodeId);
+  return floorMatch ? floorMatch[1] : null;
+}
+
+/**
+ * Create a room object with building metadata
+ */
+function createRoomEntry(
+  roomLabel: string,
+  floor: string,
+  config: BuildingConfig,
+  buildingId: string
+): RoomWithBuilding {
+  const cleanLabel =
+    config.prefix && roomLabel.startsWith(config.prefix)
+      ? roomLabel.substring(config.prefix.length)
+      : roomLabel;
+
+  return {
+    room: cleanLabel,
+    prefix: config.prefix,
+    buildingId,
+    floor,
+    displayLabel: `${config.prefix}${cleanLabel} (Floor ${floor})`,
+  };
+}
+
+/**
  * Get all rooms for a specific building across all floors
  */
 function getRoomsForBuildingFromNavMesh(buildingId: string): RoomWithBuilding[] {
@@ -64,31 +105,15 @@ function getRoomsForBuildingFromNavMesh(buildingId: string): RoomWithBuilding[] 
   const roomFloorSet = new Set<string>();
 
   for (const [roomLabel, nodeId] of Object.entries(roomIndex)) {
-    // Parse node ID to get floor number: "Hall_F8_room_291" -> 8
-    const floorRegex = /_F(\d+)_/;
-    const floorMatch = floorRegex.exec(nodeId);
-    if (floorMatch) {
-      const floor = floorMatch[1];
-      const roomFloorKey = `${roomLabel}|${floor}`;
-
-      if (!roomFloorSet.has(roomFloorKey)) {
-        roomFloorSet.add(roomFloorKey);
-
-        // Remove building prefix from room label
-        const cleanLabel =
-          config.prefix && roomLabel.startsWith(config.prefix)
-            ? roomLabel.substring(config.prefix.length)
-            : roomLabel;
-
-        rooms.push({
-          room: cleanLabel,
-          prefix: config.prefix,
-          buildingId,
-          floor,
-          displayLabel: `${config.prefix}${cleanLabel} (Floor ${floor})`,
-        });
-      }
-    }
+    const floor = extractFloorFromNodeId(nodeId);
+    
+    if (!floor) continue;
+    
+    const roomFloorKey = `${roomLabel}|${floor}`;
+    if (roomFloorSet.has(roomFloorKey)) continue;
+    
+    roomFloorSet.add(roomFloorKey);
+    rooms.push(createRoomEntry(roomLabel, floor, config, buildingId));
   }
 
   return rooms.sort(compareRooms);

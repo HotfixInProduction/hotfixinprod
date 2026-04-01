@@ -62,12 +62,17 @@ const BUILDING_PREFIXES: Record<string, string> = {
   'Hall Building': 'H',
   'Central Building': 'CC',
   'Vanier Extension': 'VE',
+  'John Molson Building': 'MB',
+  'MB': 'MB',
 };
 
 /**
  * Generate label variants to try for room lookup
+ * @param roomLabel The room label from SVG (e.g., "210", "1.210", "S2.210")
+ * @param prefix The building prefix (e.g., "MB", "H")
+ * @param floorLevel Optional floor level for buildings that need floor-prefixed room labels (e.g., "1", "S2")
  */
-function generateLabelVariants(roomLabel: string, prefix: string): string[] {
+function generateLabelVariants(roomLabel: string, prefix: string, floorLevel?: string): string[] {
   const variants: string[] = [];
   
   // Basic variants with prefix
@@ -89,6 +94,13 @@ function generateLabelVariants(roomLabel: string, prefix: string): string[] {
     }
   }
   
+  // For MB building: rooms may need floor prefix (e.g., "210" -> "MB-1.210" or "MB-S2.210")
+  // This handles the case where SVG has room "210" but roomIndex expects "MB-1.210"
+  if (prefix === 'MB' && floorLevel && !roomLabel.includes('.')) {
+    // Add floor-prefixed variant: "210" -> "MB-1.210" or "MB-S2.210"
+    variants.push(`${prefix}-${floorLevel}.${roomLabel}`);
+  }
+  
   return variants;
 }
 
@@ -98,9 +110,10 @@ function generateLabelVariants(roomLabel: string, prefix: string): string[] {
 function searchRoomInIndex(
   roomIndex: Record<string, string>,
   roomLabel: string,
-  prefix: string
+  prefix: string,
+  floorLevel?: string
 ): string | null {
-  const variants = generateLabelVariants(roomLabel, prefix);
+  const variants = generateLabelVariants(roomLabel, prefix, floorLevel);
   
   for (const label of variants) {
     const nodeId = roomIndex[label];
@@ -124,26 +137,35 @@ export function getRoomNodeId(
   _floorLevel: string,
   roomLabel: string
 ): string | null {
+  console.log(`[getRoomNodeId] Looking up room: buildingId="${buildingId}", floor="${_floorLevel}", room="${roomLabel}"`);
+  
   const navMesh = getNavMeshByKey(buildingId, _floorLevel);
   if (!navMesh) {
+    console.log(`[getRoomNodeId] NavMesh not found for buildingId="${buildingId}"`);
     return null;
   }
   
   const roomIndex = getRoomIndex(navMesh);
   if (!roomIndex) {
+    console.log(`[getRoomNodeId] No roomIndex in navMesh`);
     return null;
   }
 
   // Try the room label directly first
   const directNodeId = roomIndex[roomLabel];
   if (directNodeId !== undefined) {
+    console.log(`[getRoomNodeId] Found direct match: "${roomLabel}" -> "${directNodeId}"`);
     return directNodeId;
   }
   
   // Try building-specific prefix lookup
   const prefix = BUILDING_PREFIXES[buildingId];
   if (prefix) {
-    return searchRoomInIndex(roomIndex, roomLabel, prefix);
+    const variants = generateLabelVariants(roomLabel, prefix, _floorLevel);
+    console.log(`[getRoomNodeId] Trying variants:`, variants);
+    const result = searchRoomInIndex(roomIndex, roomLabel, prefix, _floorLevel);
+    console.log(`[getRoomNodeId] Variant search result:`, result);
+    return result;
   }
   
   return null;
@@ -343,7 +365,7 @@ function transformBuildingCoordinates(node: { x: number; y: number; buildingId?:
   if (node.buildingId === 'Hall' || node.buildingId === 'VE' || node.buildingId === 'CC') {
     return transformNavMeshCoordinates(node.x, node.y);
   }
-  // For VL and others - use coordinates directly (no transformation needed)
+  // For VL, MB, MB-S2 and others - use coordinates directly (no transformation needed)
   return { x: node.x, y: node.y };
 }
 
