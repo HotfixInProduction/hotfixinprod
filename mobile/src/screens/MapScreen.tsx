@@ -127,6 +127,12 @@ export default function MapScreen() {
     onExit: () => {
       setShowRoutePreview(false);
       setBuildingSelectorVisible(true);
+      // Clear the route and all related data
+      setStart(null);
+      setDestination(null);
+      setInstructions([]);
+      setStartRoomSelection(null);
+      setDestinationRoomSelection(null);
     },
     onRestoreRouteInfo: (routeInfo) => setRouteInfo(routeInfo),
   });
