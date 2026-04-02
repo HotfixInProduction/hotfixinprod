@@ -53,6 +53,15 @@
     "VL-121-1": "VL_F1_room_121-1"
   },
   "poiIndex": {
+    "building_entry_exit": [
+      {
+        "nodeId": "VL_F1_entrance_1",
+        "label": "VL-entrance",
+        "floor": 1,
+        "x": 950,
+        "y": 360
+      }
+    ],
     "elevator_door": [
       {
         "nodeId": "VL_F2_elevator1",
@@ -114,8 +123,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 262,
-        "y": 398,
+        "x": 254.84,
+        "y": 411.83,
         "label": "VL-202-30",
         "accessible": true
       }
@@ -126,8 +135,8 @@
         "type": "elevator_door",
         "buildingId": "VL",
         "floor": 2,
-        "x": 224,
-        "y": 532,
+        "x": 213.98,
+        "y": 555.91,
         "label": "VL-elevator1",
         "accessible": true
       }
@@ -138,8 +147,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 560,
-        "y": 328,
+        "x": 575.27,
+        "y": 336.56,
         "label": "",
         "accessible": true
       }
@@ -150,8 +159,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 651,
-        "y": 243,
+        "x": 673.12,
+        "y": 245.16,
         "label": "",
         "accessible": true
       }
@@ -162,8 +171,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 651,
-        "y": 283,
+        "x": 673.12,
+        "y": 288.17,
         "label": "",
         "accessible": true
       }
@@ -174,8 +183,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 646,
-        "y": 383,
+        "x": 667.74,
+        "y": 395.7,
         "label": "",
         "accessible": true
       }
@@ -186,8 +195,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 647,
-        "y": 438,
+        "x": 668.82,
+        "y": 454.84,
         "label": "",
         "accessible": true
       }
@@ -198,8 +207,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 645,
-        "y": 487,
+        "x": 666.67,
+        "y": 507.53,
         "label": "",
         "accessible": true
       }
@@ -210,8 +219,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 699,
-        "y": 361,
+        "x": 724.73,
+        "y": 372.04,
         "label": "",
         "accessible": true
       }
@@ -222,8 +231,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 750,
-        "y": 360,
+        "x": 779.57,
+        "y": 370.97,
         "label": "",
         "accessible": true
       }
@@ -234,8 +243,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 296,
-        "y": 416,
+        "x": 291.4,
+        "y": 431.18,
         "label": "",
         "accessible": true
       }
@@ -246,8 +255,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 244,
-        "y": 492,
+        "x": 235.48,
+        "y": 512.9,
         "label": "",
         "accessible": true
       }
@@ -258,8 +267,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 741,
-        "y": 669,
+        "x": 769.89,
+        "y": 703.23,
         "label": "",
         "accessible": true
       }
@@ -270,8 +279,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 791,
-        "y": 673,
+        "x": 823.66,
+        "y": 707.53,
         "label": "",
         "accessible": true
       }
@@ -282,8 +291,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 766,
-        "y": 730,
+        "x": 796.77,
+        "y": 768.82,
         "label": "",
         "accessible": true
       }
@@ -294,8 +303,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 822,
-        "y": 802,
+        "x": 856.99,
+        "y": 846.24,
         "label": "VL-240",
         "accessible": true
       }
@@ -306,8 +315,8 @@
         "type": "stair_landing",
         "buildingId": "VL",
         "floor": 2,
-        "x": 776,
-        "y": 795,
+        "x": 807.53,
+        "y": 838.71,
         "label": "VL-stair3",
         "accessible": true
       }
@@ -318,8 +327,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 752,
-        "y": 763,
+        "x": 781.72,
+        "y": 804.3,
         "label": "",
         "accessible": true
       }
@@ -330,8 +339,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 84,
-        "y": 848,
+        "x": 63.44,
+        "y": 895.7,
         "label": "",
         "accessible": true
       }
@@ -342,8 +351,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 178,
-        "y": 823,
+        "x": 164.52,
+        "y": 868.82,
         "label": "",
         "accessible": true
       }
@@ -354,8 +363,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 233,
-        "y": 728,
+        "x": 223.66,
+        "y": 766.67,
         "label": "",
         "accessible": true
       }
@@ -366,8 +375,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 289,
-        "y": 635,
+        "x": 283.87,
+        "y": 666.67,
         "label": "",
         "accessible": true
       }
@@ -378,8 +387,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 311,
-        "y": 527,
+        "x": 307.53,
+        "y": 550.54,
         "label": "",
         "accessible": true
       }
@@ -390,8 +399,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 449,
-        "y": 667,
+        "x": 455.91,
+        "y": 701.08,
         "label": "",
         "accessible": true
       }
@@ -402,8 +411,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 573,
-        "y": 715,
+        "x": 589.25,
+        "y": 752.69,
         "label": "",
         "accessible": true
       }
@@ -414,8 +423,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 659,
-        "y": 732,
+        "x": 681.72,
+        "y": 770.97,
         "label": "",
         "accessible": true
       }
@@ -426,8 +435,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 714,
-        "y": 696,
+        "x": 740.86,
+        "y": 732.26,
         "label": "",
         "accessible": true
       }
@@ -438,8 +447,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 455,
-        "y": 524,
+        "x": 462.37,
+        "y": 547.31,
         "label": "",
         "accessible": true
       }
@@ -450,8 +459,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 546,
-        "y": 478,
+        "x": 560.22,
+        "y": 497.85,
         "label": "",
         "accessible": true
       }
@@ -462,8 +471,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 513,
-        "y": 415,
+        "x": 524.73,
+        "y": 430.11,
         "label": "",
         "accessible": true
       }
@@ -474,8 +483,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 601,
-        "y": 367,
+        "x": 619.35,
+        "y": 378.49,
         "label": "",
         "accessible": true
       }
@@ -486,8 +495,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 613,
-        "y": 262,
+        "x": 632.26,
+        "y": 265.59,
         "label": "",
         "accessible": true
       }
@@ -498,8 +507,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 633,
-        "y": 349,
+        "x": 653.76,
+        "y": 359.14,
         "label": "",
         "accessible": true
       }
@@ -510,8 +519,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 764,
-        "y": 781,
+        "x": 794.62,
+        "y": 823.66,
         "label": "",
         "accessible": true
       }
@@ -522,8 +531,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 2,
-        "x": 768,
-        "y": 335,
+        "x": 798.92,
+        "y": 344.09,
         "label": "",
         "accessible": true
       }
@@ -534,8 +543,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 2,
-        "x": 756,
-        "y": 346,
+        "x": 786.02,
+        "y": 355.91,
         "label": "",
         "accessible": true
       }
@@ -546,8 +555,8 @@
         "type": "stair_landing",
         "buildingId": "VL",
         "floor": 2,
-        "x": 566,
-        "y": 242,
+        "x": 581.72,
+        "y": 244.09,
         "label": "VL-Stair4",
         "accessible": false
       }
@@ -558,8 +567,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 220,
-        "y": 465,
+        "x": 209.68,
+        "y": 483.87,
         "label": "",
         "accessible": true
       }
@@ -570,8 +579,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 559,
-        "y": 288,
+        "x": 574.19,
+        "y": 293.55,
         "label": "",
         "accessible": true
       }
@@ -582,8 +591,8 @@
         "type": "stair_landing",
         "buildingId": "VL",
         "floor": 2,
-        "x": 215,
-        "y": 436,
+        "x": 204.3,
+        "y": 452.69,
         "label": "VL-stair5",
         "accessible": true
       }
@@ -594,8 +603,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 57,
-        "y": 839,
+        "x": 34.41,
+        "y": 886.02,
         "label": "VL-202-1",
         "accessible": true
       }
@@ -606,8 +615,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 821,
-        "y": 647,
+        "x": 855.91,
+        "y": 679.57,
         "label": "VL-297-1",
         "accessible": true
       }
@@ -618,8 +627,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 714,
-        "y": 590,
+        "x": 740.86,
+        "y": 618.28,
         "label": "VL-201",
         "accessible": true
       }
@@ -630,8 +639,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 669,
-        "y": 488,
+        "x": 692.47,
+        "y": 508.6,
         "label": "VL-201-1",
         "accessible": true
       }
@@ -642,8 +651,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 757,
-        "y": 412,
+        "x": 787.1,
+        "y": 426.88,
         "label": "VL-204",
         "accessible": true
       }
@@ -654,8 +663,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 701,
-        "y": 417,
+        "x": 726.88,
+        "y": 432.26,
         "label": "VL-203-3",
         "accessible": true
       }
@@ -666,8 +675,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 662,
-        "y": 435,
+        "x": 684.95,
+        "y": 451.61,
         "label": "VL-203-1",
         "accessible": true
       }
@@ -678,8 +687,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 662,
-        "y": 386,
+        "x": 684.95,
+        "y": 398.92,
         "label": "VL-203-2",
         "accessible": true
       }
@@ -690,8 +699,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 803,
-        "y": 234,
+        "x": 836.56,
+        "y": 235.48,
         "label": "VL-205",
         "accessible": true
       }
@@ -702,8 +711,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 671,
-        "y": 220,
+        "x": 694.62,
+        "y": 220.43,
         "label": "VL-212",
         "accessible": true
       }
@@ -714,8 +723,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 2,
-        "x": 678,
-        "y": 300,
+        "x": 702.15,
+        "y": 306.45,
         "label": "VL-210",
         "accessible": true
       }
@@ -726,8 +735,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 398,
-        "y": 75,
+        "x": 401.08,
+        "y": 64.52,
         "label": "VL-127-4",
         "accessible": true
       }
@@ -738,8 +747,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 449,
-        "y": 73,
+        "x": 455.91,
+        "y": 62.37,
         "label": "VL-127-3",
         "accessible": true
       }
@@ -750,8 +759,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 499,
-        "y": 70,
+        "x": 509.68,
+        "y": 59.14,
         "label": "VL-127-2",
         "accessible": true
       }
@@ -762,8 +771,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 553,
-        "y": 73,
+        "x": 567.74,
+        "y": 62.37,
         "label": "VL-121-2",
         "accessible": true
       }
@@ -774,8 +783,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 755,
-        "y": 61,
+        "x": 784.95,
+        "y": 49.46,
         "label": "VL-121-3",
         "accessible": true
       }
@@ -786,8 +795,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 260,
-        "y": 186,
+        "x": 252.69,
+        "y": 183.87,
         "label": "VL-130",
         "accessible": true
       }
@@ -798,8 +807,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 310,
-        "y": 280,
+        "x": 306.45,
+        "y": 284.95,
         "label": "VL-128",
         "accessible": true
       }
@@ -810,8 +819,8 @@
         "type": "stair_landing",
         "buildingId": "VL",
         "floor": 1,
-        "x": 566,
-        "y": 222,
+        "x": 581.72,
+        "y": 222.58,
         "label": "VL-stair1",
         "accessible": true
       }
@@ -822,8 +831,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 440,
-        "y": 417,
+        "x": 446.24,
+        "y": 432.26,
         "label": "VL-122",
         "accessible": true
       }
@@ -834,8 +843,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 270,
-        "y": 389,
+        "x": 263.44,
+        "y": 402.15,
         "label": "VL-124",
         "accessible": true
       }
@@ -846,8 +855,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 680,
-        "y": 805,
+        "x": 704.3,
+        "y": 849.46,
         "label": "",
         "accessible": true
       }
@@ -858,8 +867,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 50,
-        "y": 845,
+        "x": 26.88,
+        "y": 892.47,
         "label": "VL-101-5",
         "accessible": true
       }
@@ -870,8 +879,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 297,
-        "y": 940,
+        "x": 292.47,
+        "y": 994.62,
         "label": "",
         "accessible": true
       }
@@ -882,8 +891,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 300,
-        "y": 881,
+        "x": 295.7,
+        "y": 931.18,
         "label": "",
         "accessible": true
       }
@@ -894,8 +903,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 92,
-        "y": 847,
+        "x": 72.04,
+        "y": 894.62,
         "label": "",
         "accessible": true
       }
@@ -906,8 +915,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 93,
-        "y": 804,
+        "x": 73.12,
+        "y": 848.39,
         "label": "",
         "accessible": true
       }
@@ -918,8 +927,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 92,
-        "y": 756,
+        "x": 72.04,
+        "y": 796.77,
         "label": "",
         "accessible": true
       }
@@ -930,8 +939,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 92,
-        "y": 669,
+        "x": 72.04,
+        "y": 703.23,
         "label": "",
         "accessible": true
       }
@@ -942,8 +951,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 156,
-        "y": 630,
+        "x": 140.86,
+        "y": 661.29,
         "label": "",
         "accessible": true
       }
@@ -954,8 +963,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 593,
-        "y": 768,
+        "x": 610.75,
+        "y": 809.68,
         "label": "",
         "accessible": true
       }
@@ -966,8 +975,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 597,
-        "y": 696,
+        "x": 615.05,
+        "y": 732.26,
         "label": "",
         "accessible": true
       }
@@ -978,8 +987,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 643,
-        "y": 812,
+        "x": 664.52,
+        "y": 856.99,
         "label": "",
         "accessible": true
       }
@@ -990,8 +999,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 670,
-        "y": 665,
+        "x": 693.55,
+        "y": 698.92,
         "label": "",
         "accessible": true
       }
@@ -1002,8 +1011,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 224,
-        "y": 627,
+        "x": 213.98,
+        "y": 658.06,
         "label": "",
         "accessible": true
       }
@@ -1014,8 +1023,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 154,
-        "y": 547,
+        "x": 138.71,
+        "y": 572.04,
         "label": "",
         "accessible": true
       }
@@ -1026,8 +1035,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 268,
-        "y": 462,
+        "x": 261.29,
+        "y": 480.65,
         "label": "",
         "accessible": true
       }
@@ -1038,8 +1047,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 408,
-        "y": 463,
+        "x": 411.83,
+        "y": 481.72,
         "label": "",
         "accessible": true
       }
@@ -1050,8 +1059,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 269,
-        "y": 366,
+        "x": 262.37,
+        "y": 377.42,
         "label": "",
         "accessible": true
       }
@@ -1062,8 +1071,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 350,
-        "y": 336,
+        "x": 349.46,
+        "y": 345.16,
         "label": "",
         "accessible": true
       }
@@ -1074,8 +1083,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 519,
-        "y": 333,
+        "x": 531.18,
+        "y": 341.94,
         "label": "",
         "accessible": true
       }
@@ -1086,8 +1095,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 291,
-        "y": 164,
+        "x": 286.02,
+        "y": 160.22,
         "label": "",
         "accessible": true
       }
@@ -1098,8 +1107,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 372,
-        "y": 134,
+        "x": 373.12,
+        "y": 127.96,
         "label": "",
         "accessible": true
       }
@@ -1110,8 +1119,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 726,
-        "y": 596,
+        "x": 753.76,
+        "y": 624.73,
         "label": "",
         "accessible": true
       }
@@ -1122,8 +1131,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 825,
-        "y": 716,
+        "x": 860.22,
+        "y": 753.76,
         "label": "",
         "accessible": true
       }
@@ -1134,8 +1143,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 651,
-        "y": 282,
+        "x": 673.12,
+        "y": 287.1,
         "label": "",
         "accessible": true
       }
@@ -1146,8 +1155,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 649,
-        "y": 244,
+        "x": 670.97,
+        "y": 246.24,
         "label": "",
         "accessible": true
       }
@@ -1158,8 +1167,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 725,
-        "y": 199,
+        "x": 752.69,
+        "y": 197.85,
         "label": "",
         "accessible": true
       }
@@ -1170,8 +1179,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 734,
-        "y": 334,
+        "x": 762.37,
+        "y": 343.01,
         "label": "",
         "accessible": true
       }
@@ -1182,8 +1191,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 408,
-        "y": 96,
+        "x": 411.83,
+        "y": 87.1,
         "label": "",
         "accessible": true
       }
@@ -1194,8 +1203,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 452,
-        "y": 96,
+        "x": 459.14,
+        "y": 87.1,
         "label": "",
         "accessible": true
       }
@@ -1206,8 +1215,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 484,
-        "y": 95,
+        "x": 493.55,
+        "y": 86.02,
         "label": "",
         "accessible": true
       }
@@ -1218,8 +1227,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 495,
-        "y": 126,
+        "x": 505.38,
+        "y": 119.35,
         "label": "",
         "accessible": true
       }
@@ -1230,8 +1239,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 557,
-        "y": 96,
+        "x": 572.04,
+        "y": 87.1,
         "label": "",
         "accessible": true
       }
@@ -1242,8 +1251,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 558,
-        "y": 137,
+        "x": 573.12,
+        "y": 131.18,
         "label": "",
         "accessible": true
       }
@@ -1254,8 +1263,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 612,
-        "y": 136,
+        "x": 631.18,
+        "y": 130.11,
         "label": "",
         "accessible": true
       }
@@ -1266,8 +1275,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 760,
-        "y": 133,
+        "x": 790.32,
+        "y": 126.88,
         "label": "",
         "accessible": true
       }
@@ -1278,8 +1287,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 798,
-        "y": 732,
+        "x": 831.18,
+        "y": 770.97,
         "label": "",
         "accessible": true
       }
@@ -1290,8 +1299,8 @@
         "type": "elevator_door",
         "buildingId": "VL",
         "floor": 1,
-        "x": 228,
-        "y": 530,
+        "x": 218.28,
+        "y": 553.76,
         "label": "VL-elevator1",
         "accessible": true
       }
@@ -1302,8 +1311,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 187,
-        "y": 890,
+        "x": 174.19,
+        "y": 940.86,
         "label": "",
         "accessible": true
       }
@@ -1314,8 +1323,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 183,
-        "y": 816,
+        "x": 169.89,
+        "y": 861.29,
         "label": "",
         "accessible": true
       }
@@ -1326,8 +1335,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 181,
-        "y": 750,
+        "x": 167.74,
+        "y": 790.32,
         "label": "",
         "accessible": true
       }
@@ -1338,8 +1347,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 176,
-        "y": 680,
+        "x": 162.37,
+        "y": 715.05,
         "label": "",
         "accessible": true
       }
@@ -1350,8 +1359,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 282,
-        "y": 702,
+        "x": 276.34,
+        "y": 738.71,
         "label": "",
         "accessible": true
       }
@@ -1362,8 +1371,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 366,
-        "y": 702,
+        "x": 366.67,
+        "y": 738.71,
         "label": "",
         "accessible": true
       }
@@ -1374,8 +1383,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 457,
-        "y": 753,
+        "x": 464.52,
+        "y": 793.55,
         "label": "",
         "accessible": true
       }
@@ -1386,8 +1395,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 515,
-        "y": 685,
+        "x": 526.88,
+        "y": 720.43,
         "label": "",
         "accessible": true
       }
@@ -1398,8 +1407,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 361,
-        "y": 577,
+        "x": 361.29,
+        "y": 604.3,
         "label": "",
         "accessible": true
       }
@@ -1410,8 +1419,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 344,
-        "y": 514,
+        "x": 343.01,
+        "y": 536.56,
         "label": "",
         "accessible": true
       }
@@ -1422,8 +1431,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 533,
-        "y": 585,
+        "x": 546.24,
+        "y": 612.9,
         "label": "",
         "accessible": true
       }
@@ -1434,8 +1443,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 652,
-        "y": 593,
+        "x": 674.19,
+        "y": 621.51,
         "label": "",
         "accessible": true
       }
@@ -1446,8 +1455,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 610,
-        "y": 491,
+        "x": 629.03,
+        "y": 511.83,
         "label": "",
         "accessible": true
       }
@@ -1458,8 +1467,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 598,
-        "y": 404,
+        "x": 616.13,
+        "y": 418.28,
         "label": "",
         "accessible": true
       }
@@ -1470,8 +1479,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 617,
-        "y": 788,
+        "x": 636.56,
+        "y": 831.18,
         "label": "",
         "accessible": true
       }
@@ -1482,8 +1491,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 243,
-        "y": 556,
+        "x": 234.41,
+        "y": 581.72,
         "label": "",
         "accessible": true
       }
@@ -1494,8 +1503,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 708,
-        "y": 529,
+        "x": 734.41,
+        "y": 552.69,
         "label": "",
         "accessible": true
       }
@@ -1506,8 +1515,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 793,
-        "y": 659,
+        "x": 825.81,
+        "y": 692.47,
         "label": "",
         "accessible": true
       }
@@ -1518,8 +1527,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 443,
-        "y": 350,
+        "x": 449.46,
+        "y": 360.22,
         "label": "",
         "accessible": true
       }
@@ -1530,8 +1539,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 298,
-        "y": 349,
+        "x": 293.55,
+        "y": 359.14,
         "label": "",
         "accessible": true
       }
@@ -1542,8 +1551,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 742,
-        "y": 439,
+        "x": 770.97,
+        "y": 455.91,
         "label": "",
         "accessible": true
       }
@@ -1554,8 +1563,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 741,
-        "y": 395,
+        "x": 769.89,
+        "y": 408.6,
         "label": "",
         "accessible": true
       }
@@ -1566,8 +1575,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 759,
-        "y": 349,
+        "x": 789.25,
+        "y": 359.14,
         "label": "",
         "accessible": true
       }
@@ -1578,8 +1587,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 612,
-        "y": 325,
+        "x": 631.18,
+        "y": 333.33,
         "label": "",
         "accessible": true
       }
@@ -1590,8 +1599,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 614,
-        "y": 218,
+        "x": 633.33,
+        "y": 218.28,
         "label": "",
         "accessible": true
       }
@@ -1602,8 +1611,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 612,
-        "y": 161,
+        "x": 631.18,
+        "y": 156.99,
         "label": "",
         "accessible": true
       }
@@ -1614,8 +1623,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 495,
-        "y": 150,
+        "x": 505.38,
+        "y": 145.16,
         "label": "",
         "accessible": true
       }
@@ -1626,8 +1635,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 438,
-        "y": 150,
+        "x": 444.09,
+        "y": 145.16,
         "label": "",
         "accessible": true
       }
@@ -1638,8 +1647,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 715,
-        "y": 155,
+        "x": 741.94,
+        "y": 150.54,
         "label": "",
         "accessible": true
       }
@@ -1650,8 +1659,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 566,
-        "y": 115,
+        "x": 581.72,
+        "y": 107.53,
         "label": "",
         "accessible": true
       }
@@ -1662,8 +1671,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 571,
-        "y": 329,
+        "x": 587.1,
+        "y": 337.63,
         "label": "",
         "accessible": true
       }
@@ -1674,8 +1683,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 563,
-        "y": 286,
+        "x": 578.49,
+        "y": 291.4,
         "label": "",
         "accessible": true
       }
@@ -1686,8 +1695,8 @@
         "type": "stair_landing",
         "buildingId": "VL",
         "floor": 1,
-        "x": 217,
-        "y": 418,
+        "x": 206.45,
+        "y": 433.33,
         "label": "VL-stair3",
         "accessible": true
       }
@@ -1698,8 +1707,8 @@
         "type": "doorway",
         "buildingId": "VL",
         "floor": 1,
-        "x": 242,
-        "y": 485,
+        "x": 233.33,
+        "y": 505.38,
         "label": "",
         "accessible": true
       }
@@ -1710,8 +1719,8 @@
         "type": "hallway_waypoint",
         "buildingId": "VL",
         "floor": 1,
-        "x": 218,
-        "y": 456,
+        "x": 207.53,
+        "y": 474.19,
         "label": "",
         "accessible": true
       }
@@ -1722,8 +1731,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 457,
-        "y": 224,
+        "x": 464.52,
+        "y": 224.73,
         "label": "VL-126",
         "accessible": true
       }
@@ -1734,8 +1743,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 273,
-        "y": 443,
+        "x": 266.67,
+        "y": 460.22,
         "label": "VL-122-1",
         "accessible": true
       }
@@ -1746,8 +1755,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 668,
-        "y": 226,
+        "x": 691.4,
+        "y": 226.88,
         "label": "VL-112",
         "accessible": true
       }
@@ -1758,8 +1767,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 668,
-        "y": 309,
+        "x": 691.4,
+        "y": 316.13,
         "label": "VL-110",
         "accessible": true
       }
@@ -1770,8 +1779,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 756,
-        "y": 238,
+        "x": 786.02,
+        "y": 239.78,
         "label": "VL-118",
         "accessible": true
       }
@@ -1782,8 +1791,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 748,
-        "y": 303,
+        "x": 777.42,
+        "y": 309.68,
         "label": "VL-116",
         "accessible": true
       }
@@ -1794,8 +1803,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 647,
-        "y": 107,
+        "x": 668.82,
+        "y": 98.92,
         "label": "VL-121",
         "accessible": true
       }
@@ -1806,8 +1815,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 774,
-        "y": 351,
+        "x": 805.38,
+        "y": 361.29,
         "label": "VL-120",
         "accessible": true
       }
@@ -1818,8 +1827,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 764,
-        "y": 389,
+        "x": 794.62,
+        "y": 402.15,
         "label": "VL-106-2",
         "accessible": true
       }
@@ -1830,8 +1839,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 766,
-        "y": 442,
+        "x": 796.77,
+        "y": 459.14,
         "label": "VL-106-1",
         "accessible": true
       }
@@ -1842,8 +1851,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 55,
-        "y": 757,
+        "x": 32.26,
+        "y": 797.85,
         "label": "VL-101-7",
         "accessible": true
       }
@@ -1854,8 +1863,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 51,
-        "y": 807,
+        "x": 27.96,
+        "y": 851.61,
         "label": "VL-101-6",
         "accessible": true
       }
@@ -1866,8 +1875,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 325,
-        "y": 871,
+        "x": 322.58,
+        "y": 920.43,
         "label": "VL-101-3",
         "accessible": true
       }
@@ -1878,8 +1887,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 323,
-        "y": 935,
+        "x": 320.43,
+        "y": 989.25,
         "label": "VL-101-4",
         "accessible": true
       }
@@ -1890,8 +1899,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 703,
-        "y": 746,
+        "x": 729.03,
+        "y": 786.02,
         "label": "VL-104",
         "accessible": true
       }
@@ -1902,8 +1911,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 617,
-        "y": 799,
+        "x": 636.56,
+        "y": 843.01,
         "label": "VL-101-2",
         "accessible": true
       }
@@ -1914,8 +1923,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 616,
-        "y": 702,
+        "x": 635.48,
+        "y": 738.71,
         "label": "VL-101-1",
         "accessible": true
       }
@@ -1926,8 +1935,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 822,
-        "y": 799,
+        "x": 856.99,
+        "y": 843.01,
         "label": "VL-140",
         "accessible": true
       }
@@ -1938,8 +1947,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 749,
-        "y": 632,
+        "x": 778.49,
+        "y": 663.44,
         "label": "VL-103-1",
         "accessible": true
       }
@@ -1950,8 +1959,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 831,
-        "y": 653,
+        "x": 866.67,
+        "y": 686.02,
         "label": "VL-197-1",
         "accessible": true
       }
@@ -1962,8 +1971,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 227,
-        "y": 558,
+        "x": 217.2,
+        "y": 583.87,
         "label": "VL-194-3",
         "accessible": true
       }
@@ -1974,8 +1983,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 184,
-        "y": 542,
+        "x": 170.97,
+        "y": 566.67,
         "label": "VL-102-3",
         "accessible": true
       }
@@ -1986,8 +1995,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 154,
-        "y": 596,
+        "x": 138.71,
+        "y": 624.73,
         "label": "VL-102-2",
         "accessible": true
       }
@@ -1998,8 +2007,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 123,
-        "y": 538,
+        "x": 105.38,
+        "y": 562.37,
         "label": "VL-102-4",
         "accessible": true
       }
@@ -2010,8 +2019,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 63,
-        "y": 663,
+        "x": 40.86,
+        "y": 696.77,
         "label": "VL-102",
         "accessible": true
       }
@@ -2022,8 +2031,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 301,
-        "y": 66,
+        "x": 296.77,
+        "y": 54.84,
         "label": "VL-127-5",
         "accessible": true
       }
@@ -2034,8 +2043,8 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 513,
-        "y": 122,
+        "x": 524.73,
+        "y": 115.05,
         "label": "VL-127-1",
         "accessible": true
       }
@@ -2046,9 +2055,33 @@
         "type": "room",
         "buildingId": "VL",
         "floor": 1,
-        "x": 556,
-        "y": 117,
+        "x": 570.97,
+        "y": 109.68,
         "label": "VL-121-1",
+        "accessible": true
+      }
+    },
+    {
+      "id": "VL_F1_entrance_1",
+      "data": {
+        "type": "building_entry_exit",
+        "buildingId": "VL",
+        "floor": 1,
+        "x": 950,
+        "y": 360,
+        "label": "VL-entrance",
+        "accessible": true
+      }
+    },
+    {
+      "id": "VL_F1_entrance_waypoint_1",
+      "data": {
+        "type": "hallway_waypoint",
+        "buildingId": "VL",
+        "floor": 1,
+        "x": 820,
+        "y": 550,
+        "label": "",
         "accessible": true
       }
     }
@@ -3072,7 +3105,7 @@
       }
     },
     {
-      "fromId": "VL_F1_hallway_waypoint_47",
+      "fromId": "VL_F1_entrance_waypoint_1",
       "toId": "VL_F1_doorway_56",
       "data": {
         "type": "door_to_hallway",
@@ -3082,7 +3115,7 @@
     },
     {
       "fromId": "VL_F1_doorway_56",
-      "toId": "VL_F1_hallway_waypoint_48",
+      "toId": "VL_F1_entrance_waypoint_1",
       "data": {
         "type": "door_to_hallway",
         "weight": 56,
@@ -3090,7 +3123,7 @@
       }
     },
     {
-      "fromId": "VL_F1_hallway_waypoint_48",
+      "fromId": "VL_F1_doorway_56",
       "toId": "VL_F1_doorway_54",
       "data": {
         "type": "door_to_hallway",
@@ -3563,6 +3596,510 @@
       "data": {
         "type": "stair",
         "weight": 0,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_entrance_1",
+      "toId": "VL_F1_entrance_waypoint_1",
+      "data": {
+        "type": "hallway",
+        "weight": 220,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_entrance_waypoint_1",
+      "toId": "VL_F1_hallway_waypoint_46",
+      "data": {
+        "type": "hallway",
+        "weight": 85,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_202-30",
+      "toId": "VL_F2_doorway_63",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 41,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_240",
+      "toId": "VL_F2_doorway_67",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 86,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_202-1",
+      "toId": "VL_F2_doorway_73",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 30,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_297-1",
+      "toId": "VL_F2_doorway_66",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 42,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_201",
+      "toId": "VL_F2_doorway_65",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 89,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_201-1",
+      "toId": "VL_F2_doorway_60",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 25,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_204",
+      "toId": "VL_F2_doorway_62",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 56,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_203-3",
+      "toId": "VL_F2_doorway_61",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 60,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_203-1",
+      "toId": "VL_F2_doorway_59",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 16,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_203-2",
+      "toId": "VL_F2_doorway_58",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 17,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_205",
+      "toId": "VL_F2_doorway_74",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 114,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_212",
+      "toId": "VL_F2_doorway_56",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 32,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F2_room_210",
+      "toId": "VL_F2_doorway_57",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 34,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_127-4",
+      "toId": "VL_F1_doorway_46",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 25,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_127-3",
+      "toId": "VL_F1_doorway_47",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 24,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_127-2",
+      "toId": "VL_F1_doorway_48",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 31,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_121-2",
+      "toId": "VL_F1_doorway_50",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 25,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_121-3",
+      "toId": "VL_F1_doorway_53",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 77,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_130",
+      "toId": "VL_F1_doorway_39",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 40,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_31",
+      "toId": "VL_F1_doorway_37",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 73,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_122",
+      "toId": "VL_F1_doorway_35",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 60,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_124",
+      "toId": "VL_F1_doorway_36",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 24,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_54",
+      "toId": "VL_F1_doorway_30",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 40,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_101-5",
+      "toId": "VL_F1_doorway_23",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 45,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_62",
+      "toId": "VL_F1_doorway_54",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 33,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_126",
+      "toId": "VL_F1_doorway_49",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 113,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_122-1",
+      "toId": "VL_F1_doorway_34",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 21,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_112",
+      "toId": "VL_F1_doorway_43",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 28,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_110",
+      "toId": "VL_F1_doorway_42",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 34,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_118",
+      "toId": "VL_F1_doorway_44",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 53,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_116",
+      "toId": "VL_F1_doorway_45",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 36,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_121",
+      "toId": "VL_F1_doorway_52",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 48,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_120",
+      "toId": "VL_F1_doorway_59",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 16,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_106-2",
+      "toId": "VL_F1_doorway_58",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 25,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_106-1",
+      "toId": "VL_F1_doorway_57",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 26,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_101-7",
+      "toId": "VL_F1_doorway_25",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 39,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_101-6",
+      "toId": "VL_F1_doorway_24",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 45,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_101-3",
+      "toId": "VL_F1_doorway_22",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 28,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_101-4",
+      "toId": "VL_F1_doorway_21",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 28,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_104",
+      "toId": "VL_F1_doorway_31",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 94,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_101-2",
+      "toId": "VL_F1_doorway_30",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 31,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_101-1",
+      "toId": "VL_F1_doorway_29",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 21,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_140",
+      "toId": "VL_F1_doorway_54",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 76,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_103-1",
+      "toId": "VL_F1_doorway_41",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 45,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_197-1",
+      "toId": "VL_F1_doorway_56",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 41,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_194-3",
+      "toId": "VL_F1_doorway_55",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 17,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_102-3",
+      "toId": "VL_F1_doorway_33",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 32,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_102-3",
+      "toId": "VL_F1_doorway_32",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 32,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_102-2",
+      "toId": "VL_F1_doorway_27",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 36,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_102-4",
+      "toId": "VL_F1_doorway_33",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 34,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_102",
+      "toId": "VL_F1_doorway_26",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 31,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_127-5",
+      "toId": "VL_F1_doorway_40",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 105,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_127-1",
+      "toId": "VL_F1_doorway_49",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 19,
+        "accessible": true
+      }
+    },
+    {
+      "fromId": "VL_F1_room_121-1",
+      "toId": "VL_F1_doorway_51",
+      "data": {
+        "type": "door_to_hallway",
+        "weight": 21,
         "accessible": true
       }
     }
