@@ -26,6 +26,7 @@ describe('Epic 2:Outdoor Directions E2E Test', () => {
         await element(by.id('select-destination-on-map')).tap();
         await element(by.id('map')).atIndex(0).tap({ x: 200, y: 550 });
         console.log("CJ Building selected as destination at loyola campus");
+        await element(by.text('View Directions')).tap();
 
         // Verify markers
         await expect(element(by.id('start-marker'))).toExist();
@@ -48,6 +49,8 @@ describe('Epic 2:Outdoor Directions E2E Test', () => {
         await wait(2000);
         await searchAndSelectBuilding('destination-building-selector', 'Communications & Journalism Building');
 
+        await element(by.text('View Directions')).tap();
+
         // Verify markers appear
         await waitFor(element(by.id('destination-marker'))).toExist().withTimeout(20000);
         await expect(element(by.id('start-marker'))).toExist();
@@ -55,11 +58,11 @@ describe('Epic 2:Outdoor Directions E2E Test', () => {
 
         // Select Shuttle Mode
         await element(by.id('route-info-mode-shuttle')).tap();
-        
+
         // Open Shuttle Schedule
         await waitFor(element(by.id('route-info-open-shuttle-schedule'))).toExist().withTimeout(5000);
         await element(by.id('route-info-open-shuttle-schedule')).tap();
-        
+
         // Wait for modal to appear and close Shuttle Schedule
         await waitFor(element(by.id('close-shuttle-schedule'))).toExist().withTimeout(5000);
         await element(by.id('close-shuttle-schedule')).tap();
