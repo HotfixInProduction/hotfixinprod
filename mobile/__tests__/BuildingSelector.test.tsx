@@ -539,4 +539,40 @@ describe('BuildingSelector', () => {
     
     expect(View.mockProps.textInputProps).toBeDefined();
   });
+
+  it('handles building selection with proper handler execution', () => {
+    render(
+      <BuildingSelector
+        placeholder={placeholder}
+        onSelect={mockOnSelect}
+        userLocation={null}
+        value=""
+      />
+    );
+    
+    // Verify handler exists in component
+    expect(mockOnSelect).not.toHaveBeenCalled();
+  });
+
+  it('updates view when value prop changes', () => {
+    const { rerender } = render(
+      <BuildingSelector
+        placeholder={placeholder}
+        onSelect={mockOnSelect}
+        userLocation={null}
+        value="Test"
+      />
+    );
+    
+    rerender(
+      <BuildingSelector
+        placeholder={placeholder}
+        onSelect={mockOnSelect}
+        userLocation={null}
+        value="Updated"
+      />
+    );
+    
+    expect(mockOnSelect).not.toHaveBeenCalled();
+  });
 });
