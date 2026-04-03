@@ -164,11 +164,6 @@ const RouteInstructions = ({
                             <Text style={styles.instructionText}>
                                 Exit {start.name}
                             </Text>
-
-                            <TouchableOpacity style={styles.floorPlanBtn} onPress={() => onViewFloorPlan(start.name)}>
-                                <MaterialCommunityIcons name="map" size={16} color="#fff" />
-                                <Text style={styles.floorPlanBtnText}>Floor Plan</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                 )}
@@ -188,11 +183,6 @@ const RouteInstructions = ({
                             <Text style={styles.instructionText}>
                                 Enter {destination.name}
                             </Text>
-
-                            <TouchableOpacity style={styles.floorPlanBtn} onPress={() => onViewFloorPlan(destination.name)}>
-                                <MaterialCommunityIcons name="map" size={16} color="#fff" />
-                                <Text style={styles.floorPlanBtnText}>Floor Plan</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                 )}
