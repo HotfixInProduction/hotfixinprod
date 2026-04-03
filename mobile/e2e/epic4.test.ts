@@ -72,6 +72,12 @@ describe('Epic 4: Indoor Floor Plans E2E Test', () => {
         await element(by.text('H-205')).tap();
 
         //8. Show both floors and click accessibility button
+        await element(by.id('floor-btn-1')).tap();
+        await element(by.id('floor-btn-2')).tap();
+        await element(by.id('accessibility-toggle')).tap();
+        await element(by.id('floor-btn-1')).tap();
+        await element(by.id('floor-btn-2')).tap();
+        await wait(2000);
 
     });
 
@@ -107,10 +113,24 @@ describe('Epic 4: Indoor Floor Plans E2E Test', () => {
         await waitFor(element(by.text('Hall Building - Floor 9'))).toBeVisible().withTimeout(5000);
 
         // 8. Select POI
+        await element(by.id('floor-plan-close')).atIndex(0).tap({ x: 200, y: 550 });
 
     });
 
-    it('AT 4.5-4.6: Should select Hall Building and view its floor plan and steps to get there', async () => {
+    it('AT 4.5: Should select Hall Building and view its floor plan and steps to get there', async () => {
+        // 1. Setup app near Hall Building
+        const hallCoords = { latitude: 45.497285, longitude: -73.578974 };
+        await setupApp({ location: 'always' }, hallCoords);
+        await navigateToMap();
+        await wait(2000);
+        await zoomIn(3.0);
+
+        // 2. Open building selector and search for Hall Building
+
+
+    });
+
+    it('AT 4.6: Should select Hall Building and view its floor plan and steps to get there', async () => {
         // 1. Setup app near Hall Building
         const hallCoords = { latitude: 45.497285, longitude: -73.578974 };
         await setupApp({ location: 'always' }, hallCoords);
