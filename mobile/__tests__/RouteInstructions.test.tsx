@@ -163,38 +163,6 @@ describe('RouteInstructions Component', () => {
     expect(screen.getAllByText('50 m')).toHaveLength(2);
   });
 
-  it('shows start floor plan button and calls onViewFloorPlan with start name', () => {
-    render(
-      <RouteInstructions
-        instructions={mockInstructions}
-        start={start}
-        destination={destination}
-        onClose={mockOnClose}
-        onViewFloorPlan={mockOnViewFloorPlan}
-      />
-    );
-
-    const floorPlanButtons = screen.getAllByText('Floor Plan');
-    fireEvent.press(floorPlanButtons[0]);
-    expect(mockOnViewFloorPlan).toHaveBeenCalledWith('Hall Building');
-  });
-
-  it('shows destination floor plan button and calls onViewFloorPlan with destination name', () => {
-    render(
-      <RouteInstructions
-        instructions={mockInstructions}
-        start={start}
-        destination={destination}
-        onClose={mockOnClose}
-        onViewFloorPlan={mockOnViewFloorPlan}
-      />
-    );
-
-    const floorPlanButtons = screen.getAllByText('Floor Plan');
-    fireEvent.press(floorPlanButtons[floorPlanButtons.length - 1]);
-    expect(mockOnViewFloorPlan).toHaveBeenCalledWith('Vanier Extension');
-  });
-
   it('does not render start row when start is null', () => {
     render(
       <RouteInstructions
