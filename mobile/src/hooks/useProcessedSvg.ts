@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { highlightRoomInSvg, generatePathElements } from '../utils/svgUtils';
 import { NavMeshNode } from '../types/building';
+import { getFloorFromNodeId } from '../utils/Pathfinding';
 
 // Coordinate transformation for buildings with 2x scale navmesh
 // Hall, VE, and CC buildings all use navmesh at 2x scale compared to SVG
@@ -10,12 +11,51 @@ function transformNavMeshCoordinates(x: number, y: number): { x: number; y: numb
   return { x: x * scale, y: y * scale };
 }
 
+function getFloorFromNode(node: NavMeshNode): number | null {
+  const nodeData = node.data as { floor?: number } | undefined;
+  if (nodeData?.floor !== undefined) {
+    return nodeData.floor;
+  }
+  return getFloorFromNodeId(String(node.id));
+}
+
+function filterNodesByFloor(path: NavMeshNode[], targetFloor: number): NavMeshNode[] {
+  return path.filter(node => {
+    const nodeFloor = getFloorFromNode(node);
+    return nodeFloor === targetFloor;
+  });
+}
+
+function transformBuildingCoordinates(
+  x: number, 
+  y: number, 
+  buildingId: string | undefined
+): { x: number; y: number } {
+  if (buildingId === 'Hall' || buildingId === 'VE' || buildingId === 'CC') {
+    return transformNavMeshCoordinates(x, y);
+  }
+  return { x, y };
+}
+
+function insertIntoSvg(svg: string, elements: string): string {
+  const lastSvgCloseIndex = svg.lastIndexOf('</svg>');
+  if (lastSvgCloseIndex !== -1) {
+    return svg.slice(0, lastSvgCloseIndex) + elements + svg.slice(lastSvgCloseIndex);
+  }
+  return svg + elements;
+}
+
+function createPathOnlyElement(pathString: string): string {
+  return `<path d="${pathString}" stroke="#007AFF" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>`;
+}
+
 export function useProcessedSvg(
   rawSvgContent: string | undefined,
   path: NavMeshNode[] | null,
   pathString: string,
   startRoom: string | undefined,
-  nextRoom: string | undefined
+  nextRoom: string | undefined,
+  currentFloor?: number
 ): string | undefined {
   return useMemo(() => {
     if (!rawSvgContent) {
@@ -24,14 +64,20 @@ export function useProcessedSvg(
     
     const highlighted = highlightRoomInSvg(rawSvgContent, startRoom, nextRoom);
     
-    if (!path || !pathString) {
+    if (!path || !pathString || path.length === 0) {
       // istanbul ignore next - __DEV__ is removed in production builds
       if (__DEV__) console.log('[useProcessedSvg] No path or pathString', { path: path?.length, pathString });
       return highlighted;
     }
 
-    const startNode = path[0];
-    const endNode = path.at(-1);
+    const floorNodes = currentFloor === undefined ? path : filterNodesByFloor(path, currentFloor);
+    
+    if (floorNodes.length === 0) {
+      return insertIntoSvg(highlighted, createPathOnlyElement(pathString));
+    }
+
+    const startNode = floorNodes[0];
+    const endNode = floorNodes.at(-1);
 
     if (!startNode?.data || !endNode?.data) {
       // istanbul ignore next - __DEV__ is removed in production builds
@@ -41,20 +87,13 @@ export function useProcessedSvg(
 
     // Transform coordinates based on building
     const buildingId = (startNode.data as { buildingId?: string }).buildingId;
-    
-    const transformCoord = (x: number, y: number, building: string | undefined): { x: number; y: number } => {
-      if (building === 'Hall' || building === 'VE' || building === 'CC') {
-        return transformNavMeshCoordinates(x, y);
-      }
-      // For VL and others - use coordinates directly
-      return { x, y };
-    };
-    
-    const startCoord = transformCoord(startNode.data.x, startNode.data.y, buildingId);
-    const endCoord = transformCoord(endNode.data.x, endNode.data.y, buildingId);
+    const startCoord = transformBuildingCoordinates(startNode.data.x, startNode.data.y, buildingId);
+    const endCoord = transformBuildingCoordinates(endNode.data.x, endNode.data.y, buildingId);
 
     // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[useProcessedSvg] Path coordinates:', {
+      floor: currentFloor,
+      floorNodesCount: floorNodes.length,
       startX: startCoord.x,
       startY: startCoord.y,
       endX: endCoord.x,
@@ -74,13 +113,6 @@ export function useProcessedSvg(
     // istanbul ignore next - __DEV__ is removed in production builds
     if (__DEV__) console.log('[useProcessedSvg] Generated pathElements:', pathElements.substring(0, 200) + '...');
 
-    // Find the LAST </svg> tag to insert before (handles nested SVGs like icons)
-    const lastSvgCloseIndex = highlighted.lastIndexOf('</svg>');
-    if (lastSvgCloseIndex !== -1) {
-      return highlighted.slice(0, lastSvgCloseIndex) + pathElements + highlighted.slice(lastSvgCloseIndex);
-    }
-    
-    // Fallback if no </svg> tag is found (e.g. malformed SVG)
-    return highlighted + pathElements;
-  }, [rawSvgContent, path, pathString, startRoom, nextRoom]);
+    return insertIntoSvg(highlighted, pathElements);
+  }, [rawSvgContent, path, pathString, startRoom, nextRoom, currentFloor]);
 }

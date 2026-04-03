@@ -16,6 +16,15 @@ jest.mock('../src/utils/svgUtils', () => ({
     }),
 }));
 
+// Mock Pathfinding module
+jest.mock('../src/utils/Pathfinding', () => ({
+    getFloorFromNodeId: jest.fn((nodeId: string) => {
+        // Extract floor from node ID like "Hall_F8_room_291" -> 8
+        const match = nodeId.match(/_F(\d+)_/);
+        return match ? parseInt(match[1], 10) : null;
+    }),
+}));
+
 describe('useProcessedSvg', () => {
     const mockSvgContent = '<svg><rect/></svg>';
 
@@ -78,8 +87,8 @@ describe('useProcessedSvg', () => {
         it('transforms coordinates for buildings that require scaling (Hall, VE, CC)', () => {
             const path: NavMeshNode[] = [
                 // Set buildingId to 'Hall' to trigger the transformNavMeshCoordinates branch
-                { id: 'start', data: { x: 100, y: 200, buildingId: 'Hall' } as any },
-                { id: 'end', data: { x: 300, y: 400, buildingId: 'Hall' } as any },
+                { id: 'start', data: { x: 100, y: 200, buildingId: 'Hall' } },
+                { id: 'end', data: { x: 300, y: 400, buildingId: 'Hall' } },
             ];
             const pathString = 'M 50 100 L 150 200';
 
@@ -272,6 +281,117 @@ describe('useProcessedSvg', () => {
 
             // Should not log when __DEV__ is false
             expect(consoleLogSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('floor filtering', () => {
+        it('filters path nodes by floor when currentFloor is provided', () => {
+            // Multi-floor path: floor 8 -> floor 9
+            const path: NavMeshNode[] = [
+                { id: 'Hall_F8_room_829', data: { x: 10, y: 20, floor: 8 } },
+                { id: 'Hall_F8_hallway_1', data: { x: 50, y: 50, floor: 8 } },
+                { id: 'Hall_F8_stair_1', data: { x: 100, y: 100, floor: 8 } },
+                { id: 'Hall_F9_stair_1', data: { x: 100, y: 100, floor: 9 } },
+                { id: 'Hall_F9_hallway_1', data: { x: 150, y: 150, floor: 9 } },
+                { id: 'Hall_F9_room_962', data: { x: 200, y: 200, floor: 9 } },
+            ];
+            const pathString = 'M 10 20 L 100 100';
+
+            // When viewing floor 8, markers should be at floor 8's start/end
+            const { result } = renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, pathString, undefined, undefined, 8)
+            );
+
+            // Should use floor 8's first and last nodes (10,20) and (100,100)
+            expect(result.current).toContain('start="10,20"');
+            expect(result.current).toContain('end="100,100"');
+        });
+
+        it('shows correct markers for floor 9 in multi-floor path', () => {
+            // Multi-floor path: floor 8 -> floor 9
+            const path: NavMeshNode[] = [
+                { id: 'Hall_F8_room_829', data: { x: 10, y: 20, floor: 8 } },
+                { id: 'Hall_F8_stair_1', data: { x: 100, y: 100, floor: 8 } },
+                { id: 'Hall_F9_stair_1', data: { x: 100, y: 100, floor: 9 } },
+                { id: 'Hall_F9_room_962', data: { x: 200, y: 200, floor: 9 } },
+            ];
+            const pathString = 'M 100 100 L 200 200';
+
+            // When viewing floor 9, markers should be at floor 9's start/end
+            const { result } = renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, pathString, undefined, undefined, 9)
+            );
+
+            // Should use floor 9's first and last nodes (100,100) and (200,200)
+            expect(result.current).toContain('start="100,100"');
+            expect(result.current).toContain('end="200,200"');
+        });
+
+        it('uses all path nodes when currentFloor is undefined', () => {
+            const path: NavMeshNode[] = [
+                { id: 'Hall_F8_room_829', data: { x: 10, y: 20, floor: 8 } },
+                { id: 'Hall_F9_room_962', data: { x: 200, y: 200, floor: 9 } },
+            ];
+            const pathString = 'M 10 20 L 200 200';
+
+            const { result } = renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, pathString, undefined, undefined, undefined)
+            );
+
+            // Should use entire path's first and last nodes
+            expect(result.current).toContain('start="10,20"');
+            expect(result.current).toContain('end="200,200"');
+        });
+
+        it('renders path without markers when no nodes on specified floor', () => {
+            // Path only has floor 8 nodes
+            const path: NavMeshNode[] = [
+                { id: 'Hall_F8_room_829', data: { x: 10, y: 20, floor: 8 } },
+                { id: 'Hall_F8_room_862', data: { x: 100, y: 100, floor: 8 } },
+            ];
+            const pathString = 'M 10 20 L 100 100';
+
+            // When viewing floor 9 (which has no nodes)
+            const { result } = renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, pathString, undefined, undefined, 9)
+            );
+
+            // Should render path without markers (no start/end attributes)
+            expect(result.current).toContain('<path d="M 10 20 L 100 100"');
+            expect(result.current).not.toContain('start="');
+            expect(result.current).not.toContain('end="');
+        });
+
+        it('extracts floor from node ID when floor not in data', () => {
+            // Nodes without floor in data, but floor info in ID
+            const path: NavMeshNode[] = [
+                { id: 'Hall_F8_room_829', data: { x: 10, y: 20 } },
+                { id: 'Hall_F8_room_862', data: { x: 100, y: 100 } },
+            ];
+            const pathString = 'M 10 20 L 100 100';
+
+            const { result } = renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, pathString, undefined, undefined, 8)
+            );
+
+            // Should extract floor from ID and include nodes
+            expect(result.current).toContain('start="10,20"');
+            expect(result.current).toContain('end="100,100"');
+        });
+
+        it('handles single node on floor', () => {
+            const path: NavMeshNode[] = [
+                { id: 'Hall_F8_room_829', data: { x: 10, y: 20, floor: 8 } },
+            ];
+            const pathString = 'M 10 20';
+
+            const { result } = renderHook(() =>
+                useProcessedSvg(mockSvgContent, path, pathString, undefined, undefined, 8)
+            );
+
+            // Single node: start and end should be the same
+            expect(result.current).toContain('start="10,20"');
+            expect(result.current).toContain('end="10,20"');
         });
     });
 

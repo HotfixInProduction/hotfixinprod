@@ -31,7 +31,15 @@ export interface POIInfo {
 
 export interface NavMeshNode {
     id: string | number;
-    data?: { x: number; y: number };
+    data?: { 
+        x: number; 
+        y: number; 
+        floor?: number;
+        type?: string;
+        buildingId?: string;
+        label?: string;
+        accessible?: boolean;
+    };
 }
 
 /**

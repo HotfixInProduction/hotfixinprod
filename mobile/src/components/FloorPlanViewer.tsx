@@ -469,7 +469,8 @@ export default function FloorPlanViewer({
         activePath,
         pathString,
         isNavigating ? undefined : startRoom,
-        isNavigating ? undefined : nextRoom
+        isNavigating ? undefined : nextRoom,
+        displayFloorNum
     );
     
     // Check if this is a multi-floor path
