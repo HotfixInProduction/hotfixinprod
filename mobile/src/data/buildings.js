@@ -1,6 +1,8 @@
 import { cc1Svg } from './svgs/cc1';
 import { ve1Svg } from './svgs/ve1';
 import { ve2Svg } from './svgs/ve2';
+import { vl1Svg } from './svgs/vl1';
+import { vl2Svg } from './svgs/vl2';
 import { hall1Svg } from './svgs/hall1';
 import { hall2Svg } from './svgs/hall2';
 import { hall8Svg } from './svgs/hall8';
@@ -1382,7 +1384,11 @@ export const buildings = [
         labelCoord: { latitude: 45.459102324778435, longitude: -73.6384271187033 },
         address: '7141 Sherbrooke St. W.',
         services: ['First Stop', 'Georges P. Vanier Library'],
-        isAccessible: true
+        isAccessible: true,
+        floorPlans: {
+            '1': vl1Svg,
+            '2': vl2Svg
+        }
     },
     {
         id: 'Vanier Extension',
