@@ -24,7 +24,7 @@ import type { OutdoorPOI } from '../data/outdoorPOI';
 import POIInfoPanel from '../components/POIInfoPanel';
 import POIFilter from '../components/POIFilter';
 import NearestPOIBanner from '../components/NearestPOIBanner';
-import { findNearestPOI } from '../utils/distanceUtils';
+import { findNearestPOI, calculateDistance } from '../utils/distanceUtils';
 import { getPOICategoryIcon, getPOICategoryLabel, getPOICategoryColor } from '../utils/poiMarkerUtils';
 import { useAppSettings } from '../hooks/useAppSettings';
 import {
@@ -471,10 +471,25 @@ export default function MapScreen() {
   }
   // Helper function to get POIs for current campus and active filters
   const getFilteredPOIs = useCallback(() => {
-    return outdoorPOIs.filter(
+    let filtered = outdoorPOIs.filter(
       poi => poi.campus === selectedCampus && poiFilters.has(poi.category)
     );
-  }, [selectedCampus, poiFilters]);
+
+    // Apply distance filter if user location is available
+    if (userLocation && settings?.poiRangeMeters) {
+      filtered = filtered.filter(poi => {
+        const distance = calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          poi.coordinates.latitude,
+          poi.coordinates.longitude
+        );
+        return distance <= settings.poiRangeMeters;
+      });
+    }
+
+    return filtered;
+  }, [selectedCampus, poiFilters, userLocation, settings]);
 
   // Helper function to get POI color based on category
   const getPOIMarkerColor = useCallback((category: OutdoorPOI['category'], isNearest: boolean = false): string => {
