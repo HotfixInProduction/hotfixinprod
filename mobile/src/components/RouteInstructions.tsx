@@ -145,13 +145,18 @@ const RouteInstructions = ({
                                 <Text style={[styles.navCircleBtnText, isFirstStep && styles.navCircleBtnTextDisabled]}>Prev</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
-                                style={[styles.navCircleBtn, styles.navCircleBtnPrimary]} 
-                                onPress={onNextStep}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.navCircleBtnTextPrimary}>{isLastStep ? 'Done' : 'Next'}</Text>
-                            </TouchableOpacity>
+                            {isLastStep ? (
+                                /* Invisible placeholder keeps "Prev" button from shifting right */
+                                <View style={{ width: 56, height: 56 }} />
+                            ) : (
+                                <TouchableOpacity 
+                                    style={[styles.navCircleBtn, styles.navCircleBtnPrimary]} 
+                                    onPress={onNextStep}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.navCircleBtnTextPrimary}>Next</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 </View>
