@@ -113,7 +113,10 @@ describe('Epic 4: Indoor Floor Plans E2E Test', () => {
         await element(by.id('floor-btn-8')).tap();
         await waitFor(element(by.text('Hall Building - Floor 8'))).toBeVisible().withTimeout(5000);
 
-        // 8. Select POI
+        // 8. Select POI (Stairs)
+        await waitFor(element(by.id('amenity-touch-stairs1'))).toBeVisible().withTimeout(5000);
+        await element(by.id('amenity-touch-stairs1')).tap();
+        wait(5000);
 
 
     });
