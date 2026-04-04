@@ -64,10 +64,9 @@ describe('InlineRoomSelector', () => {
 
     expect(getByText('Floor')).toBeTruthy();
     expect(getByText('Room')).toBeTruthy();
-    expect(getByText('No building selected')).toBeTruthy();
   });
 
-  it('renders selected building text when building is provided', () => {
+  it('renders selected floor and room when building is provided', () => {
     const { getByText } = render(
       <InlineRoomSelector
         label="Start"
@@ -77,7 +76,8 @@ describe('InlineRoomSelector', () => {
       />
     );
 
-    expect(getByText('Building: Hall Building • Floor 8 • H-820')).toBeTruthy();
+    expect(getByText('Floor: 8')).toBeTruthy();
+    expect(getByText('Room: H-820')).toBeTruthy();
   });
 
   it('shows selected floor in floor input', () => {

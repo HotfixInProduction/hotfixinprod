@@ -103,6 +103,7 @@ export default function MapScreen() {
   // Room selection state for cross-building persistence
   const [startRoomSelection, setStartRoomSelection] = useState<RoomSelection | null>(null);
   const [destinationRoomSelection, setDestinationRoomSelection] = useState<RoomSelection | null>(null);
+  const [enableAccessibility, setEnableAccessibility] = useState(false);
 
   // Navigation state using custom hook
   const {
@@ -122,17 +123,13 @@ export default function MapScreen() {
     start,
     destination,
     googleMapsApiKey,
+    isAccessible: enableAccessibility,
     onShowShuttleSchedule: () => setShowShuttleSchedule(true),
     onShowInstructions: () => setShowInstructions(true),
     onExit: () => {
       setShowRoutePreview(false);
       setBuildingSelectorVisible(true);
-      // Clear the route and all related data
-      setStart(null);
-      setDestination(null);
       setInstructions([]);
-      setStartRoomSelection(null);
-      setDestinationRoomSelection(null);
     },
     onRestoreRouteInfo: (routeInfo) => setRouteInfo(routeInfo),
   });
@@ -865,6 +862,10 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
               setStartSelection: setStartRoomSelection,
               destinationSelection: destinationRoomSelection,
               setDestinationSelection: setDestinationRoomSelection,
+            }}
+            accessibility={{
+              enabled: enableAccessibility,
+              setEnabled: setEnableAccessibility,
             }}
             directionsAction={{
               canShow: isStartComplete && isDestinationComplete,

@@ -99,6 +99,7 @@ interface UseNavigationStateProps {
     start: Place | null;
     destination: Place | null;
     googleMapsApiKey: string | undefined;
+    isAccessible?: boolean;
     onShowShuttleSchedule: () => void;
     onShowInstructions: () => void;
     onExit: () => void;
@@ -172,6 +173,7 @@ export function useNavigationState({
     start,
     destination,
     googleMapsApiKey,
+    isAccessible = false,
     onShowShuttleSchedule,
     onShowInstructions,
     onExit,
@@ -202,7 +204,6 @@ export function useNavigationState({
             return;
         }
 
-        const isAccessible = false;
         const startBuildingId = startRoomSelection?.buildingId;
         const destBuildingId = destinationRoomSelection?.buildingId;
         
@@ -220,7 +221,7 @@ export function useNavigationState({
             // Fallback for purely outdoor Google Maps navigation without rooms
             onShowInstructions();
         }
-    }, [transportMode, startRoomSelection, destinationRoomSelection, instructions, navigationSteps, onShowShuttleSchedule, onShowInstructions]);
+    }, [transportMode, startRoomSelection, destinationRoomSelection, instructions, navigationSteps, onShowShuttleSchedule, onShowInstructions, isAccessible]);
 
     const handleExitNavigation = useCallback(() => {
         isExitingRef.current = true;

@@ -81,6 +81,7 @@ describe('StartDestinationPicker', () => {
       },
       ...(overrides.mapSelection ? { mapSelection: overrides.mapSelection } : {}),
       ...(overrides.roomSelection ? { roomSelection: overrides.roomSelection } : {}),
+      ...(overrides.accessibility ? { accessibility: overrides.accessibility } : {}),
       ...(overrides.directionsAction ? { directionsAction: overrides.directionsAction } : {}),
     });
   // Helper functions to reduce code duplication
@@ -107,7 +108,7 @@ describe('StartDestinationPicker', () => {
   };
 
   const pressCurrentLocationButton = async (getByText: any) => {
-    const currentLocationButton = getByText('Use Current Location');
+    const currentLocationButton = getByText('Current Location');
     await act(async () => {
       fireEvent.press(currentLocationButton);
     });
@@ -228,15 +229,15 @@ describe('StartDestinationPicker', () => {
     expect(mockSetDestination).toHaveBeenCalledWith(destPlace);
   });
 
-  it('shows Use Current Location button when userLocation is provided', () => {
+  it('shows Current Location button when userLocation is provided', () => {
     const userLocation = { latitude: 45.5, longitude: -73.6 };
     const { getByText } = render(<StartDestinationPicker {...createProps({ locations: { userLocation } })} />);
-    expect(getByText('Use Current Location')).toBeTruthy();
+    expect(getByText('Current Location')).toBeTruthy();
   });
 
-  it('does not show Use Current Location button when userLocation is null', () => {
+  it('does not show Current Location button when userLocation is null', () => {
     const { queryByText } = render(<StartDestinationPicker {...createProps()} />);
-    expect(queryByText('Use Current Location')).toBeNull();
+    expect(queryByText('Current Location')).toBeNull();
   });
 
   it('handles Use Current Location button press - finds nearest building', async () => {
@@ -388,7 +389,7 @@ describe('StartDestinationPicker', () => {
     (Location.getCurrentPositionAsync as jest.Mock).mockReturnValue(locationPromise);
 
     const { getByText, UNSAFE_getByType } = render(<StartDestinationPicker {...createProps({ locations: { userLocation } })} />);
-    const currentLocationButton = getByText('Use Current Location');
+    const currentLocationButton = getByText('Current Location');
 
     await act(async () => {
       fireEvent.press(currentLocationButton);
@@ -456,22 +457,56 @@ describe('StartDestinationPicker', () => {
     expect(locationIcon).toBeDefined();
   });
 
-  it('renders selected text with proper styling', async () => {
-    const mockPlace = createMockPlace('Styled Building', '789 Style Ave');
-    const { getByText } = render(<StartDestinationPicker {...createProps({ locations: { start: mockPlace } })} />);
-
-    await waitFor(() => {
-      const selectedText = getByText('Selected: Styled Building');
-      expect(selectedText).toBeTruthy();
-      expect(selectedText.props.style).toBeDefined();
-    });
+  it('renders Room Selection Mode toggle', () => {
+    const { getByText } = render(<StartDestinationPicker {...createProps()} />);
+    expect(getByText('Room Selection Mode')).toBeTruthy();
   });
 
-  it('renders all label texts', () => {
-    const { getByText } = render(<StartDestinationPicker {...createProps()} />);
+  it('renders Accessibility Mode toggle when setEnabled is provided', () => {
+    const mockSetEnableAccessibility = jest.fn();
+    const { getByText } = render(
+      <StartDestinationPicker
+        {...createProps({ accessibility: { enabled: false, setEnabled: mockSetEnableAccessibility } })}
+      />
+    );
+    expect(getByText('Accessibility Mode')).toBeTruthy();
+  });
 
-    expect(getByText('Start Building')).toBeTruthy();
-    expect(getByText('Destination Building')).toBeTruthy();
+  it('does not render Accessibility Mode toggle when setEnabled is not provided', () => {
+    const { queryByText } = render(
+      <StartDestinationPicker
+        {...createProps({ accessibility: { enabled: false } })}
+      />
+    );
+    expect(queryByText('Accessibility Mode')).toBeNull();
+  });
+
+  it('calls setEnableAccessibility when Accessibility toggle is changed', async () => {
+    const mockSetEnableAccessibility = jest.fn();
+    const { getAllByRole } = render(
+      <StartDestinationPicker
+        {...createProps({ accessibility: { enabled: false, setEnabled: mockSetEnableAccessibility } })}
+      />
+    );
+
+    // The second switch is the Accessibility toggle (first is Room Selection Mode)
+    const allToggles = getAllByRole('switch');
+    
+    await act(async () => {
+      fireEvent(allToggles[1], 'valueChange', true);
+    });
+
+    expect(mockSetEnableAccessibility).toHaveBeenCalledWith(true);
+  });
+
+  it('renders Accessibility Mode toggle with active styling when enabled', () => {
+    const mockSetEnableAccessibility = jest.fn();
+    const { getByText } = render(
+      <StartDestinationPicker
+        {...createProps({ accessibility: { enabled: true, setEnabled: mockSetEnableAccessibility } })}
+      />
+    );
+    expect(getByText('Accessibility Mode')).toBeTruthy();
   });
 
   describe('Select on Map buttons', () => {
@@ -525,16 +560,16 @@ describe('StartDestinationPicker', () => {
       const { getByText } = render(
         <StartDestinationPicker {...createMapSelectionProps('start')} />
       );
-      expect(getByText('Selecting on map...')).toBeTruthy();
+      expect(getByText('Selecting...')).toBeTruthy();
     });
 
     it('shows active state for destination when mapSelectionTarget is "destination"', () => {
       const { getAllByText } = render(
         <StartDestinationPicker {...createMapSelectionProps('destination')} />
       );
-      // One "Select on Map" for start, one "Selecting on map..." for destination
+      // One "Select on Map" for start, one "Selecting..." for destination
       expect(getAllByText('Select on Map').length).toBe(1);
-      expect(getAllByText('Selecting on map...').length).toBe(1);
+      expect(getAllByText('Selecting...').length).toBe(1);
     });
 
     it('toggles off when pressing active Select on Map button', async () => {
@@ -545,6 +580,19 @@ describe('StartDestinationPicker', () => {
 
       await act(async () => {
         fireEvent.press(getByTestId('select-start-on-map'));
+      });
+
+      expect(props.mapSelection.setTarget).toHaveBeenCalledWith(null);
+    });
+
+    it('toggles off destination when pressing active destination Select on Map button', async () => {
+      const props = createMapSelectionProps('destination');
+      const { getByTestId } = render(
+        <StartDestinationPicker {...props} />
+      );
+
+      await act(async () => {
+        fireEvent.press(getByTestId('select-destination-on-map'));
       });
 
       expect(props.mapSelection.setTarget).toHaveBeenCalledWith(null);
@@ -739,22 +787,30 @@ describe('StartDestinationPicker', () => {
     expect(mockSetDestinationRoomSelection).toHaveBeenCalledWith(null);
   });
 
-  it('renders View Directions button only when canShowDirectionsAction is true', () => {
-    const { getByTestId, queryByTestId, rerender } = render(
+  it('renders View Directions button as disabled when canShowDirectionsAction is false', () => {
+    const { getByTestId } = render(
       <StartDestinationPicker
         {...createProps({ directionsAction: { canShow: false, onShow: jest.fn() } })}
       />
     );
 
-    expect(queryByTestId('view-directions-button')).toBeNull();
+    const button = getByTestId('view-directions-button');
+    expect(button).toBeTruthy();
+    // Button should be disabled
+    expect(button.props.accessibilityState.disabled).toBe(true);
+  });
 
-    rerender(
+  it('renders View Directions button as enabled when canShowDirectionsAction is true', () => {
+    const { getByTestId } = render(
       <StartDestinationPicker
         {...createProps({ directionsAction: { canShow: true, onShow: jest.fn() } })}
       />
     );
 
-    expect(getByTestId('view-directions-button')).toBeTruthy();
+    const button = getByTestId('view-directions-button');
+    expect(button).toBeTruthy();
+    // Button should be enabled
+    expect(button.props.accessibilityState.disabled).toBe(false);
   });
 
   it('does not render View Directions button when onShowDirections is missing', () => {
