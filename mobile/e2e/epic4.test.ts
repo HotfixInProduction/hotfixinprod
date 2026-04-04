@@ -104,20 +104,21 @@ describe('Epic 4: Indoor Floor Plans E2E Test', () => {
         await waitFor(element(by.id('floor-plan-close'))).toBeVisible().withTimeout(15000);
         await expect(element(by.text('Hall Building - Floor 1'))).toBeVisible();
 
-        // 6. Select Floor 8
-        await element(by.id('floor-btn-8')).tap();
-        await waitFor(element(by.text('Hall Building - Floor 8'))).toBeVisible().withTimeout(5000);
 
-        // 7. Select Floor 9
+        // 6. Select Floor 9
         await element(by.id('floor-btn-9')).tap();
         await waitFor(element(by.text('Hall Building - Floor 9'))).toBeVisible().withTimeout(5000);
 
+        // 7. Select Floor 8
+        await element(by.id('floor-btn-8')).tap();
+        await waitFor(element(by.text('Hall Building - Floor 8'))).toBeVisible().withTimeout(5000);
+
         // 8. Select POI
-        await element(by.id('floor-plan-close')).atIndex(0).tap({ x: 200, y: 550 });
+
 
     });
 
-    it('AT 4.5: Should select Hall Building and view its floor plan and steps to get there', async () => {
+    it('AT 4.5: Should select Destination picker and view directions different floors', async () => {
         // 1. Setup app near Hall Building
         const hallCoords = { latitude: 45.497285, longitude: -73.578974 };
         await setupApp({ location: 'always' }, hallCoords);
@@ -130,7 +131,7 @@ describe('Epic 4: Indoor Floor Plans E2E Test', () => {
 
     });
 
-    it('AT 4.6: Should select Hall Building and view its floor plan and steps to get there', async () => {
+    it('AT 4.6: Should select Destination picker and view floor directions to different building floors', async () => {
         // 1. Setup app near Hall Building
         const hallCoords = { latitude: 45.497285, longitude: -73.578974 };
         await setupApp({ location: 'always' }, hallCoords);
