@@ -360,7 +360,6 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
 
   const floorText = getFloorText(building, selection);
   const roomText = getRoomText(building, selection, buildingPrefix);
-  const selectedText = getSelectedText(buildingId, selection, buildingPrefix);
 
   return (
     <View style={styles.section}>
