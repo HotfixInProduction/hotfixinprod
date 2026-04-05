@@ -1,7 +1,8 @@
-﻿﻿import React, { useState, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { MaterialIcons } from '@expo/vector-icons';
 
 import { useGoogleCalendar } from '../hooks/useGoogleCalendar';
 import { useNextClass } from '../hooks/useNextClass';
@@ -26,14 +27,31 @@ import type { NextClassRouteParam } from '../types/calendar';
 const ScheduleScreen: React.FC = () => {
   // Compute once per mount so fake timers in tests control the dates.
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [viewDate, setViewDate] = useState(new Date());
   const { state, connect, disconnect, selectCalendar } = useGoogleCalendar();
   const { hourHeight, dayColWidth, setGridHeight, getMondayOfWeek, getEventStyle } = useWeekGrid();
 
   const displayClasses = state.isAuthenticated ? state.events : [];
   const nextClass = useNextClass(displayClasses, currentTime);
-  const monday = getMondayOfWeek(currentTime);
+  const monday = getMondayOfWeek(viewDate);
 
   const navigation = useNavigation<any>();
+
+  const handleNextWeek = () => {
+    const next = new Date(viewDate);
+    next.setDate(next.getDate() + 7);
+    setViewDate(next);
+  };
+
+  const handlePrevWeek = () => {
+    const prev = new Date(viewDate);
+    prev.setDate(prev.getDate() - 7);
+    setViewDate(prev);
+  };
+
+  const handleToday = () => {
+    setViewDate(new Date());
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -60,12 +78,18 @@ const ScheduleScreen: React.FC = () => {
       {state.isAuthenticated && state.user ? (
         <>
           <ConnectedUserBar user={state.user} onDisconnect={disconnect} />
-          <CalendarPicker
-            calendars={state.calendars}
-            selectedCalendarId={state.selectedCalendarId}
-            onSelect={selectCalendar}
-            isLoading={state.isLoading}
-          />
+          <View style={styles.topRow}>
+            <CalendarPicker
+              calendars={state.calendars}
+              selectedCalendarId={state.selectedCalendarId}
+              onSelect={selectCalendar}
+              isLoading={state.isLoading}
+            />
+            <TouchableOpacity onPress={handleToday} style={styles.todayButton}>
+              <MaterialIcons name="calendar-today" size={20} color="#800000" />
+              <Text style={styles.todayText}>Today</Text>
+            </TouchableOpacity>
+          </View>
         </>
       ) : (
         <CalendarConnectButton
@@ -75,36 +99,39 @@ const ScheduleScreen: React.FC = () => {
         />
       )}
 
-{nextClass && (
-  <NextClassCard
-    nextClass={nextClass}
-    onDirectionsPress={(selectedClass) => {
-      const nextClassParam: NextClassRouteParam = {
-        id: selectedClass.id,
-        title: selectedClass.title,
-        location: selectedClass.location,
-        building: selectedClass.building,
-        room: selectedClass.room,
-        startTime: selectedClass.startTime.toISOString(),
-        endTime: selectedClass.endTime.toISOString(),
-        dayOfWeek: selectedClass.dayOfWeek,
-        color: selectedClass.color,
-      };
+      {nextClass && (
+        <NextClassCard
+          nextClass={nextClass}
+          onDirectionsPress={(selectedClass) => {
+            const nextClassParam: NextClassRouteParam = {
+              id: selectedClass.id,
+              title: selectedClass.title,
+              location: selectedClass.location,
+              building: selectedClass.building,
+              room: selectedClass.room,
+              startTime: selectedClass.startTime.toISOString(),
+              endTime: selectedClass.endTime.toISOString(),
+              dayOfWeek: selectedClass.dayOfWeek,
+              color: selectedClass.color,
+            };
 
-      navigation.navigate('Map', {
-        nextClass: nextClassParam,
-        startFromCurrentLocation: true,
-      });
-    }}
-  />
-)}
+            navigation.navigate('Map', {
+              nextClass: nextClassParam,
+              startFromCurrentLocation: true,
+            });
+          }}
+        />
+      )}
       <View style={styles.gridWrapper}>
         <WeekDayHeader
           timeColWidth={TIME_COL_WIDTH}
           dayColWidth={dayColWidth}
           monday={monday}
+          onPrev={handlePrevWeek}
+          onNext={handleNextWeek}
         />
         <View
+          testID="time-grid"
           style={styles.timeGrid}
           onLayout={(e) => setGridHeight(e.nativeEvent.layout.height)}
         >
@@ -114,19 +141,33 @@ const ScheduleScreen: React.FC = () => {
             totalHours={TOTAL_HOURS}
             hourHeight={hourHeight}
           />
-          {WEEK_DAY_INDICES.map((dayIdx) => (
-            <DayColumn
-              key={dayIdx}
-              width={dayColWidth}
-              hourHeight={hourHeight}
-              totalHours={TOTAL_HOURS}
-              events={displayClasses.filter(cls => cls.dayOfWeek === dayIdx)}
-              isToday={isToday(dayIdx)}
-              showNowLine={showNowLine}
-              nowTop={nowTop}
-              getEventStyle={getEventStyle}
-            />
-          ))}
+          {WEEK_DAY_INDICES.map((dayIdx) => {
+            const dayDate = new Date(monday);
+            dayDate.setDate(monday.getDate() + (dayIdx - 1));
+
+            return (
+              <DayColumn
+                key={dayIdx}
+                width={dayColWidth}
+                hourHeight={hourHeight}
+                totalHours={TOTAL_HOURS}
+                events={displayClasses.filter(cls =>
+                  cls.startTime.getDate() === dayDate.getDate() &&
+                  cls.startTime.getMonth() === dayDate.getMonth() &&
+                  cls.startTime.getFullYear() === dayDate.getFullYear()
+                )}
+                isToday={isToday(dayIdx)}
+                showNowLine={showNowLine &&
+                  currentTime.getDate() === dayDate.getDate() &&
+                  currentTime.getMonth() === dayDate.getMonth() &&
+                  currentTime.getFullYear() === dayDate.getFullYear()
+                }
+                nowTop={nowTop}
+                getEventStyle={getEventStyle}
+              />
+            );
+          })}
+          <View style={{ width: TIME_COL_WIDTH }} />
         </View>
       </View>
     </SafeAreaView>
@@ -144,6 +185,34 @@ const styles = StyleSheet.create({
   timeGrid: {
     flex: 1,
     flexDirection: 'row',
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+  },
+  todayButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    marginLeft: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  todayText: {
+    color: '#800000',
+    fontWeight: '600',
+    fontSize: 14,
+    marginLeft: 4,
   },
 });
 

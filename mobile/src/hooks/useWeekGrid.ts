@@ -14,7 +14,8 @@ export function useWeekGrid() {
   const [gridHeight, setGridHeight] = useState(0);
 
   const hourHeight = gridHeight > 0 ? gridHeight / TOTAL_HOURS : 0;
-  const dayColWidth = (width - TIME_COL_WIDTH) / 5;
+  // Account for columns on both sides in the header (Time column/Left Arrow and Right Arrow)
+  const dayColWidth = (width - 2 * TIME_COL_WIDTH) / 5;
 
   const getMondayOfWeek = (date: Date): Date => {
     const d = new Date(date);

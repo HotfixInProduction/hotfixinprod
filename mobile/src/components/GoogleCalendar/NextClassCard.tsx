@@ -35,7 +35,11 @@ export default function NextClassCard({ nextClass, onDirectionsPress }: Readonly
             <Text style={styles.countdown}>{getTimeUntilClass(nextClass.startTime)}</Text>
           </Text>
         </View>
-        <TouchableOpacity style={styles.directionsBtn} onPress={() => onDirectionsPress(nextClass)}>
+        <TouchableOpacity 
+          testID="next-class-directions-button"
+          style={styles.directionsBtn} 
+          onPress={() => onDirectionsPress(nextClass)}
+        >
           <MaterialIcons name="directions" size={22} color="#fff" />
         </TouchableOpacity>
       </View>

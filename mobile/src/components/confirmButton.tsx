@@ -14,6 +14,7 @@ const ConfirmButton : React.FC<ConfirmButtonProps> = ({
 }) => {
     return (
         <TouchableOpacity
+            testID="confirm-route-button"
             onPress={onPress}
             disabled={disabled}
             style={[styles.button, disabled && styles.disabled]}

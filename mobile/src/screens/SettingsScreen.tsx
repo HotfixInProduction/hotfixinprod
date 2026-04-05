@@ -31,6 +31,7 @@ export default function SettingsScreen() {
           
           <View style={styles.sliderContainer}>
             <Slider
+              testID="poi-range-slider"
               style={styles.slider}
               minimumValue={100}
               maximumValue={2000}
@@ -46,7 +47,7 @@ export default function SettingsScreen() {
 
           <View style={styles.rangeDisplayContainer}>
             <Text style={styles.rangeLabel}>Range:</Text>
-            <Text style={styles.rangeValue}>{Math.round(settings.poiRangeMeters)} meters</Text>
+            <Text style={styles.rangeValue} testID="poi-range-value">{Math.round(settings.poiRangeMeters)} meters</Text>
           </View>
         </View>
 
