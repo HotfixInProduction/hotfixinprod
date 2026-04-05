@@ -131,6 +131,7 @@ const ScheduleScreen: React.FC = () => {
           onNext={handleNextWeek}
         />
         <View
+          testID="time-grid"
           style={styles.timeGrid}
           onLayout={(e) => setGridHeight(e.nativeEvent.layout.height)}
         >
