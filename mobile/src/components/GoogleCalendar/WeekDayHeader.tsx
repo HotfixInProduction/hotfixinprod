@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { WEEK_DAY_INDICES, DAY_HEADER_HEIGHT } from '../../hooks/useWeekGrid';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { WEEK_DAY_INDICES, DAY_HEADER_HEIGHT, TIME_COL_WIDTH } from '../../hooks/useWeekGrid';
 
 const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
@@ -8,6 +9,8 @@ interface Props {
   timeColWidth: number;
   dayColWidth: number;
   monday: Date;
+  onPrev: () => void;
+  onNext: () => void;
 }
 
 function getDayDate(monday: Date, dayIndex: number): string {
@@ -27,9 +30,13 @@ function isToday(monday: Date, dayIndex: number): boolean {
   );
 }
 
-export default function WeekDayHeader({ timeColWidth, dayColWidth, monday }: Readonly<Props>) {
+export default function WeekDayHeader({ timeColWidth, dayColWidth, monday, onPrev, onNext }: Readonly<Props>) {
   return (
-    <View style={[styles.row, { paddingLeft: timeColWidth, height: DAY_HEADER_HEIGHT }]}>
+    <View style={[styles.row, { height: DAY_HEADER_HEIGHT }]}>
+      <TouchableOpacity onPress={onPrev} style={[styles.arrowButton, { width: timeColWidth }]}>
+        <MaterialIcons name="chevron-left" size={24} color="#912338" />
+      </TouchableOpacity>
+
       {WEEK_DAY_INDICES.map((dayIdx, i) => {
         const today = isToday(monday, dayIdx);
         return (
@@ -45,6 +52,10 @@ export default function WeekDayHeader({ timeColWidth, dayColWidth, monday }: Rea
           </View>
         );
       })}
+
+      <TouchableOpacity onPress={onNext} style={[styles.arrowButton, { width: TIME_COL_WIDTH }]}>
+        <MaterialIcons name="chevron-right" size={24} color="#912338" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -83,4 +94,9 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   todayDateText: { color: '#fff' },
+  arrowButton: {
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

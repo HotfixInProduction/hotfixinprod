@@ -28,8 +28,9 @@ export async function fetchCalendarEvents(
   calendarId: string = 'primary'
 ): Promise<GoogleCalendarEvent[]> {
   const now = new Date();
-  const timeMin = now.toISOString();
-  const timeMax = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Fetch from 1 week ago until 4 weeks from now (approx 5 weeks coverage)
+  const timeMin = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const timeMax = new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000).toISOString();
   const res = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events` +
       `?timeMin=${encodeURIComponent(timeMin)}` +
