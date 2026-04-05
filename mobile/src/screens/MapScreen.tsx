@@ -129,7 +129,6 @@ export default function MapScreen() {
     onExit: () => {
       setShowRoutePreview(false);
       setBuildingSelectorVisible(true);
-      setInstructions([]);
     },
     onRestoreRouteInfo: (routeInfo) => setRouteInfo(routeInfo),
   });

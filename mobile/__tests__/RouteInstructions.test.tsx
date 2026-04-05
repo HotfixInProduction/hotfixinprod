@@ -353,7 +353,7 @@ it('evaluates both true and false branches for the toggle panel and icon', () =>
       // navigationMode = 'indoor'
       // navigationInstruction = "Custom String" (truthy)
       // isLastStep = true
-      const { getByText } = render(
+      const { getByText, queryByText } = render(
         <RouteInstructions
           instructions={mockInstructions}
           start={start}
@@ -367,7 +367,8 @@ it('evaluates both true and false branches for the toggle panel and icon', () =>
       );
       expect(getByText('directions')).toBeTruthy();
       expect(getByText('Custom instruction here')).toBeTruthy();
-      expect(getByText('Done')).toBeTruthy();
+      // When isLastStep=true, there's an invisible placeholder instead of "Next" button
+      expect(queryByText('Next')).toBeNull();
     });
 
     it('evaluates the fallback branch for indoor path without custom instruction', () => {
