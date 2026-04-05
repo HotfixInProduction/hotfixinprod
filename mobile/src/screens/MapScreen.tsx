@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import StartDestinationPicker, { Place } from '../components/BuildingSelector/StartDestinationPicker';
-import { MaterialIcons } from '@expo/vector-icons'
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
 import Constants from "expo-constants";
@@ -503,6 +503,26 @@ export default function MapScreen() {
     return getPOICategoryColor(category, isNearest);
   }, []);
 
+  // Helper function to get icon name for POI category
+  const getPOIIconName = useCallback((category: OutdoorPOI['category']): string => {
+    switch (category) {
+      case 'food':
+        return 'silverware-fork-knife';
+      case 'cafe':
+        return 'coffee';
+      case 'restroom':
+        return 'toilet';
+      case 'parking':
+        return 'parking';
+      case 'bike_rack':
+        return 'bike';
+      case 'emergency':
+        return 'medical-bag';
+      default:
+        return 'map-marker';
+    }
+  }, []);
+
   const handlePOISelect = useCallback((poi: OutdoorPOI) => {
     setSelectedPOI(poi);
   }, []);
@@ -719,19 +739,52 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
         {/* POI Markers */}
         {getFilteredPOIs().map((poi) => {
           const isNearest = nearestPOI?.id === poi.id;
-          const icon = getPOICategoryIcon(poi.category);
           const label = getPOICategoryLabel(poi.category);
+          const color = getPOIMarkerColor(poi.category, isNearest);
+          const iconName = getPOIIconName(poi.category);
           return (
             <Marker
               key={poi.id}
               coordinate={poi.coordinates}
-              title={`${icon} ${poi.name}`}
+              title={`${poi.name}`}
               description={`${label}${isNearest ? ' - Nearest!' : ''}`}
-              pinColor={getPOIMarkerColor(poi.category, isNearest)}
               onPress={() => handlePOISelect(poi)}
               testID={`poi-marker-${poi.id}`}
-              opacity={1}
-            />
+            >
+              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <View
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: 15,
+                    backgroundColor: color,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3,
+                    elevation: 5,
+                  }}
+                >
+                  <MaterialCommunityIcons name={iconName as any} size={13} color="#fff" />
+                </View>
+                {isNearest && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      width: 38,
+                      height: 38,
+                      borderRadius: 19,
+                      borderWidth: 2,
+                      borderColor: '#FFD700',
+                    }}
+                  />
+                )}
+              </View>
+            </Marker>
           );
         })}
 
