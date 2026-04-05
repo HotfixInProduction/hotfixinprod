@@ -1495,7 +1495,8 @@ describe('Clearing Route', () => {
 
     await waitFor(() => {
       expect(queryByTestId('route-instructions-mock')).toBeNull();
-      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(queryByTestId('route-info-mock')).toBeNull();
+      expect(getByTestId('building-selector-toggle')).toBeTruthy();
     });
   });
 });
@@ -1950,7 +1951,7 @@ describe('Route Instructions', () => {
     expect(queryByTestId('building-selector-toggle')).toBeNull();
   });
 
-  it('returns to route info when instructions are closed', async () => {
+  it('clears route when instructions are closed', async () => {
     const { getByTestId, queryByTestId } = render(<MapScreen />);
     await setupRouteInstructions(getByTestId);
 
@@ -1958,7 +1959,8 @@ describe('Route Instructions', () => {
 
     await waitFor(() => {
       expect(queryByTestId('route-instructions-mock')).toBeNull();
-      expect(getByTestId('route-info-mock')).toBeTruthy();
+      expect(queryByTestId('route-info-mock')).toBeNull();
+      expect(getByTestId('building-selector-toggle')).toBeTruthy();
     });
   });
 
@@ -2022,17 +2024,15 @@ describe('Route Instructions', () => {
     await setupRouteInstructions(getByTestId);
 
     fireEvent.press(getByTestId('route-instructions-close-button'));
-    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
-
-    fireEvent.press(getByTestId('route-info-close-button'));
 
     await waitFor(() => {
       expect(queryByTestId('route-instructions-mock')).toBeNull();
       expect(queryByTestId('route-info-mock')).toBeNull();
+      expect(getByTestId('building-selector-toggle')).toBeTruthy();
     });
   });
 
-  it('clears route state and restores building selector when exiting route instructions', async () => {
+  it('clears route state and restores building selector when closing route instructions', async () => {
     const { getByTestId, queryByTestId } = render(<MapScreen />);
     
     // Setup route instructions
@@ -2053,26 +2053,14 @@ describe('Route Instructions', () => {
 
     await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
 
-    // The route instructions close button should trigger handleExitNavigation -> onExit()
-    // onExit() clears: setStart(null), setDestination(null), setInstructions([])
-    // setStartRoomSelection(null), setDestinationRoomSelection(null)
+    // Close route instructions should clear route state and exit navigation
     fireEvent.press(getByTestId('route-instructions-close-button'));
 
-    // After closing route instructions and exiting navigation, we should return to route info
     await waitFor(() => {
       expect(queryByTestId('route-instructions-mock')).toBeNull();
-      expect(getByTestId('route-info-mock')).toBeTruthy();
-    });
-
-    // Close the route info  
-    fireEvent.press(getByTestId('route-info-close-button'));
-
-    await waitFor(() => {
       expect(queryByTestId('route-info-mock')).toBeNull();
+      expect(getByTestId('building-selector-toggle')).toBeTruthy();
     });
-
-    // Building selector toggle should be visible and usable again
-    expect(getByTestId('building-selector-toggle')).toBeTruthy();
 
     // Verify we can add a new route
     fireEvent.press(getByTestId('building-selector-toggle'));
