@@ -53,6 +53,10 @@ type StartDestinationPickerProps = {
     destinationSelection?: RoomSelection | null;
     setDestinationSelection?: (selection: RoomSelection | null) => void;
   };
+  accessibility?: {
+    enabled: boolean;
+    setEnabled?: (val: boolean) => void;
+  };
   directionsAction?: {
     canShow: boolean;
     onShow: () => void;
@@ -67,7 +71,7 @@ const GOOGLE_DIRECTIONS_MODE: Record<TravelMode, string> = {
   SHUTTLE: 'transit',
 };
 
-const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locations, route, mapSelection, roomSelection, directionsAction, }) => {
+const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locations, route, mapSelection, roomSelection, accessibility, directionsAction, }) => {
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
 
   const { userLocation, start, destination, setStart, setDestination } = locations;
@@ -82,6 +86,9 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
     const setStartRoomSelection = roomSelection?.setStartSelection;
     const destinationRoomSelection = roomSelection?.destinationSelection ?? null;
     const setDestinationRoomSelection = roomSelection?.setDestinationSelection;
+
+    const enableAccessibility = accessibility?.enabled ?? false;
+    const setEnableAccessibility = accessibility?.setEnabled;
 
     const canShowDirectionsAction = directionsAction?.canShow ?? false;
     const onShowDirections = directionsAction?.onShow;
@@ -198,7 +205,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
 
   return (
     <View style={styles.container} testID="building-selector-container">
-    <View style={styles.toggleRow}>
+    <View style={[styles.toggleRow, styles.toggleRowNoBorder]}>
       <Text style={styles.toggleLabel}>Room Selection Mode</Text>
 
       <Switch
@@ -208,7 +215,18 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
         thumbColor={enableRoomSelection ? '#912338' : '#999'}
       />
     </View>
-      <Text style={styles.label}>Start Building</Text>
+    {setEnableAccessibility && (
+      <View style={[styles.toggleRow, styles.toggleRowNoBorder]}>
+        <Text style={styles.toggleLabel}>Accessibility Mode</Text>
+
+        <Switch
+          value={!!enableAccessibility}
+          onValueChange={setEnableAccessibility}
+          trackColor={{ false: '#ddd', true: '#f3c4cc' }}
+          thumbColor={enableAccessibility ? '#912338' : '#999'}
+        />
+      </View>
+    )}
       <View style={styles.selectorRow}>
         <View style={styles.selectorWrapper}>
           <BuildingSelector
@@ -245,9 +263,6 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
           </TouchableOpacity>
         )}
       </View>
-      {!enableRoomSelection && start && (
-        <Text style={styles.selectedText}>Selected: {start.name}</Text>
-      )}
       {enableRoomSelection && setStartRoomSelection && (
               <InlineRoomSelector
                 buildingId={start?.name ?? null}
@@ -256,44 +271,46 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
                 onChange={setStartRoomSelection}
               />
      )}
-      {setMapSelectionTarget && (
-        <TouchableOpacity
-          style={[
-            styles.selectOnMapButton,
-            mapSelectionTarget === 'start' && styles.selectOnMapButtonActive,
-          ]}
-          onPress={() => setMapSelectionTarget(mapSelectionTarget === 'start' ? null : 'start')}
-          testID="select-start-on-map"
-        >
-          <MaterialIcons name="map" size={18} color={mapSelectionTarget === 'start' ? '#fff' : '#912338'} />
-          <Text style={[
-            styles.selectOnMapText,
-            mapSelectionTarget === 'start' && styles.selectOnMapTextActive,
-          ]}>
-            {mapSelectionTarget === 'start' ? 'Selecting on map...' : 'Select on Map'}
-          </Text>
-        </TouchableOpacity>
-      )}
+      <View style={styles.buttonRow}>
+        {setMapSelectionTarget && (
+          <TouchableOpacity
+            style={[
+              styles.selectOnMapButton,
+              styles.halfButton,
+              mapSelectionTarget === 'start' && styles.selectOnMapButtonActive,
+            ]}
+            onPress={() => setMapSelectionTarget(mapSelectionTarget === 'start' ? null : 'start')}
+            testID="select-start-on-map"
+          >
+            <MaterialIcons name="map" size={18} color={mapSelectionTarget === 'start' ? '#fff' : '#912338'} />
+            <Text style={[
+              styles.selectOnMapText,
+              mapSelectionTarget === 'start' && styles.selectOnMapTextActive,
+            ]}>
+              {mapSelectionTarget === 'start' ? 'Selecting...' : 'Select on Map'}
+            </Text>
+          </TouchableOpacity>
+        )}
 
-      {userLocation && (
-        <TouchableOpacity
-          style={styles.currentLocationButton}
-          onPress={handleUseCurrentLocation}
-          disabled={loadingCurrentLocation}
-          testID="use-current-location-button"
-        >
-          {loadingCurrentLocation ? (
-            <ActivityIndicator size="small" color="#007AFF" />
-          ) : (
-            <>
-              <MaterialIcons name="my-location" size={18} color="#007AFF" />
-              <Text style={styles.currentLocationText}>Use Current Location</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      )}
+        {userLocation && (
+          <TouchableOpacity
+            style={[styles.currentLocationButton, styles.halfButton]}
+            onPress={handleUseCurrentLocation}
+            disabled={loadingCurrentLocation}
+            testID="use-current-location-button"
+          >
+            {loadingCurrentLocation ? (
+              <ActivityIndicator size="small" color="#007AFF" />
+            ) : (
+              <>
+                <MaterialIcons name="my-location" size={18} color="#007AFF" />
+                <Text style={styles.currentLocationText}>Current Location</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
 
-      <Text style={styles.label}>Destination Building</Text>
       <View style={styles.selectorRow}>
         <View style={styles.selectorWrapper}>
           <BuildingSelector
@@ -330,9 +347,6 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
           </TouchableOpacity>
         )}
       </View>
-      {!enableRoomSelection && destination && (
-        <Text style={styles.selectedText}>Selected: {destination.name}</Text>
-      )}
       {enableRoomSelection && setDestinationRoomSelection && (
               <InlineRoomSelector
               buildingId={destination?.name ?? null}
@@ -341,34 +355,42 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
               onChange={setDestinationRoomSelection}
               />
       )}
-      {setMapSelectionTarget && (
-        <TouchableOpacity
-          style={[
-            styles.selectOnMapButton,
-            mapSelectionTarget === 'destination' && styles.selectOnMapButtonActive,
-          ]}
-          onPress={() => setMapSelectionTarget(mapSelectionTarget === 'destination' ? null : 'destination')}
-          testID="select-destination-on-map"
-        >
-          <MaterialIcons name="map" size={18} color={mapSelectionTarget === 'destination' ? '#fff' : '#912338'} />
-          <Text style={[
-            styles.selectOnMapText,
-            mapSelectionTarget === 'destination' && styles.selectOnMapTextActive,
-          ]}>
-            {mapSelectionTarget === 'destination' ? 'Selecting on map...' : 'Select on Map'}
-          </Text>
-        </TouchableOpacity>
-      )}
-      {canShowDirectionsAction && onShowDirections && (
-        <TouchableOpacity
-          style={styles.viewDirectionsButton}
-          onPress={onShowDirections}
-          testID="view-directions-button"
-        >
-          <MaterialIcons name="directions" size={18} color="#fff" />
-          <Text style={styles.viewDirectionsButtonText}>View Directions</Text>
-        </TouchableOpacity>
-      )}
+      <View style={styles.buttonRow}>
+        {setMapSelectionTarget && (
+          <TouchableOpacity
+            style={[
+              styles.selectOnMapButton,
+              styles.halfButton,
+              mapSelectionTarget === 'destination' && styles.selectOnMapButtonActive,
+            ]}
+            onPress={() => setMapSelectionTarget(mapSelectionTarget === 'destination' ? null : 'destination')}
+            testID="select-destination-on-map"
+          >
+            <MaterialIcons name="map" size={18} color={mapSelectionTarget === 'destination' ? '#fff' : '#912338'} />
+            <Text style={[
+              styles.selectOnMapText,
+              mapSelectionTarget === 'destination' && styles.selectOnMapTextActive,
+            ]}>
+              {mapSelectionTarget === 'destination' ? 'Selecting...' : 'Select on Map'}
+            </Text>
+          </TouchableOpacity>
+        )}
+        {onShowDirections && (
+          <TouchableOpacity
+            style={[
+              styles.viewDirectionsButton,
+              styles.halfButton,
+              !canShowDirectionsAction && styles.viewDirectionsButtonDisabled,
+            ]}
+            onPress={onShowDirections}
+            disabled={!canShowDirectionsAction}
+            testID="view-directions-button"
+          >
+            <MaterialIcons name="directions" size={18} color={canShowDirectionsAction ? "#fff" : "#999"} />
+            <Text style={[styles.viewDirectionsButtonText, !canShowDirectionsAction && styles.viewDirectionsButtonTextDisabled]}>View Directions</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
@@ -469,14 +491,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  toggleRowNoBorder: {
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+    marginBottom: 0,
+  },
 
   toggleLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: '#1f1f1f',
   },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  halfButton: {
+    flex: 1,
+    marginTop: 0,
+  },
   viewDirectionsButton: {
-    marginTop: 14,
     backgroundColor: '#912338',
     borderRadius: 10,
     paddingVertical: 12,
@@ -486,11 +521,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
+  viewDirectionsButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
 
   viewDirectionsButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '700',
+  },
+  viewDirectionsButtonTextDisabled: {
+    color: '#999',
   },
 });
 

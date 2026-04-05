@@ -2032,6 +2032,57 @@ describe('Route Instructions', () => {
     });
   });
 
+  it('clears route state and restores building selector when exiting route instructions', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+    
+    // Setup route instructions
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
+    await waitFor(() => expect(getByTestId('route-info-mock')).toBeTruthy());
+
+    // Start navigation by pressing the Start button on RouteInfo
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => expect(getByTestId('route-instructions-mock')).toBeTruthy());
+
+    // The route instructions close button should trigger handleExitNavigation -> onExit()
+    // onExit() clears: setStart(null), setDestination(null), setInstructions([])
+    // setStartRoomSelection(null), setDestinationRoomSelection(null)
+    fireEvent.press(getByTestId('route-instructions-close-button'));
+
+    // After closing route instructions and exiting navigation, we should return to route info
+    await waitFor(() => {
+      expect(queryByTestId('route-instructions-mock')).toBeNull();
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    // Close the route info  
+    fireEvent.press(getByTestId('route-info-close-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('route-info-mock')).toBeNull();
+    });
+
+    // Building selector toggle should be visible and usable again
+    expect(getByTestId('building-selector-toggle')).toBeTruthy();
+
+    // Verify we can add a new route
+    fireEvent.press(getByTestId('building-selector-toggle'));
+
+    await waitFor(() => {
+      expect(getByTestId('set-start')).toBeTruthy();
+      expect(getByTestId('set-destination')).toBeTruthy();
+    });
+  });
+
   it('does nothing when onViewFloorPlan is called with non-existing building', () => {
       const setDirectionsFloorPlan = jest.fn();
       const buildings = [{ id: 'A', name: 'Building A' }];

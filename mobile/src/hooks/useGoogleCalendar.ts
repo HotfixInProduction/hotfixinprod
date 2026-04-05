@@ -28,13 +28,43 @@ WebBrowser.maybeCompleteAuthSession();
 
 const EVENT_COLORS = ['#4A90E2', '#E94B3C', '#50C878', '#F39C12', '#9B59B6'];
 
+function parseBuildingAndRoom(location: string): { building: string; room: string } {
+  const parts = location.trim().split(/\s+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return {
+      building: parts[0],
+      room: parts[1],
+    };
+  }
+
+  if (parts.length === 1) {
+    const compactMatch = /^([A-Z]+)-?(\d+)$/i.exec(parts[0]);
+    if (compactMatch) {
+      return {
+        building: compactMatch[1],
+        room: compactMatch[2],
+      };
+    }
+
+    return {
+      building: parts[0],
+      room: '',
+    };
+  }
+
+  return {
+    building: '',
+    room: '',
+  };
+}
+
 export function mapToClassEvent(event: GoogleCalendarEvent, index: number): ClassEvent {
   const startDate = new Date(event.start.dateTime);
   const endDate = new Date(event.end.dateTime);
-  const locationParts = (event.location ?? '').split(' ');
-
-  const building = locationParts[0] ?? '';
-  const room = locationParts[1] ?? '';
+  const parsedLocation = parseBuildingAndRoom(event.location ?? '');
+  const building = parsedLocation.building;
+  const room = parsedLocation.room;
 
   return {
     id: event.id,

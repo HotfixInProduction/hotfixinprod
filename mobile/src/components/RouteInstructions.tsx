@@ -145,13 +145,18 @@ const RouteInstructions = ({
                                 <Text style={[styles.navCircleBtnText, isFirstStep && styles.navCircleBtnTextDisabled]}>Prev</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity 
-                                style={[styles.navCircleBtn, styles.navCircleBtnPrimary]} 
-                                onPress={onNextStep}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={styles.navCircleBtnTextPrimary}>{isLastStep ? 'Done' : 'Next'}</Text>
-                            </TouchableOpacity>
+                            {isLastStep ? (
+                                /* Invisible placeholder keeps "Prev" button from shifting right */
+                                <View style={{ width: 56, height: 56 }} />
+                            ) : (
+                                <TouchableOpacity 
+                                    style={[styles.navCircleBtn, styles.navCircleBtnPrimary]} 
+                                    onPress={onNextStep}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.navCircleBtnTextPrimary}>Next</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -164,11 +169,6 @@ const RouteInstructions = ({
                             <Text style={styles.instructionText}>
                                 Exit {start.name}
                             </Text>
-
-                            <TouchableOpacity style={styles.floorPlanBtn} onPress={() => onViewFloorPlan(start.name)}>
-                                <MaterialCommunityIcons name="map" size={16} color="#fff" />
-                                <Text style={styles.floorPlanBtnText}>Floor Plan</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                 )}
@@ -188,11 +188,6 @@ const RouteInstructions = ({
                             <Text style={styles.instructionText}>
                                 Enter {destination.name}
                             </Text>
-
-                            <TouchableOpacity style={styles.floorPlanBtn} onPress={() => onViewFloorPlan(destination.name)}>
-                                <MaterialCommunityIcons name="map" size={16} color="#fff" />
-                                <Text style={styles.floorPlanBtnText}>Floor Plan</Text>
-                            </TouchableOpacity>
                         </View>
                     </View>
                 )}

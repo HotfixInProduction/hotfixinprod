@@ -90,13 +90,27 @@ export function generatePathElements(
     endX: number,
     endY: number
 ): string {
+    const arrowDef = `
+    <defs>
+      <marker 
+        id="arrowhead" 
+        markerWidth="6" 
+        markerHeight="6" 
+        refX="5" 
+        refY="3" 
+        orient="auto"
+      >
+        <polygon points="0 0, 6 3, 0 6" fill="#007AFF" />
+      </marker>
+    </defs>`;
+
     // The path string already has transformed coordinates from generateSvgPath
-    const pathElement = `<path d="${pathString}" stroke="#007AFF" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>`;
+    const pathElement = `<path d="${pathString}" stroke="#007AFF" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.9" marker-end="url(#arrowhead)"/>`;
     
     // Start and end markers
     const markers =
         `<circle cx="${startX}" cy="${startY}" r="12" fill="#34C759" stroke="#fff" stroke-width="3"/>` +
         `<circle cx="${endX}" cy="${endY}" r="12" fill="#FF3B30" stroke="#fff" stroke-width="3"/>`;
 
-    return pathElement + markers;
+    return arrowDef + pathElement + markers;
 }

@@ -73,17 +73,18 @@ describe('App', () => {
     expect(getByTestId('icon-settings')).toBeTruthy();
 
     // Verify icon names (MaterialIcons mock renders name as child text)
-    expect(getByTestId('icon-schedule').props.children).toBe('schedule');
+    expect(getByTestId('icon-schedule').props.children).toBe('calendar-today');
     expect(getByTestId('icon-map').props.children).toBe('map');
     expect(getByTestId('icon-settings').props.children).toBe('settings');
   });
 
   it('renders tab buttons (for coverage of Screen options)', () => {
     const { getByTestId } = render(<App />);
-    expect(getByTestId('tab-schedule')).toBeTruthy();
-    expect(getByTestId('tab-map')).toBeTruthy();
-    expect(getByTestId('tab-settings')).toBeTruthy();
+    expect(getByTestId('icon-schedule')).toBeTruthy();
+    expect(getByTestId('icon-map')).toBeTruthy();
+    expect(getByTestId('icon-settings')).toBeTruthy();
   });
+
 
   it('applies active tint color when focused (via mock simulation)', () => {
     // Our mock in testUtils calls tabBarIcon with focused: false

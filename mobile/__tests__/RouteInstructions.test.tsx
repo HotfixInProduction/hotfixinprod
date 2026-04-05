@@ -163,38 +163,6 @@ describe('RouteInstructions Component', () => {
     expect(screen.getAllByText('50 m')).toHaveLength(2);
   });
 
-  it('shows start floor plan button and calls onViewFloorPlan with start name', () => {
-    render(
-      <RouteInstructions
-        instructions={mockInstructions}
-        start={start}
-        destination={destination}
-        onClose={mockOnClose}
-        onViewFloorPlan={mockOnViewFloorPlan}
-      />
-    );
-
-    const floorPlanButtons = screen.getAllByText('Floor Plan');
-    fireEvent.press(floorPlanButtons[0]);
-    expect(mockOnViewFloorPlan).toHaveBeenCalledWith('Hall Building');
-  });
-
-  it('shows destination floor plan button and calls onViewFloorPlan with destination name', () => {
-    render(
-      <RouteInstructions
-        instructions={mockInstructions}
-        start={start}
-        destination={destination}
-        onClose={mockOnClose}
-        onViewFloorPlan={mockOnViewFloorPlan}
-      />
-    );
-
-    const floorPlanButtons = screen.getAllByText('Floor Plan');
-    fireEvent.press(floorPlanButtons[floorPlanButtons.length - 1]);
-    expect(mockOnViewFloorPlan).toHaveBeenCalledWith('Vanier Extension');
-  });
-
   it('does not render start row when start is null', () => {
     render(
       <RouteInstructions
@@ -385,7 +353,7 @@ it('evaluates both true and false branches for the toggle panel and icon', () =>
       // navigationMode = 'indoor'
       // navigationInstruction = "Custom String" (truthy)
       // isLastStep = true
-      const { getByText } = render(
+      const { getByText, queryByText } = render(
         <RouteInstructions
           instructions={mockInstructions}
           start={start}
@@ -399,7 +367,8 @@ it('evaluates both true and false branches for the toggle panel and icon', () =>
       );
       expect(getByText('directions')).toBeTruthy();
       expect(getByText('Custom instruction here')).toBeTruthy();
-      expect(getByText('Done')).toBeTruthy();
+      // When isLastStep=true, there's an invisible placeholder instead of "Next" button
+      expect(queryByText('Next')).toBeNull();
     });
 
     it('evaluates the fallback branch for indoor path without custom instruction', () => {

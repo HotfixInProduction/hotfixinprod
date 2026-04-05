@@ -360,7 +360,6 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
 
   const floorText = getFloorText(building, selection);
   const roomText = getRoomText(building, selection, buildingPrefix);
-  const selectedText = getSelectedText(buildingId, selection, buildingPrefix);
 
   return (
     <View style={styles.section}>
@@ -402,23 +401,16 @@ const InlineRoomSelector: React.FC<InlineRoomSelectorProps> = ({
           onSelect={handleRoomSelect}
         />
       ) : null}
-
-      <Text style={styles.selectedText}>{selectedText}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   section: {
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
   },
   compactRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
+    gap: 8
   },
   compactInput: {
     flex: 1,
