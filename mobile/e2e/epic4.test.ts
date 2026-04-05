@@ -1,5 +1,5 @@
 import { element, by, expect, waitFor } from 'detox';
-import { setupApp, navigateToMap, openBuildingSelector, searchAndSelectBuilding, wait, selectCampus, zoomIn } from './helpers';
+import { setupApp, navigateToMap, openBuildingSelector, searchAndSelectBuilding, searchAndSelectBuilding2, wait, selectCampus, zoomIn } from './helpers';
 
 describe('Epic 4: Indoor Floor Plans E2E Test', () => {
 
@@ -130,9 +130,59 @@ describe('Epic 4: Indoor Floor Plans E2E Test', () => {
         await zoomIn(3.0);
 
 
-        // 2. Open building selector and search for Hall Building
+        // 2. Open building selector (room selection mode) and search for Hall Building
         await openBuildingSelector();
+        await waitFor(element(by.id('room-selection-toggle'))).toExist().withTimeout(5000);
+        await element(by.id('room-selection-toggle')).tap();
         await element(by.id('use-current-location-button')).tap();
+
+        // 3. Select Start Room: Floor 1, H--118-2
+        // Floor 1 is already selected by default for Hall Building
+        await waitFor(element(by.text('Room: Select')).atIndex(0)).toBeVisible().withTimeout(5000);
+        await element(by.text('Room: Select')).atIndex(0).tap();
+        await waitFor(element(by.text('H-118-2'))).toBeVisible().withTimeout(5000);
+        await element(by.text('H-118-2')).tap();
+
+        // 4. Select Destination Building: Tap on map (Hall Building)
+        await element(by.id('select-destination-on-map')).tap();
+        await element(by.id('map')).atIndex(0).tap({ x: 200, y: 550 });
+        await wait(2000);
+
+        // 5. Change Destination Floor to 8
+        await element(by.text('Floor: 1')).atIndex(1).tap();
+        await waitFor(element(by.text('Floor 8'))).toBeVisible().withTimeout(5000);
+        await element(by.text('Floor 8')).tap();
+
+        // 6. Select Destination Room: H-801
+        await waitFor(element(by.text('Room: Select'))).toBeVisible().withTimeout(5000);
+        await element(by.text('Room: Select')).tap();
+        await waitFor(element(by.text('H801'))).toBeVisible().withTimeout(5000);
+        await element(by.text('H801')).tap();
+
+        // 7. View Directions
+        await element(by.id('view-directions-button')).tap();
+
+        // 8. Select Walk mode
+        await waitFor(element(by.id('route-info-mode-walking'))).toExist().withTimeout(5000);
+        await element(by.id('route-info-mode-walking')).tap();
+
+        // 9. Tap Start
+        await waitFor(element(by.id('confirm-route-button'))).toExist().withTimeout(2000);
+        await element(by.id('confirm-route-button')).tap();
+
+        // 10. Expand directions
+        await waitFor(element(by.id('expand-directions-button'))).toExist().withTimeout(5000);
+        await element(by.id('expand-directions-button')).tap();
+
+        // 11. Scroll through directions
+        await waitFor(element(by.id('next-instruction-button'))).toExist().withTimeout(5000);
+        await element(by.id('next-instruction-button')).tap();
+
+        // 12. Close directions
+        await waitFor(element(by.id('close-button'))).toExist().withTimeout(2000);
+        await element(by.id('close-button')).tap();
+
+        await wait(2000);
 
     });
 
@@ -144,9 +194,58 @@ describe('Epic 4: Indoor Floor Plans E2E Test', () => {
         await wait(2000);
         await zoomIn(3.0);
 
-        // 2. Open building selector and search for Hall Building
+        // 2. Open building selector (room selection mode) and search for Hall Building
+        await openBuildingSelector();
+        await waitFor(element(by.id('room-selection-toggle'))).toExist().withTimeout(5000);
+        await element(by.id('room-selection-toggle')).tap();
+        await element(by.id('use-current-location-button')).tap();
+
+        // 3. Select Start Room: Floor 1, H--118-2
+        // Floor 1 is already selected by default for Hall Building
+        await waitFor(element(by.text('Room: Select')).atIndex(0)).toBeVisible().withTimeout(5000);
+        await element(by.text('Room: Select')).atIndex(0).tap();
+        await waitFor(element(by.text('H-118-2'))).toBeVisible().withTimeout(5000);
+        await element(by.text('H-118-2')).tap();
+
+        // 4. Select Destination Building: Tap on map (Hall Building)
+        await searchAndSelectBuilding2('destination-building-selector', 'John Molson Building');
+        await wait(2000);
+
+        // 5. Select Destination Room: MB1.115
+        await waitFor(element(by.text('Room: Select'))).toBeVisible().withTimeout(5000);
+        await element(by.text('Room: Select')).tap();
+        await waitFor(element(by.text('MB1.115'))).toBeVisible().withTimeout(5000);
+        await element(by.text('MB1.115')).tap();
+
+        // 6. View Directions
+        await element(by.id('view-directions-button')).tap();
+
+        // 7. Select Walk mode
+        await waitFor(element(by.id('route-info-mode-walking'))).toExist().withTimeout(5000);
+        await element(by.id('route-info-mode-walking')).tap();
+
+        // 9. Tap Start
+        await waitFor(element(by.id('confirm-route-button'))).toExist().withTimeout(2000);
+        await element(by.id('confirm-route-button')).tap();
+
+        // 10. Expand directions
+        await waitFor(element(by.id('expand-directions-button'))).toExist().withTimeout(5000);
+        await element(by.id('expand-directions-button')).tap();
+
+        // 11. Scroll through directions
+        await waitFor(element(by.id('next-instruction-button'))).toExist().withTimeout(5000);
+        await element(by.id('next-instruction-button')).tap();
+        await wait(2000);
+        await element(by.id('next-instruction-button')).tap();
+
+        // 12. Close directions
+        await waitFor(element(by.id('close-button'))).toExist().withTimeout(2000);
+        await element(by.id('close-button')).tap();
+
+        await wait(2000);
 
 
     });
+
 
 });

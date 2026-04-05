@@ -53,6 +53,18 @@ export const searchAndSelectBuilding = async (selectorId: string, text: string) 
     await element(by.id('search-result-item')).atIndex(0).tap({ x: 100, y: 10 });
 };
 
+export const searchAndSelectBuilding2 = async (selectorId: string, text: string) => {
+    await waitFor(element(by.id(selectorId))).toBeVisible().withTimeout(5000);
+    await element(by.id(selectorId)).tap();
+    await element(by.id(selectorId)).typeText(text);
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Specifically target the local result for John Molson Building by its test ID
+    await waitFor(element(by.id(`local-building-result-John Molson Building`))).toExist().withTimeout(10000);
+    await element(by.id(`local-building-result-John Molson Building`)).tap();
+    await element(by.id(`local-building-result-John Molson Building`)).tap();
+};
+
+
 export const dismissAlert = async (label: string = 'OK') => {
     try {
         await waitFor(element(by.label(label))).toExist().withTimeout(2000);

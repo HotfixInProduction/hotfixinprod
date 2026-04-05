@@ -137,6 +137,7 @@ const RouteInstructions = ({
                         {/* Circular buttons side by side on the right */}
                         <View style={styles.navButtonRow}>
                             <TouchableOpacity
+                                testID="prev-instruction-button"
                                 style={[styles.navCircleBtn, isFirstStep && styles.navCircleBtnDisabled]}
                                 onPress={onPrevStep}
                                 disabled={isFirstStep}
@@ -150,6 +151,7 @@ const RouteInstructions = ({
                                 <View style={{ width: 56, height: 56 }} />
                             ) : (
                                 <TouchableOpacity 
+                                    testID="next-instruction-button"
                                     style={[styles.navCircleBtn, styles.navCircleBtnPrimary]} 
                                     onPress={onNextStep}
                                     activeOpacity={0.7}
