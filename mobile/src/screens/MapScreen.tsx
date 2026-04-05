@@ -27,7 +27,7 @@ import NearestPOIBanner from '../components/NearestPOIBanner';
 import ShuttleScheduleModalContent from '../components/ShuttleScheduleModalContent';
 import BuildingSelectorPanel from '../components/BuildingSelectorPanel';
 import { findNearestPOI, calculateDistance } from '../utils/distanceUtils';
-import { getActiveMapModal } from '../utils/mapScreenUiState';
+import { getActiveMapModal, getIsDestinationComplete, shouldShowCompactRouteHeader } from '../utils/mapScreenUiState';
 import { getPOICategoryIcon, getPOICategoryLabel, getPOICategoryColor } from '../utils/poiMarkerUtils';
 import { useAppSettings } from '../hooks/useAppSettings';
 import {
@@ -143,14 +143,11 @@ export default function MapScreen() {
 
   const isStartComplete = !!start;
 
-  const hasDestinationRoomSelection =
-    !!destinationRoomSelection?.buildingId &&
-    !!destinationRoomSelection?.floor &&
-    !!destinationRoomSelection?.room;
-
-  const isDestinationComplete = enableRoomSelection
-    ? !!destination && hasDestinationRoomSelection
-    : !!destination;
+  const isDestinationComplete = getIsDestinationComplete({
+    destination,
+    enableRoomSelection,
+    destinationRoomSelection,
+  });
 
   // Sync room selections to start/destination places for cross-building navigation
   useEffect(() => {
@@ -545,7 +542,7 @@ export default function MapScreen() {
     isStartComplete,
     isDestinationComplete,
   });
-  const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions' || activeModal === 'navigation';
+  const showCompactRouteHeader = shouldShowCompactRouteHeader(activeModal);
 
   const getFloorFromRoom = useCallback((room: string): string => {
     const trimmed = room.trim();

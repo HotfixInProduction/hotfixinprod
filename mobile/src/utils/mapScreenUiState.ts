@@ -5,6 +5,12 @@ export type MapScreenModal =
   | 'routeInfo'
   | 'none';
 
+type RoomSelectionLike = {
+  readonly buildingId?: string;
+  readonly floor?: string;
+  readonly room?: string;
+} | null;
+
 type GetActiveMapModalParams = {
   readonly isNavigating: boolean;
   readonly hasSelectedBuilding: boolean;
@@ -29,4 +35,31 @@ export function getActiveMapModal({
   if (showInstructions) return 'routeInstructions';
   if (showRoutePreview && hasRouteInfo && isStartComplete && isDestinationComplete) return 'routeInfo';
   return 'none';
+}
+
+type GetDestinationCompleteParams = {
+  readonly destination: unknown;
+  readonly enableRoomSelection: boolean;
+  readonly destinationRoomSelection: RoomSelectionLike;
+};
+
+export function getIsDestinationComplete({
+  destination,
+  enableRoomSelection,
+  destinationRoomSelection,
+}: Readonly<GetDestinationCompleteParams>): boolean {
+  const hasDestinationRoomSelection = Boolean(
+    destinationRoomSelection?.buildingId &&
+    destinationRoomSelection?.floor &&
+    destinationRoomSelection?.room
+  );
+
+  return Boolean(destination) &&
+    (!enableRoomSelection || hasDestinationRoomSelection);
+}
+
+export function shouldShowCompactRouteHeader(activeModal: MapScreenModal): boolean {
+  return activeModal === 'routeInfo' ||
+    activeModal === 'routeInstructions' ||
+    activeModal === 'navigation';
 }
