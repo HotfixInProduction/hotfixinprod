@@ -4,8 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import type { ShuttleData } from '../models/MapRouting';
 
 type ShuttleScheduleTableProps = {
-  loyScheduleLabels: string[];
-  sgwScheduleLabels: string[];
+  readonly loyScheduleLabels: string[];
+  readonly sgwScheduleLabels: string[];
 };
 
 function ShuttleScheduleTable({ loyScheduleLabels, sgwScheduleLabels }: ShuttleScheduleTableProps) {
@@ -47,14 +47,14 @@ function ShuttleScheduleTable({ loyScheduleLabels, sgwScheduleLabels }: ShuttleS
 }
 
 type ShuttleScheduleModalContentProps = {
-  shuttleData: ShuttleData;
-  onClose: () => void;
+  readonly shuttleData: ShuttleData;
+  readonly onClose: () => void;
 };
 
 export default function ShuttleScheduleModalContent({
   shuttleData,
   onClose,
-}: ShuttleScheduleModalContentProps) {
+}: Readonly<ShuttleScheduleModalContentProps>) {
   return (
     <View style={styles.shuttleCard}>
       <View style={styles.modalHeader}>

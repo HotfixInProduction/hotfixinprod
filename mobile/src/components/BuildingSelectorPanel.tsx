@@ -2,9 +2,9 @@ import React from 'react';
 import { Animated, StyleSheet } from 'react-native';
 
 type BuildingSelectorPanelProps = {
-  visible: boolean;
-  slideAnim: Animated.Value;
-  children: React.ReactNode;
+  readonly visible: boolean;
+  readonly slideAnim: Animated.Value;
+  readonly children: React.ReactNode;
 };
 
 export default function BuildingSelectorPanel({ visible, slideAnim, children }: BuildingSelectorPanelProps) {

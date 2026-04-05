@@ -1,0 +1,6 @@
+{
+    "sonarlint.connectedMode.project": {
+        "connectionId": "hotfixinproduction",
+        "projectKey": "HotfixInProduction_hotfixinprod"
+    }
+}
