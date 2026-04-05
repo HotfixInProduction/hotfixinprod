@@ -27,6 +27,7 @@ import NearestPOIBanner from '../components/NearestPOIBanner';
 import ShuttleScheduleModalContent from '../components/ShuttleScheduleModalContent';
 import BuildingSelectorPanel from '../components/BuildingSelectorPanel';
 import { findNearestPOI, calculateDistance } from '../utils/distanceUtils';
+import { getActiveMapModal } from '../utils/mapScreenUiState';
 import { getPOICategoryIcon, getPOICategoryLabel, getPOICategoryColor } from '../utils/poiMarkerUtils';
 import { useAppSettings } from '../hooks/useAppSettings';
 import {
@@ -535,13 +536,15 @@ export default function MapScreen() {
     setSelectedBuilding(null);
   }, [userLocation]);
 
-  const activeModal = (() => {
-    if (isNavigating) return 'navigation';
-    if (selectedBuilding) return 'buildingInfo';
-    if (showInstructions) return 'routeInstructions';
-    if (showRoutePreview && routeInfo && isStartComplete && isDestinationComplete) return 'routeInfo';
-    return 'none';
-  })();
+  const activeModal = getActiveMapModal({
+    isNavigating,
+    hasSelectedBuilding: selectedBuilding !== null,
+    showInstructions,
+    showRoutePreview,
+    hasRouteInfo: routeInfo !== null,
+    isStartComplete,
+    isDestinationComplete,
+  });
   const showCompactRouteHeader = activeModal === 'routeInfo' || activeModal === 'routeInstructions' || activeModal === 'navigation';
 
   const getFloorFromRoom = useCallback((room: string): string => {
