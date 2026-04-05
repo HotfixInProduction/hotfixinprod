@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
-import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus, ScrollView } from 'react-native';
+import { Alert, StyleSheet, View, TouchableOpacity, Text, Animated, Modal, Linking, AppState, AppStateStatus } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
@@ -24,6 +24,8 @@ import type { OutdoorPOI } from '../data/outdoorPOI';
 import POIInfoPanel from '../components/POIInfoPanel';
 import POIFilter from '../components/POIFilter';
 import NearestPOIBanner from '../components/NearestPOIBanner';
+import ShuttleScheduleModalContent from '../components/ShuttleScheduleModalContent';
+import BuildingSelectorPanel from '../components/BuildingSelectorPanel';
 import { findNearestPOI, calculateDistance } from '../utils/distanceUtils';
 import { getPOICategoryIcon, getPOICategoryLabel, getPOICategoryColor } from '../utils/poiMarkerUtils';
 import { useAppSettings } from '../hooks/useAppSettings';
@@ -844,15 +846,7 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
           </Text>
         </View>
       ) : (
-        <Animated.View
-          style={[
-            styles.buildingSelectorPanel,
-            {
-              transform: [{ translateX: buildingSelectorSlideAnim }],
-            },
-          ]}
-          pointerEvents={buildingSelectorVisible ? 'auto' : 'none'}
-        >
+        <BuildingSelectorPanel visible={buildingSelectorVisible} slideAnim={buildingSelectorSlideAnim}>
 
           <StartDestinationPicker
             locations={{
@@ -894,7 +888,7 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
               onShow: () => setShowRoutePreview(true),
             }}
           />
-        </Animated.View>
+        </BuildingSelectorPanel>
       )}
 
       {mapSelectionTarget && (
@@ -1080,68 +1074,12 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
         onRequestClose={() => setShowShuttleSchedule(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.shuttleCard}>
-            <View style={styles.modalHeader}>
-              <MaterialIcons name="airport-shuttle" size={24} color="#912338" />
-              <Text style={styles.modalTitle}>Shuttle Schedule</Text>
-            </View>
-            {shuttleData && (
-              <>
-                <Text style={styles.shuttleDirectionText}>{shuttleData.directionLabel}</Text>
-                {shuttleData.nextDepartureInMinutes > 60 ? (
-                  <Text style={styles.shuttleNextText}>No more shuttle departures today</Text>
-                ) : (
-                  <Text style={styles.shuttleNextText}>
-                    Next shuttle in {shuttleData.nextDepartureInMinutes} min ({shuttleData.nextDepartureTimeLabel})
-                  </Text>
-                )}
-                {shuttleData.serviceResumesNextWeekday && (
-                  <Text style={styles.shuttleServiceResumeText}>
-                    Service has ended for today. Resumes next weekday at {shuttleData.nextDepartureTimeLabel}.
-                  </Text>
-                )}
-                <Text style={styles.shuttleServiceText}>Monday – Thursday only</Text>
-
-                {shuttleData.loyScheduleLabels.length > 0 ? (
-                  <>
-                    <View style={styles.scheduleTableHeader}>
-                      <Text style={styles.scheduleTableHeaderCell}>Loyola departures</Text>
-                      <Text style={styles.scheduleTableHeaderCell}>SGW departures</Text>
-                    </View>
-                    <ScrollView style={styles.scheduleTable} contentContainerStyle={styles.scheduleTableContent}>
-                      {shuttleData.loyScheduleLabels.map((loyTime, idx) => {
-                        const sgwTime = shuttleData.sgwScheduleLabels[idx] ?? '';
-                        const rowKey = `${loyTime}-${sgwTime}`;
-                        const isLast = idx === shuttleData.loyScheduleLabels.length - 1;
-                        return (
-                          <View key={rowKey} style={[styles.scheduleTableRow, idx % 2 === 1 && styles.scheduleTableRowAlt]}>
-                            <Text style={[styles.scheduleTableCell, isLast && styles.scheduleTableCellLast]}>
-                              {loyTime}{isLast ? ' *' : ''}
-                            </Text>
-                            <Text style={[styles.scheduleTableCell, isLast && styles.scheduleTableCellLast]}>
-                              {sgwTime}{isLast ? ' *' : ''}
-                            </Text>
-                          </View>
-                        );
-                      })}
-                    </ScrollView>
-                    <Text style={styles.scheduleLastBusNote}>* Last bus / Dernier départ</Text>
-                  </>
-                ) : (
-                  <Text style={styles.shuttleServiceResumeText}>
-                    No service today. Resumes next weekday.
-                  </Text>
-                )}
-              </>
-            )}
-            <TouchableOpacity
-              style={[styles.modalButton, styles.primaryButton]}
-              onPress={() => setShowShuttleSchedule(false)}
-              testID="close-shuttle-schedule"
-            >
-              <Text style={styles.primaryButtonText}>Close schedule</Text>
-            </TouchableOpacity>
-          </View>
+          {shuttleData && (
+            <ShuttleScheduleModalContent
+              shuttleData={shuttleData}
+              onClose={() => setShowShuttleSchedule(false)}
+            />
+          )}
         </View>
       </Modal>
 
@@ -1260,15 +1198,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  buildingSelectorPanel: {
-    position: 'absolute',
-    left: 10,
-    top: 110,
-    marginTop: 0,
-    width: 350,
-    maxWidth: '85%',
-    zIndex: 9,
-  },
   compactRouteHeader: {
     position: 'absolute',
     top: 115,
@@ -1369,18 +1298,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 6,
   },
-  shuttleCard: {
-    width: '100%',
-    maxHeight: '85%',
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-  },
   modalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1420,86 +1337,5 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: '#3d3d3d',
     fontWeight: '600',
-  },
-  shuttleDirectionText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1f1f1f',
-    marginBottom: 6,
-  },
-  shuttleNextText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#912338',
-    marginBottom: 4,
-  },
-  shuttleServiceText: {
-    fontSize: 14,
-    color: '#444',
-    marginBottom: 8,
-  },
-  shuttleServiceResumeText: {
-    fontSize: 13,
-    color: '#6a3f45',
-    marginBottom: 8,
-  },
-  shuttleSectionTitle: {
-    marginTop: 8,
-    marginBottom: 6,
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#912338',
-  },
-  scheduleTableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#912338',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-    marginTop: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  scheduleTableHeaderCell: {
-    flex: 1,
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  scheduleTable: {
-    maxHeight: 220,
-    borderWidth: 1,
-    borderTopWidth: 0,
-    borderColor: '#f0d9de',
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
-  },
-  scheduleTableContent: {
-    paddingBottom: 4,
-  },
-  scheduleTableRow: {
-    flexDirection: 'row',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  scheduleTableRowAlt: {
-    backgroundColor: '#fff9fa',
-  },
-  scheduleTableCell: {
-    flex: 1,
-    fontSize: 13,
-    color: '#1f1f1f',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  scheduleTableCellLast: {
-    color: '#912338',
-  },
-  scheduleLastBusNote: {
-    fontSize: 11,
-    color: '#6a3f45',
-    fontStyle: 'italic',
-    marginTop: 4,
-    marginBottom: 8,
   },
 });
