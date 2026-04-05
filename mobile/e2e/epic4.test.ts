@@ -129,8 +129,10 @@ describe('Epic 4: Indoor Floor Plans E2E Test', () => {
         await wait(2000);
         await zoomIn(3.0);
 
-        // 2. Open building selector and search for Hall Building
 
+        // 2. Open building selector and search for Hall Building
+        await openBuildingSelector();
+        await element(by.id('use-current-location-button')).tap();
 
     });
 
