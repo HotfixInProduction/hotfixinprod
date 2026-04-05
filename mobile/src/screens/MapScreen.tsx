@@ -457,7 +457,7 @@ export default function MapScreen() {
     Alert.alert('Route Error', 'Unable to load the shuttle route.');
   }, []);
 
-  const handleClearRoute = () => {
+  const handleClearRoute = useCallback(() => {
     setStart(null);
     setDestination(null);
     setRouteInfo(null);
@@ -467,7 +467,15 @@ export default function MapScreen() {
     setShowShuttleSchedule(false);
     setShowRoutePreview(false);
     mapRef.current?.animateToRegion(INITIAL_REGION, 1000);
-  }
+  }, []);
+
+  const handleCloseDirections = useCallback(() => {
+    if (isNavigating) {
+      handleExitNavigation();
+    }
+    handleClearRoute();
+  }, [isNavigating, handleExitNavigation, handleClearRoute]);
+
   // Helper function to get POIs for current campus and active filters
   const getFilteredPOIs = useCallback(() => {
     let filtered = outdoorPOIs.filter(
@@ -994,7 +1002,7 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
           instructions={instructions}
           start={start}
           destination={destination}
-          onClose={() => setShowInstructions(false)}
+          onClose={handleCloseDirections}
           onViewFloorPlan={(buildingId, floor) => {
             const building = buildings.find(b => b.id === buildingId);
 
@@ -1029,7 +1037,7 @@ const handleDirectionsToNextClass = useCallback((nextClass: NextClassRouteParam)
           instructions={instructions}
           start={start}
           destination={destination}
-          onClose={handleExitNavigation}
+          onClose={handleCloseDirections}
           onViewFloorPlan={(buildingId, floor) => {
             const building = buildings.find(b => b.id === buildingId);
             if (!building) return;
