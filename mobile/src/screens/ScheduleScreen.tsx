@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -99,29 +99,29 @@ const ScheduleScreen: React.FC = () => {
         />
       )}
 
-{nextClass && (
-  <NextClassCard
-    nextClass={nextClass}
-    onDirectionsPress={(selectedClass) => {
-      const nextClassParam: NextClassRouteParam = {
-        id: selectedClass.id,
-        title: selectedClass.title,
-        location: selectedClass.location,
-        building: selectedClass.building,
-        room: selectedClass.room,
-        startTime: selectedClass.startTime.toISOString(),
-        endTime: selectedClass.endTime.toISOString(),
-        dayOfWeek: selectedClass.dayOfWeek,
-        color: selectedClass.color,
-      };
+      {nextClass && (
+        <NextClassCard
+          nextClass={nextClass}
+          onDirectionsPress={(selectedClass) => {
+            const nextClassParam: NextClassRouteParam = {
+              id: selectedClass.id,
+              title: selectedClass.title,
+              location: selectedClass.location,
+              building: selectedClass.building,
+              room: selectedClass.room,
+              startTime: selectedClass.startTime.toISOString(),
+              endTime: selectedClass.endTime.toISOString(),
+              dayOfWeek: selectedClass.dayOfWeek,
+              color: selectedClass.color,
+            };
 
-      navigation.navigate('Map', {
-        nextClass: nextClassParam,
-        startFromCurrentLocation: true,
-      });
-    }}
-  />
-)}
+            navigation.navigate('Map', {
+              nextClass: nextClassParam,
+              startFromCurrentLocation: true,
+            });
+          }}
+        />
+      )}
       <View style={styles.gridWrapper}>
         <WeekDayHeader
           timeColWidth={TIME_COL_WIDTH}
