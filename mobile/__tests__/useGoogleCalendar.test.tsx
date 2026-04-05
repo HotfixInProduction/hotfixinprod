@@ -314,6 +314,36 @@ describe('mapToClassEvent', () => {
     expect(classEvent.location).toBe('');
     expect(classEvent.building).toBe('');
   });
+
+  it('parses location without spaces (H937)', () => {
+    const googleEvent: GoogleCalendarEvent = {
+      id: '4',
+      summary: 'SOEN 343',
+      location: 'h937',
+      start: { dateTime: '2026-03-07T10:00:00Z' },
+      end: { dateTime: '2026-03-07T11:00:00Z' },
+    };
+
+    const classEvent = mapToClassEvent(googleEvent, 0);
+
+    expect(classEvent.building).toBe('h');
+    expect(classEvent.room).toBe('937');
+  });
+
+  it('parses location with dashes and no spaces (B-101)', () => {
+    const googleEvent: GoogleCalendarEvent = {
+      id: '5',
+      summary: 'COMP 346',
+      location: 'B-101',
+      start: { dateTime: '2026-03-07T10:00:00Z' },
+      end: { dateTime: '2026-03-07T11:00:00Z' },
+    };
+
+    const classEvent = mapToClassEvent(googleEvent, 0);
+
+    expect(classEvent.building).toBe('B');
+    expect(classEvent.room).toBe('101');
+  });
 });
 
 describe('filterValidClassEvents', () => {
