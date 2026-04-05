@@ -1499,6 +1499,52 @@ describe('Clearing Route', () => {
       expect(getByTestId('building-selector-toggle')).toBeTruthy();
     });
   });
+
+  it('clears markers and resets map when route instructions are closed', async () => {
+    const { getByTestId, queryByTestId } = render(<MapScreen />);
+
+    fireEvent.press(getByTestId('building-selector-toggle'));
+    fireEvent.press(getByTestId('set-start'));
+    fireEvent.press(getByTestId('set-destination'));
+
+    await waitFor(() => {
+      expect(getByTestId('start-marker')).toBeTruthy();
+      expect(getByTestId('destination-marker')).toBeTruthy();
+      expect(getByTestId('view-directions-button')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('view-directions-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-info-mock')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('route-info-start-button'));
+
+    await waitFor(() => {
+      expect(getByTestId('route-instructions-mock')).toBeTruthy();
+    });
+
+    mockAnimateToRegion.mockClear();
+
+    fireEvent.press(getByTestId('route-instructions-close-button'));
+
+    await waitFor(() => {
+      expect(queryByTestId('route-instructions-mock')).toBeNull();
+      expect(queryByTestId('start-marker')).toBeNull();
+      expect(queryByTestId('destination-marker')).toBeNull();
+    });
+
+    expect(mockAnimateToRegion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        latitude: 45.497,
+        longitude: -73.579,
+        latitudeDelta: 0.004,
+        longitudeDelta: 0.004,
+      }),
+      1000
+    );
+  });
 });
 
 describe('MapScreen Edge Cases', () => {
