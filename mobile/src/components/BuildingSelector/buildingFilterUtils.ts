@@ -9,6 +9,6 @@ export const getMatchingBuildings = (query: string): Building[] => {
   return buildings.filter(building => 
     building.id.toLowerCase().includes(lowerQuery) ||
     building.label.toLowerCase().includes(lowerQuery) ||
-    (building.address && building.address.toLowerCase().includes(lowerQuery))
+    building.address?.toLowerCase().includes(lowerQuery)
   );
 };

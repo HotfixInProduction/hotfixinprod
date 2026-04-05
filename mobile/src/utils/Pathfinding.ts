@@ -433,7 +433,7 @@ export function getPOIsByType(
   poiType: POIType
 ): (POIInfo & { label: string })[] {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  if (!navMesh || !navMesh.poiIndex) {
+  if (!navMesh?.poiIndex) {
     return [];
   }
   
@@ -471,7 +471,7 @@ export function getAllPOIs(
   floorLevel: string
 ): Record<string, POIInfo> {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  if (!navMesh || !navMesh.poiIndex) {
+  if (!navMesh?.poiIndex) {
     return {};
   }
   
@@ -613,7 +613,7 @@ export function getPOINodeId(
   poiLabel: string
 ): string | null {
   const navMesh = getNavMeshByKey(buildingId, floorLevel);
-  if (!navMesh || !navMesh.poiIndex) {
+  if (!navMesh?.poiIndex) {
     return null;
   }
   
