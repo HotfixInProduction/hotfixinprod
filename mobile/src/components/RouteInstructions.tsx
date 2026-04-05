@@ -103,7 +103,7 @@ const RouteInstructions = ({
                 <View style={styles.headerRow}>
                     <Text style={styles.title}>Directions</Text>
                     <View style={styles.headerButtons}>
-                        <TouchableOpacity onPress={togglePanel} style={styles.toggleButton}>
+                        <TouchableOpacity testID="expand-directions-button" onPress={togglePanel} style={styles.toggleButton}>
                             <MaterialIcons 
                                 name={isExpanded.current ? "expand-more" : "expand-less"}
                                 size={20} 

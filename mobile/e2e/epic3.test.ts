@@ -1,5 +1,5 @@
 import { device, element, by, waitFor } from 'detox';
-import { setupApp, setupAppWithPersistence, dismissAlert } from './helpers';
+import { setupApp, setupAppWithPersistence, dismissAlert, openBuildingSelector } from './helpers';
 
 describe('Epic 3: Google Calendar Integration E2E Test', () => {
 
@@ -31,7 +31,35 @@ describe('Epic 3: Google Calendar Integration E2E Test', () => {
         await waitFor(element(by.text('Select Calendar'))).toExist().withTimeout(2000);
         await element(by.text('Concordia School')).atIndex(0).tap();
 
-        // Wait to visually confirm the switch to Concordia School
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Wait for the Next Class card and tap the directions arrow
+        await waitFor(element(by.id('next-class-directions-button'))).toExist().withTimeout(15000);
+        await element(by.id('next-class-directions-button')).tap();
+        
+        // Tap on the toggle of room selection mode
+        await waitFor(element(by.id('room-selection-toggle'))).toExist().withTimeout(5000);
+        await element(by.id('room-selection-toggle')).tap();
+        
+        // Tap view directions
+        await waitFor(element(by.id('view-directions-button'))).toExist().withTimeout(5000);
+        await element(by.id('view-directions-button')).tap();
+        
+        // Select Walk mode
+        await waitFor(element(by.id('route-info-mode-walking'))).toExist().withTimeout(5000);
+        await element(by.id('route-info-mode-walking')).tap();
+
+        // Tap Start
+        await waitFor(element(by.id('confirm-route-button'))).toExist().withTimeout(2000);
+        await element(by.id('confirm-route-button')).tap();
+
+        // Expand directions
+        await waitFor(element(by.id('expand-directions-button'))).toExist().withTimeout(5000);
+        await element(by.id('expand-directions-button')).tap();
+
+        // Close directions
+        await waitFor(element(by.id('close-button'))).toExist().withTimeout(2000);
+        await element(by.id('close-button')).tap();
+
+        // Wait to visually confirm the transition to the map/directions
+        await new Promise(resolve => setTimeout(resolve, 5000));
     });
 });

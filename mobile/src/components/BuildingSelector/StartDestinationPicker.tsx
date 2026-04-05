@@ -209,6 +209,7 @@ const StartDestinationPicker: React.FC<StartDestinationPickerProps> = ({ locatio
       <Text style={styles.toggleLabel}>Room Selection Mode</Text>
 
       <Switch
+        testID="room-selection-toggle"
         value={!!enableRoomSelection}
         onValueChange={setEnableRoomSelection}
         trackColor={{ false: '#ddd', true: '#f3c4cc' }}
