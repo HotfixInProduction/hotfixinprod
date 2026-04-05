@@ -6,7 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import BuildingPolygon from '../components/BuildingPolygon';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import StartDestinationPicker, { Place } from '../components/BuildingSelector/StartDestinationPicker';
-import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons'
+import { MaterialIcons } from '@expo/vector-icons'
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import BuildingInfo from '../components/BuildingInfo';
 import FloorPlanViewer from '../components/FloorPlanViewer';
 import Constants from "expo-constants";
