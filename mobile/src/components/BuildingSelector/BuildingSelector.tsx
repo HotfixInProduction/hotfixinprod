@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, Text, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { GooglePlacesAutocomplete, GooglePlacesAutocompleteRef } from 'react-native-google-places-autocomplete';
 import Constants from 'expo-constants';
 import { buildings } from '../../data/buildings';
@@ -31,7 +31,7 @@ const BuildingSelector: React.FC<BuildingSelectorProps> = ({ placeholder, onSele
     return buildings.filter(building => 
       building.id.toLowerCase().includes(lowerQuery) ||
       building.label.toLowerCase().includes(lowerQuery) ||
-      (building.address && building.address.toLowerCase().includes(lowerQuery))
+      building.address?.toLowerCase().includes(lowerQuery)
     );
   };
 
