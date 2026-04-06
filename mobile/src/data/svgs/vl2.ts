@@ -1,7 +1,7 @@
 export const vl2Svg = `
 <svg fill="none" height="1024" viewBox="0 0 1024 1024" width="1024" xmlns="http://www.w3.org/2000/svg">
   <defs id="defs4.32" />
-  <g id="g5182.47" inkscape:label="VL2 vec copy" style="display:inline" transform="translate(-31.33,-18.21)">
+  <g id="g5182.47" style="display:inline" transform="translate(-31.33,-18.21)">
     <path style="fill:#f7d6d6;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" d="M 224.63,19.31 V 129.23 h -21.07 v 55.51 h 18.50 v 174.26 h -20.05 v 52.43 H 215.89 v 81.73 h -49.35 v 60.14 h -55.51 v 60.14 H 58.60 v 66.31 H 33.92 V 924.94 H 64.77 V 997.42 H 32.38 v 44.72 H 383.98 V 997.42 924.94 869.83 h 40.19 v 21.81 H 896.32 919.46 V 611.13 h 90.60 13.49 29.69 v -43.95 h -29.69 V 378.66 h -13.49 v -5.78 H 932.19 V 99.16 H 914.45 V 132.31 H 896.32 V 19.31 H 383.98 Z" id="path5184.63" />
     <rect style="fill:#da3636;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" id="rect5186.79" width="74.09" height="44.68" x="32.41" y="996.46" inkscape:label="295" />
     <path id="path5188.94" d="m 825.40,781.91 v 30.67 h 30.58 v 79.06 h 63.49 v -100.32 H 855.98 v -9.41 z" style="fill:#da3636;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" inkscape:label="240" />

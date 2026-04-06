@@ -1,7 +1,7 @@
 export const vl1Svg = `
 <svg fill="none" height="1024" viewBox="0 0 1024 1024" width="1024" xmlns="http://www.w3.org/2000/svg">
   <defs id="defs4.32" />
-  <g style="display:inline" inkscape:label="VL1 vec copy" id="g4856.47" transform="translate(-31.33,-18.21)">
+  <g style="display:inline" id="g4856.47" transform="translate(-31.33,-18.21)">
     <path id="path4858.63" d="M 224.63,19.31 V 129.23 h -21.07 v 55.51 h 18.50 v 174.26 h -20.05 v 52.43 H 215.89 v 81.73 h -49.35 v 60.14 h -55.51 v 60.14 H 58.60 v 66.31 H 33.92 V 924.94 H 64.77 V 997.42 H 32.38 v 44.72 H 383.98 V 997.42 924.94 869.83 h 40.19 v 21.81 H 896.32 919.46 V 611.13 h 90.60 13.49 29.69 v -43.95 h -29.69 V 378.66 h -13.49 v -5.78 H 932.19 V 99.16 H 914.45 V 132.31 H 896.32 V 19.31 H 383.98 Z" style="fill:#f7d6d6;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <rect y="996.46" x="32.41" height="44.68" width="74.09" id="rect4860.79" style="fill:#da3636;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" inkscape:label="195" />
     <rect y="973.35" x="322.60" height="67.79" width="61.74" id="rect4862.95" style="fill:#da3636;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" inkscape:label="101-4" />

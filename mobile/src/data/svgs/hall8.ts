@@ -4,7 +4,7 @@ export const hall8Svg = `
 <linearGradient id="linearGradient4705" osb:paint="solid">
 <stop id="stop4707" offset="0" style="stop-color:#ffffff;stop-opacity:1;"/>
 </linearGradient>
-<filter id="filter5156" inkscape:label="Blur" style="color-interpolation-filters:sRGB;">
+<filter id="filter5156" style="color-interpolation-filters:sRGB;">
 <feGaussianBlur id="feGaussianBlur5158" result="blur" stdDeviation="20 20"/>
 </filter>
 </defs>
