@@ -1,7 +1,7 @@
 export const john1Svg = `
 <svg fill="none" height="1024" viewBox="0 0 1024 1024" width="1024" xmlns="http://www.w3.org/2000/svg">
   <defs id="defs4" />
-  <g inkscape:label="1 vec copy" id="g3906" style="display:inline">
+  <g id="g3906" style="display:inline">
     <path id="path3908" d="m 358.57143,146.85714 102.14286,734.28572 h 15.71428 l 32.14286,111.42857 H 735 v 8.57147 h 46.42857 v 9.2857 H 980.35714 V 656.30447 H 851.5586 V 112.57143 H 815 v 17.14285 H 630.71429 v -16.42857 h -25 V 97.571428 H 397.14286 v 49.285712 z" style="fill:#f7d6d6;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <path id="path3910" d="M 517.85714,97.571428 V 169 h 29.28572 v 38.57143 h 72.14285 V 113.28571 H 605.71429 V 97.571428 Z" style="fill:#da3636;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" inkscape:label="1.294" />
     <path id="path3912" d="m 619.28571,153.28571 h 35 l 17.66827,30.60234 v 52.96909 H 851.5586 V 112.57143 H 815 v 17.14285 H 630.71429 v -16.42857 h -11.42858 z" style="fill:#da3636;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" inkscape:label="1.265" />

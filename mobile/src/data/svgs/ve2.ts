@@ -11,7 +11,7 @@ export const ve2Svg = `
 </cc:Work>
 </rdf:RDF>
 </metadata>
-<g id="g4719" inkscape:groupmode="layer" inkscape:label="VE2 vec copy" style="display:inline">
+<g id="g4719" inkscape:groupmode="layer" style="display:inline">
 <path d="m 241.42773,38.285156 0,100.000004 -35.71289,0 0,45.71484 35.71289,0 0,150.71484 302.03516,0 0,-172.7539 98.99414,0 0,5.42968 48.48828,0 0,26.76954 16.66602,0 0,140.66406 54.54883,0 0,-140.66406 0,-29.29493 32.125,0 33.53515,0 0,-42.29296 2.52539,0 0,-73.57227 -36.06054,0 0,-10.714844 -552.85743,0 z" id="path4721" inkscape:connector-curvature="0" style="display:inline;fill:#f7d6d6;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"/>
 <rect height="58.967793" id="rect4201" style="fill:#da3636;fill-opacity:1;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" width="50.506348" x="241.42773" y="161.96094"/>
 <text alignment-baseline="middle" fill="black" font-family="Arial" font-size="15" stroke-width="0" text-anchor="middle" x="266.680904" y="191.4448365"> 201 </text>
